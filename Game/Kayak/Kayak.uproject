@@ -1,0 +1,19 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{8C7AF436-4F1B-D2A5-58CE-66B53F21EF16}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "Kayak",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "Paper2D",
+			"Enabled": true
+		}
+	]
+}
