@@ -1,0 +1,224 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="..\..\Kayak.uproject" />
+    <Filter Include="Source">
+      <UniqueIdentifier>{FECF217D-86B8-4248-8C8F-1C01C6CA261B}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\Kayak.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\Source\KayakClient.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\Source\KayakEditor.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\Source\KayakServer.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <Filter Include="Config">
+      <UniqueIdentifier>{1B6BF31B-A26F-4E18-A951-E9B85958092E}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Config\DefaultEditor.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEditorPerProjectUserSettings.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEngine.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultGame.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultInput.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\ReadMe.txt">
+      <Filter>Config</Filter>
+    </None>
+    <Filter Include="Config\Binary">
+      <UniqueIdentifier>{C4C43075-D44B-4081-9302-1228C0713B77}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Config\Binary\ReadMe.txt">
+      <Filter>Config\Binary</Filter>
+    </None>
+    <Filter Include="Source\Kayak">
+      <UniqueIdentifier>{E8067D0C-2BC9-4A64-838C-419E49B68487}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\Kayak\Kayak.Build.cs">
+      <Filter>Source\Kayak</Filter>
+    </None>
+    <ClCompile Include="..\..\Source\Kayak\Kayak.cpp">
+      <Filter>Source\Kayak</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\Kayak\Kayak.h">
+      <Filter>Source\Kayak</Filter>
+    </ClInclude>
+    <None Include="..\..\Source\Kayak\ReadMe.txt">
+      <Filter>Source\Kayak</Filter>
+    </None>
+    <Filter Include="Source\Kayak\Private">
+      <UniqueIdentifier>{DF3366A8-F7CA-44B3-AE10-E1788EEABC1E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Kayak\Private\Controller">
+      <UniqueIdentifier>{97EBD90F-7B2B-4021-B5A7-E6D43E88244C}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\Kayak\Private\Controller\KayakAIControllerBase.cpp">
+      <Filter>Source\Kayak\Private\Controller</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Kayak\Private\Controller\KayakControllerBase.cpp">
+      <Filter>Source\Kayak\Private\Controller</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Kayak\Private\Controller\KayakTestController.cpp">
+      <Filter>Source\Kayak\Private\Controller</Filter>
+    </ClCompile>
+    <Filter Include="Source\Kayak\Private\GameMode">
+      <UniqueIdentifier>{7018177A-756D-4EC8-9575-9DF1074D51C2}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\Kayak\Private\GameMode\KayakGameModeBase.cpp">
+      <Filter>Source\Kayak\Private\GameMode</Filter>
+    </ClCompile>
+    <Filter Include="Source\Kayak\Private\GamePlayClass">
+      <UniqueIdentifier>{DB187366-2C44-47FD-BCE6-F4F7C33A2687}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\Kayak\Private\GamePlayClass\KayakSingleton.cpp">
+      <Filter>Source\Kayak\Private\GamePlayClass</Filter>
+    </ClCompile>
+    <None Include="..\..\Source\Kayak\Private\GamePlayClass\ReadMe.txt">
+      <Filter>Source\Kayak\Private\GamePlayClass</Filter>
+    </None>
+    <Filter Include="Source\Kayak\Private\Pawn">
+      <UniqueIdentifier>{4F23E247-F541-4BE1-BAA3-AEEADB07AF44}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\Kayak\Private\Pawn\KayakCharacterBase.cpp">
+      <Filter>Source\Kayak\Private\Pawn</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Kayak\Private\Pawn\KayakPawnBase.cpp">
+      <Filter>Source\Kayak\Private\Pawn</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Kayak\Private\Pawn\KayakTestCharacter.cpp">
+      <Filter>Source\Kayak\Private\Pawn</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Kayak\Private\Pawn\KayakTestPawn.cpp">
+      <Filter>Source\Kayak\Private\Pawn</Filter>
+    </ClCompile>
+    <Filter Include="Source\Kayak\Private\UI">
+      <UniqueIdentifier>{298E3368-9ACC-4F12-8F3A-2B2469C7B7A7}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\Kayak\Private\UI\KakayUIBase.cpp">
+      <Filter>Source\Kayak\Private\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Kayak\Private\UI\KayakTestUI.cpp">
+      <Filter>Source\Kayak\Private\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Kayak\Private\UI\KayakUIManager.cpp">
+      <Filter>Source\Kayak\Private\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Kayak\Private\UI\KayakUserWidget.cpp">
+      <Filter>Source\Kayak\Private\UI</Filter>
+    </ClCompile>
+    <Filter Include="Source\Kayak\Private\UI\Component">
+      <UniqueIdentifier>{748569E7-53AB-44B3-91A8-14593FD550C5}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\Kayak\Private\UI\Component\KayakUIComponentBase.cpp">
+      <Filter>Source\Kayak\Private\UI\Component</Filter>
+    </ClCompile>
+    <Filter Include="Source\Kayak\Private\UI\Login">
+      <UniqueIdentifier>{6C4AFDF0-4153-4CE1-B4E5-F8FD7902750A}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\Kayak\Private\UI\Login\KayakUILogin.cpp">
+      <Filter>Source\Kayak\Private\UI\Login</Filter>
+    </ClCompile>
+    <Filter Include="Source\Kayak\Private\UI\MessageBox">
+      <UniqueIdentifier>{A02D7E61-5BF9-42A1-82D0-48C8ED6157ED}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\Kayak\Private\UI\MessageBox\KayakUIMessageBoxBase.cpp">
+      <Filter>Source\Kayak\Private\UI\MessageBox</Filter>
+    </ClCompile>
+    <Filter Include="Source\Kayak\Public">
+      <UniqueIdentifier>{BE41EBFC-F0A1-4656-851F-EF4F1F46A03D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Kayak\Public\Controller">
+      <UniqueIdentifier>{83DCB041-8FEC-4933-8395-4DF35634523A}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\Kayak\Public\Controller\KayakAIControllerBase.h">
+      <Filter>Source\Kayak\Public\Controller</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Kayak\Public\Controller\KayakControllerBase.h">
+      <Filter>Source\Kayak\Public\Controller</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Kayak\Public\Controller\KayakTestController.h">
+      <Filter>Source\Kayak\Public\Controller</Filter>
+    </ClInclude>
+    <Filter Include="Source\Kayak\Public\GameMode">
+      <UniqueIdentifier>{71FB64F0-B0DE-4A99-9EBD-B4B97B6374AF}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\Kayak\Public\GameMode\KayakGameModeBase.h">
+      <Filter>Source\Kayak\Public\GameMode</Filter>
+    </ClInclude>
+    <Filter Include="Source\Kayak\Public\GamePlayClass">
+      <UniqueIdentifier>{7952E32B-A397-4EEB-8AD5-141210D68A35}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\Kayak\Public\GamePlayClass\KayakSingleton.h">
+      <Filter>Source\Kayak\Public\GamePlayClass</Filter>
+    </ClInclude>
+    <None Include="..\..\Source\Kayak\Public\GamePlayClass\ReadMe.txt">
+      <Filter>Source\Kayak\Public\GamePlayClass</Filter>
+    </None>
+    <Filter Include="Source\Kayak\Public\Pawn">
+      <UniqueIdentifier>{A302F209-0C83-4BEA-8C8C-C9A4A6BC4DEE}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\Kayak\Public\Pawn\KayakCharacterBase.h">
+      <Filter>Source\Kayak\Public\Pawn</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Kayak\Public\Pawn\KayakPawnBase.h">
+      <Filter>Source\Kayak\Public\Pawn</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Kayak\Public\Pawn\KayakTestCharacter.h">
+      <Filter>Source\Kayak\Public\Pawn</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Kayak\Public\Pawn\KayakTestPawn.h">
+      <Filter>Source\Kayak\Public\Pawn</Filter>
+    </ClInclude>
+    <Filter Include="Source\Kayak\Public\UI">
+      <UniqueIdentifier>{A1A773C7-0D67-435B-920C-2D9562C21D3E}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\Kayak\Public\UI\KayakTestUI.h">
+      <Filter>Source\Kayak\Public\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Kayak\Public\UI\KayakUIManager.h">
+      <Filter>Source\Kayak\Public\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Kayak\Public\UI\KayakUserWidget.h">
+      <Filter>Source\Kayak\Public\UI</Filter>
+    </ClInclude>
+    <Filter Include="Source\Kayak\Public\UI\Component">
+      <UniqueIdentifier>{8F82F261-C5EF-4381-BEDF-119ECD6AA73C}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\Kayak\Public\UI\Component\KayakUIComponentBase.h">
+      <Filter>Source\Kayak\Public\UI\Component</Filter>
+    </ClInclude>
+    <Filter Include="Source\Kayak\Public\UI\Login">
+      <UniqueIdentifier>{7ECF2378-856A-4EF4-83D7-98E2D8D0E68C}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\Kayak\Public\UI\Login\KayakUILogin.h">
+      <Filter>Source\Kayak\Public\UI\Login</Filter>
+    </ClInclude>
+    <Filter Include="Source\Kayak\Public\UI\MessageBox">
+      <UniqueIdentifier>{964205E6-A2C5-4148-9415-7F3F0A3E648D}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\Kayak\Public\UI\MessageBox\KayakUIMessageBoxBase.h">
+      <Filter>Source\Kayak\Public\UI\MessageBox</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Kayak\Public\UI\MessageBox\KayakUIMessageBoxDeclaration.h">
+      <Filter>Source\Kayak\Public\UI\MessageBox</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Source\Kayak\Public\UI\KayakUIBase.h">
+      <Filter>Source\Kayak\Public\UI</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
