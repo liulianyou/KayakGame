@@ -14,6 +14,9 @@ void UKayakUILogin::NativePreConstruct()
 void UKayakUILogin::NativeConstruct()
 {
 	Super::NativeConstruct();
+
+
+
 }
 
 void UKayakUILogin::NativeDestruct()

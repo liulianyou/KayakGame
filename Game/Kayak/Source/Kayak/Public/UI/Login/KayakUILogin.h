@@ -13,17 +13,34 @@
 
 #include "KayakUILogin.generated.h"
 
+class UButton;
+class UEditableText;
+
+
 UCLASS()
 class KAYAK_API UKayakUILogin : public UKayakUIBase
 {
 	GENERATED_UCLASS_BODY()
 public:
 	//Override the base class in the UUserWidget
-	void NativePreConstruct() ;
-	void NativeConstruct() ;
-	void NativeDestruct() ;
+	void NativePreConstruct() override;
+	void NativeConstruct() override;
+	void NativeDestruct() override;
 
 public:
+	UPROPERTY(meta = (BindWidget),Category="UI_Login")
+	UButton* LoginButton;
+	UPROPERTY(meta = (BindWidget), Category = "UI_Login")
+	UButton* Options;
+	UPROPERTY(meta = (BindWidget), Category = "UI_Login")
+	UButton* Quit;
 
+	UPROPERTY(meta = (BindWidget,OptionalWidget = true), Category = "UI_Login")
+	UEditableText* UserName;
+	UPROPERTY(meta = (BindWidget, OptionalWidget = true), Category = "UI_Login")
+	UEditableText* Password;
+
+	UPROPERTY(meta = (BindWidgetOptional), Category = "UI_Login")
+	UEditableText* ServerIPAddress;
 
 };
