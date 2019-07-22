@@ -18,6 +18,14 @@
 			<Configuration>Mac_Debug_Program</Configuration>
 			<Platform>x64</Platform>
 		</ProjectConfiguration>
+		<ProjectConfiguration Include="Android_Debug_Program|Win32">
+			<Configuration>Android_Debug_Program</Configuration>
+			<Platform>Win32</Platform>
+		</ProjectConfiguration>
+		<ProjectConfiguration Include="Android_Debug_Program|x64">
+			<Configuration>Android_Debug_Program</Configuration>
+			<Platform>x64</Platform>
+		</ProjectConfiguration>
 		<ProjectConfiguration Include="HTML5_Debug_Program|Win32">
 			<Configuration>HTML5_Debug_Program</Configuration>
 			<Platform>Win32</Platform>
@@ -40,6 +48,14 @@
 		</ProjectConfiguration>
 		<ProjectConfiguration Include="Mac_Development_Program|x64">
 			<Configuration>Mac_Development_Program</Configuration>
+			<Platform>x64</Platform>
+		</ProjectConfiguration>
+		<ProjectConfiguration Include="Android_Development_Program|Win32">
+			<Configuration>Android_Development_Program</Configuration>
+			<Platform>Win32</Platform>
+		</ProjectConfiguration>
+		<ProjectConfiguration Include="Android_Development_Program|x64">
+			<Configuration>Android_Development_Program</Configuration>
 			<Platform>x64</Platform>
 		</ProjectConfiguration>
 		<ProjectConfiguration Include="HTML5_Development_Program|Win32">
@@ -80,6 +96,14 @@
 		<ConfigurationType>Makefile</ConfigurationType>
 		<PlatformToolset>v141</PlatformToolset>
 	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Android_Debug_Program|Win32'" Label="Configuration">
+		<ConfigurationType>Makefile</ConfigurationType>
+		<PlatformToolset>v141</PlatformToolset>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Android_Debug_Program|x64'" Label="Configuration">
+		<ConfigurationType>Makefile</ConfigurationType>
+		<PlatformToolset>v141</PlatformToolset>
+	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='HTML5_Debug_Program|Win32'" Label="Configuration">
 		<ConfigurationType>Makefile</ConfigurationType>
 		<PlatformToolset>v141</PlatformToolset>
@@ -101,6 +125,14 @@
 		<PlatformToolset>v141</PlatformToolset>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Mac_Development_Program|x64'" Label="Configuration">
+		<ConfigurationType>Makefile</ConfigurationType>
+		<PlatformToolset>v141</PlatformToolset>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Android_Development_Program|Win32'" Label="Configuration">
+		<ConfigurationType>Makefile</ConfigurationType>
+		<PlatformToolset>v141</PlatformToolset>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Android_Development_Program|x64'" Label="Configuration">
 		<ConfigurationType>Makefile</ConfigurationType>
 		<PlatformToolset>v141</PlatformToolset>
 	</PropertyGroup>
@@ -127,10 +159,10 @@
 		<ExcludePath />
 		<OutDir>$(ProjectDir)..\Build\Unused\</OutDir>
 		<IntDir>$(ProjectDir)..\Build\Unused\</IntDir>
-		<NMakeBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter Win32 Debug -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
-		<NMakeReBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter Win32 Debug -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
-		<NMakeCleanCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter Win32 Debug -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
-		<NMakeOutput>E:\Engine\UnrealEngine\Engine\Binaries\Win32\DsymExporter-Win32-Debug.exe</NMakeOutput>
+		<NMakeBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter Win32 Debug -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
+		<NMakeReBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter Win32 Debug -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
+		<NMakeCleanCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter Win32 Debug -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
+		<NMakeOutput>D:\UnrealEngine4\UnrealEngine\Engine\Binaries\Win32\DsymExporter-Win32-Debug.exe</NMakeOutput>
 	</PropertyGroup>
 	<ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Program|x64'" Label="PropertySheets">
 		<Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -144,10 +176,10 @@
 		<ExcludePath />
 		<OutDir>$(ProjectDir)..\Build\Unused\</OutDir>
 		<IntDir>$(ProjectDir)..\Build\Unused\</IntDir>
-		<NMakeBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter Win64 Debug -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
-		<NMakeReBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter Win64 Debug -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
-		<NMakeCleanCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter Win64 Debug -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
-		<NMakeOutput>E:\Engine\UnrealEngine\Engine\Binaries\Win64\DsymExporter-Win64-Debug.exe</NMakeOutput>
+		<NMakeBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter Win64 Debug -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
+		<NMakeReBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter Win64 Debug -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
+		<NMakeCleanCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter Win64 Debug -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
+		<NMakeOutput>D:\UnrealEngine4\UnrealEngine\Engine\Binaries\Win64\DsymExporter-Win64-Debug.exe</NMakeOutput>
 	</PropertyGroup>
 	<ImportGroup Condition="'$(Configuration)|$(Platform)'=='Mac_Debug_Program|Win32'" Label="PropertySheets">
 		<Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -161,10 +193,27 @@
 		<ExcludePath />
 		<OutDir>$(ProjectDir)..\Build\Unused\</OutDir>
 		<IntDir>$(ProjectDir)..\Build\Unused\</IntDir>
-		<NMakeBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter Mac Debug -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
-		<NMakeReBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter Mac Debug -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
-		<NMakeCleanCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter Mac Debug -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
-		<NMakeOutput>E:\Engine\UnrealEngine\Engine\Binaries\Mac\DsymExporter-Mac-Debug</NMakeOutput>
+		<NMakeBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter Mac Debug -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
+		<NMakeReBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter Mac Debug -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
+		<NMakeCleanCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter Mac Debug -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
+		<NMakeOutput>D:\UnrealEngine4\UnrealEngine\Engine\Binaries\Mac\DsymExporter-Mac-Debug</NMakeOutput>
+	</PropertyGroup>
+	<ImportGroup Condition="'$(Configuration)|$(Platform)'=='Android_Debug_Program|Win32'" Label="PropertySheets">
+		<Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+	</ImportGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Android_Debug_Program|Win32'">
+		<IncludePath />
+		<ReferencePath />
+		<LibraryPath />
+		<LibraryWPath />
+		<SourcePath />
+		<ExcludePath />
+		<OutDir>$(ProjectDir)..\Build\Unused\</OutDir>
+		<IntDir>$(ProjectDir)..\Build\Unused\</IntDir>
+		<NMakeBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter Android Debug -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
+		<NMakeReBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter Android Debug -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
+		<NMakeCleanCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter Android Debug -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
+		<NMakeOutput>D:\UnrealEngine4\UnrealEngine\Engine\Binaries\Android\DsymExporter-Android-Debug.so</NMakeOutput>
 	</PropertyGroup>
 	<ImportGroup Condition="'$(Configuration)|$(Platform)'=='HTML5_Debug_Program|Win32'" Label="PropertySheets">
 		<Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -178,10 +227,10 @@
 		<ExcludePath />
 		<OutDir>$(ProjectDir)..\Build\Unused\</OutDir>
 		<IntDir>$(ProjectDir)..\Build\Unused\</IntDir>
-		<NMakeBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter HTML5 Debug -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
-		<NMakeReBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter HTML5 Debug -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
-		<NMakeCleanCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter HTML5 Debug -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
-		<NMakeOutput>E:\Engine\UnrealEngine\Engine\Binaries\HTML5\DsymExporter-HTML5-Debug.js</NMakeOutput>
+		<NMakeBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter HTML5 Debug -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
+		<NMakeReBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter HTML5 Debug -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
+		<NMakeCleanCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter HTML5 Debug -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
+		<NMakeOutput>D:\UnrealEngine4\UnrealEngine\Engine\Binaries\HTML5\DsymExporter-HTML5-Debug.js</NMakeOutput>
 	</PropertyGroup>
 	<ImportGroup Condition="'$(Configuration)|$(Platform)'=='Development_Program|Win32'" Label="PropertySheets">
 		<Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -195,10 +244,10 @@
 		<ExcludePath />
 		<OutDir>$(ProjectDir)..\Build\Unused\</OutDir>
 		<IntDir>$(ProjectDir)..\Build\Unused\</IntDir>
-		<NMakeBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter Win32 Development -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
-		<NMakeReBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter Win32 Development -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
-		<NMakeCleanCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter Win32 Development -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
-		<NMakeOutput>E:\Engine\UnrealEngine\Engine\Binaries\Win32\DsymExporter.exe</NMakeOutput>
+		<NMakeBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter Win32 Development -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
+		<NMakeReBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter Win32 Development -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
+		<NMakeCleanCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter Win32 Development -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
+		<NMakeOutput>D:\UnrealEngine4\UnrealEngine\Engine\Binaries\Win32\DsymExporter.exe</NMakeOutput>
 	</PropertyGroup>
 	<ImportGroup Condition="'$(Configuration)|$(Platform)'=='Development_Program|x64'" Label="PropertySheets">
 		<Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -212,10 +261,10 @@
 		<ExcludePath />
 		<OutDir>$(ProjectDir)..\Build\Unused\</OutDir>
 		<IntDir>$(ProjectDir)..\Build\Unused\</IntDir>
-		<NMakeBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter Win64 Development -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
-		<NMakeReBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter Win64 Development -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
-		<NMakeCleanCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter Win64 Development -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
-		<NMakeOutput>E:\Engine\UnrealEngine\Engine\Binaries\Win64\DsymExporter.exe</NMakeOutput>
+		<NMakeBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter Win64 Development -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
+		<NMakeReBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter Win64 Development -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
+		<NMakeCleanCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter Win64 Development -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
+		<NMakeOutput>D:\UnrealEngine4\UnrealEngine\Engine\Binaries\Win64\DsymExporter.exe</NMakeOutput>
 	</PropertyGroup>
 	<ImportGroup Condition="'$(Configuration)|$(Platform)'=='Mac_Development_Program|Win32'" Label="PropertySheets">
 		<Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -229,10 +278,27 @@
 		<ExcludePath />
 		<OutDir>$(ProjectDir)..\Build\Unused\</OutDir>
 		<IntDir>$(ProjectDir)..\Build\Unused\</IntDir>
-		<NMakeBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter Mac Development -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
-		<NMakeReBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter Mac Development -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
-		<NMakeCleanCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter Mac Development -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
-		<NMakeOutput>E:\Engine\UnrealEngine\Engine\Binaries\Mac\DsymExporter</NMakeOutput>
+		<NMakeBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter Mac Development -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
+		<NMakeReBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter Mac Development -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
+		<NMakeCleanCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter Mac Development -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
+		<NMakeOutput>D:\UnrealEngine4\UnrealEngine\Engine\Binaries\Mac\DsymExporter</NMakeOutput>
+	</PropertyGroup>
+	<ImportGroup Condition="'$(Configuration)|$(Platform)'=='Android_Development_Program|Win32'" Label="PropertySheets">
+		<Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+	</ImportGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Android_Development_Program|Win32'">
+		<IncludePath />
+		<ReferencePath />
+		<LibraryPath />
+		<LibraryWPath />
+		<SourcePath />
+		<ExcludePath />
+		<OutDir>$(ProjectDir)..\Build\Unused\</OutDir>
+		<IntDir>$(ProjectDir)..\Build\Unused\</IntDir>
+		<NMakeBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter Android Development -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
+		<NMakeReBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter Android Development -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
+		<NMakeCleanCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter Android Development -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
+		<NMakeOutput>D:\UnrealEngine4\UnrealEngine\Engine\Binaries\Android\DsymExporter.so</NMakeOutput>
 	</PropertyGroup>
 	<ImportGroup Condition="'$(Configuration)|$(Platform)'=='HTML5_Development_Program|Win32'" Label="PropertySheets">
 		<Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -246,21 +312,21 @@
 		<ExcludePath />
 		<OutDir>$(ProjectDir)..\Build\Unused\</OutDir>
 		<IntDir>$(ProjectDir)..\Build\Unused\</IntDir>
-		<NMakeBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter HTML5 Development -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
-		<NMakeReBuildCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter HTML5 Development -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
-		<NMakeCleanCommandLine>E:\Engine\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter HTML5 Development -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
-		<NMakeOutput>E:\Engine\UnrealEngine\Engine\Binaries\HTML5\DsymExporter.js</NMakeOutput>
+		<NMakeBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Build.bat DsymExporter HTML5 Development -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
+		<NMakeReBuildCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Rebuild.bat DsymExporter HTML5 Development -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
+		<NMakeCleanCommandLine>D:\UnrealEngine4\UnrealEngine\Engine\Build\BatchFiles\Clean.bat DsymExporter HTML5 Development -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
+		<NMakeOutput>D:\UnrealEngine4\UnrealEngine\Engine\Binaries\HTML5\DsymExporter.js</NMakeOutput>
 	</PropertyGroup>
 	<ItemGroup>
-		<None Include="..\..\..\..\..\..\Engine\UnrealEngine\Engine\Source\Programs\Mac\DsymExporter\DsymExporter.Target.cs" />
-		<None Include="..\..\..\..\..\..\Engine\UnrealEngine\Engine\Source\Programs\Mac\DsymExporter\DsymExporter.Build.cs" />
-		<ClCompile Include="..\..\..\..\..\..\Engine\UnrealEngine\Engine\Source\Programs\Mac\DsymExporter\Private\DsymExporterApp.cpp" />
-		<ClCompile Include="..\..\..\..\..\..\Engine\UnrealEngine\Engine\Source\Programs\Mac\DsymExporter\Private\Mac\DsymExporterMainMac.cpp" />
-		<ClInclude Include="..\..\..\..\..\..\Engine\UnrealEngine\Engine\Source\Programs\Mac\DsymExporter\Public\DsymExporterApp.h" />
+		<None Include="..\..\..\..\..\..\UnrealEngine4\UnrealEngine\Engine\Source\Programs\Mac\DsymExporter\DsymExporter.Target.cs" />
+		<None Include="..\..\..\..\..\..\UnrealEngine4\UnrealEngine\Engine\Source\Programs\Mac\DsymExporter\DsymExporter.Build.cs" />
+		<ClCompile Include="..\..\..\..\..\..\UnrealEngine4\UnrealEngine\Engine\Source\Programs\Mac\DsymExporter\Private\DsymExporterApp.cpp" />
+		<ClCompile Include="..\..\..\..\..\..\UnrealEngine4\UnrealEngine\Engine\Source\Programs\Mac\DsymExporter\Private\Mac\DsymExporterMainMac.cpp" />
+		<ClInclude Include="..\..\..\..\..\..\UnrealEngine4\UnrealEngine\Engine\Source\Programs\Mac\DsymExporter\Public\DsymExporterApp.h" />
 	</ItemGroup>
 	<PropertyGroup>
 		<NMakePreprocessorDefinitions>$(NMakePreprocessorDefinitions);IS_PROGRAM=1;ENABLE_PGO_PROFILE=0;WITH_DEV_AUTOMATION_TESTS=1;WITH_PERF_AUTOMATION_TESTS=1;UNICODE;_UNICODE;__UNREAL__;IS_MONOLITHIC=1;WITH_ENGINE=0;WITH_UNREAL_DEVELOPER_TOOLS=0;WITH_COREUOBJECT=0;USE_STATS_WITHOUT_ENGINE=0;WITH_PLUGIN_SUPPORT=0;WITH_PERFCOUNTERS=0;USE_LOGGING_IN_SHIPPING=0;WITH_LOGGING_TO_MEMORY=0;USE_CACHE_FREED_OS_ALLOCS=1;USE_CHECKS_IN_SHIPPING=0;UE_BUILD_MINIMAL=1;WITH_EDITOR=0;WITH_SERVER_CODE=1;WITH_CEF3=1;WITH_XGE_CONTROLLER=0;UBT_MODULE_MANIFEST="DsymExporter.modules";UBT_MODULE_MANIFEST_DEBUGGAME="DsymExporter-Win64-DebugGame.modules";UBT_COMPILED_PLATFORM=Win64;UBT_COMPILED_TARGET=Program;WIN32=1;_WIN32_WINNT=0x0601;WINVER=0x0601;PLATFORM_WINDOWS=1;DEPTH_32_BIT_CONVERSION=0;PROJECT_COPYRIGHT_STRING=Fill out your copyright notice in the Description page of Project Settings.;PROJECT_PRODUCT_NAME=UE4Game;NDEBUG=1;UE_BUILD_DEVELOPMENT=1;ORIGINAL_FILE_NAME="DsymExporter.exe";UE_IS_ENGINE_MODULE=0;UE_BUILD_DEVELOPMENT_WITH_DEBUGGAME=0;IMPLEMENT_ENCRYPTION_KEY_REGISTRATION()=;IMPLEMENT_SIGNING_KEY_REGISTRATION()=;DEPRECATED_FORGAME=DEPRECATED;UE_ENABLE_ICU=1;WITH_VS_PERF_PROFILER=0;WITH_DIRECTXMATH=0;WITH_MALLOC_STOMP=1;CORE_API=;APPLICATIONCORE_API=;RHI_API=;LOAD_PLUGINS_FOR_TARGET_PLATFORMS=0;PROJECTS_API=;JSON_API=;WITH_LAUNCHERCHECK=0;LAUNCH_API=;PROFILERSERVICE_API=;DSYMEXPORTER_API=</NMakePreprocessorDefinitions>
-		<NMakeIncludeSearchPath>$(NMakeIncludeSearchPath);E:\Engine\UnrealEngine\Engine\Source;E:\Engine\UnrealEngine\Engine\Source\Runtime\Launch\Private;E:\Engine\UnrealEngine\Engine\Source\Programs\Mac\DsymExporter\Private;E:\Engine\UnrealEngine\Engine\Source\Runtime;E:\Engine\UnrealEngine\Engine\Source\Runtime\Core\Public;E:\Engine\UnrealEngine\Engine\Source\Runtime\ApplicationCore\Public;E:\Engine\UnrealEngine\Engine\Source\Runtime\RHI\Public;E:\Engine\UnrealEngine\Engine\Source\Runtime\Projects\Public;E:\Engine\UnrealEngine\Engine\Source\Runtime\Json\Public;E:\Engine\UnrealEngine\Engine\Source\Runtime\Launch\Public;E:\Engine\UnrealEngine\Engine\Source\Developer;E:\Engine\UnrealEngine\Engine\Source\Developer\ProfilerService\Public;E:\Engine\UnrealEngine\Engine\Source\Programs\Mac;E:\Engine\UnrealEngine\Engine\Source\Programs\Mac\DsymExporter\Public;E:\Engine\UnrealEngine\Engine\Intermediate\Build\Win64\DsymExporter\Inc\DsymExporter;c:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\INCLUDE;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\include\um;C:\Program Files (x86)\Windows Kits\10\include\10.0.17763.0\ucrt;C:\Program Files (x86)\Windows Kits\10\include\10.0.17763.0\shared;C:\Program Files (x86)\Windows Kits\10\include\10.0.17763.0\um;C:\Program Files (x86)\Windows Kits\10\include\10.0.17763.0\winrt;;</NMakeIncludeSearchPath>
+		<NMakeIncludeSearchPath>$(NMakeIncludeSearchPath);D:\UnrealEngine4\UnrealEngine\Engine\Source;D:\UnrealEngine4\UnrealEngine\Engine\Source\Runtime\Launch\Private;D:\UnrealEngine4\UnrealEngine\Engine\Source\Programs\Mac\DsymExporter\Private;D:\UnrealEngine4\UnrealEngine\Engine\Intermediate\Build\Win64\DsymExporter\Inc\Core;D:\UnrealEngine4\UnrealEngine\Engine\Source\Runtime;D:\UnrealEngine4\UnrealEngine\Engine\Source\Runtime\Core\Public;D:\UnrealEngine4\UnrealEngine\Engine\Intermediate\Build\Win64\DsymExporter\Inc\ApplicationCore;D:\UnrealEngine4\UnrealEngine\Engine\Source\Runtime\ApplicationCore\Public;D:\UnrealEngine4\UnrealEngine\Engine\Intermediate\Build\Win64\DsymExporter\Inc\RHI;D:\UnrealEngine4\UnrealEngine\Engine\Source\Runtime\RHI\Public;D:\UnrealEngine4\UnrealEngine\Engine\Intermediate\Build\Win64\DsymExporter\Inc\Projects;D:\UnrealEngine4\UnrealEngine\Engine\Source\Runtime\Projects\Public;D:\UnrealEngine4\UnrealEngine\Engine\Intermediate\Build\Win64\DsymExporter\Inc\Json;D:\UnrealEngine4\UnrealEngine\Engine\Source\Runtime\Json\Public;D:\UnrealEngine4\UnrealEngine\Engine\Intermediate\Build\Win64\DsymExporter\Inc\Launch;D:\UnrealEngine4\UnrealEngine\Engine\Source\Runtime\Launch\Public;D:\UnrealEngine4\UnrealEngine\Engine\Intermediate\Build\Win64\DsymExporter\Inc\ProfilerService;D:\UnrealEngine4\UnrealEngine\Engine\Source\Developer;D:\UnrealEngine4\UnrealEngine\Engine\Source\Developer\ProfilerService\Public;D:\UnrealEngine4\UnrealEngine\Engine\Intermediate\Build\Win64\DsymExporter\Inc\DsymExporter;D:\UnrealEngine4\UnrealEngine\Engine\Source\Programs\Mac;D:\UnrealEngine4\UnrealEngine\Engine\Source\Programs\Mac\DsymExporter\Public;C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Tools\MSVC\14.16.27023\INCLUDE;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\include\um;D:\Windows Kits\10\include\10.0.17763.0\ucrt;D:\Windows Kits\10\include\10.0.17763.0\shared;D:\Windows Kits\10\include\10.0.17763.0\um;D:\Windows Kits\10\include\10.0.17763.0\winrt;;</NMakeIncludeSearchPath>
 		<NMakeForcedIncludes>$(NMakeForcedIncludes)</NMakeForcedIncludes>
 		<NMakeAssemblySearchPath>$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
 		<NMakeForcedUsingAssemblies>$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
