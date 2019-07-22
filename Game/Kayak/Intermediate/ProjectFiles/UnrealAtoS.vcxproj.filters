@@ -2,24 +2,24 @@
 
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<ItemGroup>
-		<None Include="..\..\..\..\..\..\Engine\UnrealEngine\Engine\Source\Programs\Mac\UnrealAtoS\UnrealAtoS.Target.cs" />
-		<None Include="..\..\..\..\..\..\Engine\UnrealEngine\Engine\Source\Programs\Mac\UnrealAtoS\UnrealAtoS.Build.cs" />
+		<None Include="..\..\..\..\..\..\UnrealEngine4\UnrealEngine\Engine\Source\Programs\Mac\UnrealAtoS\UnrealAtoS.Target.cs" />
+		<None Include="..\..\..\..\..\..\UnrealEngine4\UnrealEngine\Engine\Source\Programs\Mac\UnrealAtoS\UnrealAtoS.Build.cs" />
 		<Filter Include="Private">
-			<UniqueIdentifier>{14A25866-E2D7-4A71-BC57-D9261FF583C7}</UniqueIdentifier>
+			<UniqueIdentifier>{45FB75D5-7028-484D-BC70-63E5FA05122F}</UniqueIdentifier>
 		</Filter>
-		<ClCompile Include="..\..\..\..\..\..\Engine\UnrealEngine\Engine\Source\Programs\Mac\UnrealAtoS\Private\UnrealAtoSApp.cpp">
+		<ClCompile Include="..\..\..\..\..\..\UnrealEngine4\UnrealEngine\Engine\Source\Programs\Mac\UnrealAtoS\Private\UnrealAtoSApp.cpp">
 			<Filter>Private</Filter>
 		</ClCompile >
 		<Filter Include="Private\Mac">
-			<UniqueIdentifier>{FA12061B-F99E-4543-BBF6-F24F7934AEB8}</UniqueIdentifier>
+			<UniqueIdentifier>{A87C4C43-0F1D-41D2-87E2-EA79A510C485}</UniqueIdentifier>
 		</Filter>
-		<ClCompile Include="..\..\..\..\..\..\Engine\UnrealEngine\Engine\Source\Programs\Mac\UnrealAtoS\Private\Mac\UnrealAtoSMainMac.cpp">
+		<ClCompile Include="..\..\..\..\..\..\UnrealEngine4\UnrealEngine\Engine\Source\Programs\Mac\UnrealAtoS\Private\Mac\UnrealAtoSMainMac.cpp">
 			<Filter>Private\Mac</Filter>
 		</ClCompile >
 		<Filter Include="Public">
-			<UniqueIdentifier>{347FBCB1-8C92-4FE3-8174-977795AE2F74}</UniqueIdentifier>
+			<UniqueIdentifier>{BCBBEC18-6942-4052-8705-3B204C8327FF}</UniqueIdentifier>
 		</Filter>
-		<ClInclude Include="..\..\..\..\..\..\Engine\UnrealEngine\Engine\Source\Programs\Mac\UnrealAtoS\Public\UnrealAtoSApp.h">
+		<ClInclude Include="..\..\..\..\..\..\UnrealEngine4\UnrealEngine\Engine\Source\Programs\Mac\UnrealAtoS\Public\UnrealAtoSApp.h">
 			<Filter>Public</Filter>
 		</ClInclude >
 	</ItemGroup>
