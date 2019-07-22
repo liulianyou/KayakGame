@@ -6,13 +6,13 @@
 	{
 		"MajorVersion": 4,
 		"MinorVersion": 20,
-		"PatchVersion": 2,
+		"PatchVersion": 3,
 		"Changelist": 0,
 		"CompatibleChangelist": 4212847,
 		"IsLicenseeVersion": 0,
 		"IsPromotedBuild": 0,
 		"BranchName": "++UE4+Release-4.20",
-		"BuildId": "b34db411-55f8-4ec9-8942-ef7306785ae1"
+		"BuildId": "d8c7cfcb-33f6-4806-a923-02f0a77c7b87"
 	},
 	"BuildProducts": [
 		{
@@ -1533,6 +1533,14 @@
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/UE4Editor-VulkanShaderFormat-Win64-Debug.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Binaries/Win64/UE4Editor-TextureFormatAndroid-Win64-Debug.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Binaries/Win64/UE4Editor-TextureFormatAndroid-Win64-Debug.pdb",
 			"Type": "SymbolFile"
 		},
 		{
@@ -6199,6 +6207,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/ThirdParty/ARM/Win32/astcenc.exe",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Binaries/ThirdParty/Qualcomm/Win64/TextureConverter.dll",
 			"Type": "NonUFS"
 		},
 		{
