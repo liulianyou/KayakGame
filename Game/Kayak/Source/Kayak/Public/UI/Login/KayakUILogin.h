@@ -17,7 +17,7 @@ class UButton;
 class UEditableText;
 
 
-UCLASS(Config = UI, hidedropdown)
+UCLASS(Config = UI, HideDropdown)
 class KAYAK_API UKayakUILogin : public UKayakUIBase
 {
 	GENERATED_UCLASS_BODY()
@@ -28,19 +28,19 @@ public:
 	void NativeDestruct() override;
 
 public:
-	UPROPERTY(meta = (BindWidget),Category="UI_Login")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget),Category="UI_Login")
 	UButton* LoginButton;
-	UPROPERTY(meta = (BindWidget), Category = "UI_Login")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget), Category = "UI_Login")
 	UButton* Options;
-	UPROPERTY(meta = (BindWidget), Category = "UI_Login")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget), Category = "UI_Login")
 	UButton* Quit;
 
-	UPROPERTY(meta = (BindWidget,OptionalWidget = true), Category = "UI_Login")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget,OptionalWidget = true), Category = "UI_Login")
 	UEditableText* UserName;
-	UPROPERTY(meta = (BindWidget, OptionalWidget = true), Category = "UI_Login")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget, OptionalWidget = true), Category = "UI_Login")
 	UEditableText* Password;
 
-	UPROPERTY(meta = (BindWidgetOptional), Category = "UI_Login")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidgetOptional), Category = "UI_Login")
 	UEditableText* ServerIPAddress;
 
 };

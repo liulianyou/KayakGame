@@ -1,5 +1,8 @@
 #include "Login/KayakUILogin.h"
 
+#include "Components/Button.h"
+#include "Components/EditableText.h"
+
 UKayakUILogin::UKayakUILogin(const FObjectInitializer& ObjectInitializer) :
 	Super(ObjectInitializer)
 {
@@ -9,6 +12,8 @@ UKayakUILogin::UKayakUILogin(const FObjectInitializer& ObjectInitializer) :
 void UKayakUILogin::NativePreConstruct()
 {
 	Super::NativePreConstruct();
+
+
 }
 
 void UKayakUILogin::NativeConstruct()

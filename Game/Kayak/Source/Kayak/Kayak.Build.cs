@@ -18,7 +18,7 @@ public class Kayak : ModuleRules
         PrivateIncludePaths.AddRange(new string[] {
             "Kayak/Public/Pawn",
             "Kayak/Public/UI",
-            "Kayak/Public/PlayerController",
+            "Kayak/Public/Controller",
             "Kayak/Public/GameMode",
             "Kayak/Public/GamePlayClass",
         });
