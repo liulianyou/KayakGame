@@ -13,7 +13,7 @@
 
 #include "KayakUIBase.generated.h"
 
-UCLASS()
+UCLASS(Config = UI, hidedropdown)
 class KAYAK_API UKayakUIBase : public UUserWidget
 {
 	GENERATED_UCLASS_BODY()

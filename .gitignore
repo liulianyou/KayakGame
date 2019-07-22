@@ -16,6 +16,9 @@
 # Ignore all files by default, but scan all directories
 
 
-/Game/Kayak/.vs/Kayak/v15
+/Game/Kayak/.vs
 /Game/Kayak/Intermediate
+/Game/Kayak/Binaries
+/Game/Kayak/Saved
+/Game/Kayak/Kayak.sln
 /Engine

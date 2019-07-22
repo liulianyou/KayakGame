@@ -17,7 +17,7 @@ class UButton;
 class UEditableText;
 
 
-UCLASS()
+UCLASS(Config = UI, hidedropdown)
 class KAYAK_API UKayakUILogin : public UKayakUIBase
 {
 	GENERATED_UCLASS_BODY()
