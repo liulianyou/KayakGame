@@ -20,5 +20,7 @@
 /Game/Kayak/Intermediate
 /Game/Kayak/Binaries
 /Game/Kayak/Saved
+/Game/Kayak/DerivedDataCache
+/Game/Kayak/enc_temp_folder
 /Game/Kayak/Kayak.sln
 /Engine
