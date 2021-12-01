@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Copyright form 2019-2019 YIYOU, Inc. All Rights Reserved.
 * Author:	Liulianyou
 * Time:		2019/7/22
@@ -20,7 +20,7 @@ UCLASS(Blueprintable, Blueprintable, Config=UI, Category = "Kayak|UI")
 class KAYAK_API UKayakUIManager : public UObject
 {
 	GENERATED_UCLASS_BODY()
-public:
+
 
 public:
 	UPROPERTY(Transient)

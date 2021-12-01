@@ -7,3 +7,5 @@ UKayakUIManager::UKayakUIManager(const FObjectInitializer& ObjectInitializer) :
 
 }
 
+
+
