@@ -1,0 +1,1 @@
+This object is not derried from the UObject, all codes in these object should not depend on the Unreal Engin.

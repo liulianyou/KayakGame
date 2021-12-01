@@ -1,0 +1,191 @@
+// Copyright Epic Games, Inc. All Rights Reserved.
+/*===========================================================================
+	Generated code exported from UnrealHeaderTool.
+	DO NOT modify this manually! Edit the corresponding .h files instead!
+===========================================================================*/
+
+#include "UObject/ObjectMacros.h"
+#include "UObject/ScriptMacros.h"
+
+PRAGMA_DISABLE_DEPRECATION_WARNINGS
+class UObject;
+class UOperationInformationBase;
+class UTriggerStyleBase;
+class UTriggerTaskSkip_AIStaticsSkip;
+class UTriggerTaskSkip_SkipConditions;
+#ifdef TRIGGERRUNTIME_TriggerTaskSkipCommonOperationInfos_generated_h
+#error "TriggerTaskSkipCommonOperationInfos.generated.h already included, missing '#pragma once' in TriggerTaskSkipCommonOperationInfos.h"
+#endif
+#define TRIGGERRUNTIME_TriggerTaskSkipCommonOperationInfos_generated_h
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_SPARSE_DATA
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_RPC_WRAPPERS \
+ \
+	DECLARE_FUNCTION(execAIStaticsSkip);
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_RPC_WRAPPERS_NO_PURE_DECLS \
+ \
+	DECLARE_FUNCTION(execAIStaticsSkip);
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_INCLASS_NO_PURE_DECLS \
+private: \
+	static void StaticRegisterNativesUTriggerTaskSkip_AIStaticsSkip(); \
+	friend struct Z_Construct_UClass_UTriggerTaskSkip_AIStaticsSkip_Statics; \
+public: \
+	DECLARE_CLASS(UTriggerTaskSkip_AIStaticsSkip, UTriggerTaskSkipInformationBase, COMPILED_IN_FLAGS(0), CASTCLASS_None, TEXT("/Script/TriggerRunTime"), NO_API) \
+	DECLARE_SERIALIZER(UTriggerTaskSkip_AIStaticsSkip)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_INCLASS \
+private: \
+	static void StaticRegisterNativesUTriggerTaskSkip_AIStaticsSkip(); \
+	friend struct Z_Construct_UClass_UTriggerTaskSkip_AIStaticsSkip_Statics; \
+public: \
+	DECLARE_CLASS(UTriggerTaskSkip_AIStaticsSkip, UTriggerTaskSkipInformationBase, COMPILED_IN_FLAGS(0), CASTCLASS_None, TEXT("/Script/TriggerRunTime"), NO_API) \
+	DECLARE_SERIALIZER(UTriggerTaskSkip_AIStaticsSkip)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_STANDARD_CONSTRUCTORS \
+	/** Standard constructor, called after all reflected properties have been initialized */ \
+	NO_API UTriggerTaskSkip_AIStaticsSkip(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
+	DEFINE_DEFAULT_OBJECT_INITIALIZER_CONSTRUCTOR_CALL(UTriggerTaskSkip_AIStaticsSkip) \
+	DECLARE_VTABLE_PTR_HELPER_CTOR(NO_API, UTriggerTaskSkip_AIStaticsSkip); \
+	DEFINE_VTABLE_PTR_HELPER_CTOR_CALLER(UTriggerTaskSkip_AIStaticsSkip); \
+private: \
+	/** Private move- and copy-constructors, should never be used */ \
+	NO_API UTriggerTaskSkip_AIStaticsSkip(UTriggerTaskSkip_AIStaticsSkip&&); \
+	NO_API UTriggerTaskSkip_AIStaticsSkip(const UTriggerTaskSkip_AIStaticsSkip&); \
+public:
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_ENHANCED_CONSTRUCTORS \
+	/** Standard constructor, called after all reflected properties have been initialized */ \
+	NO_API UTriggerTaskSkip_AIStaticsSkip(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()) : Super(ObjectInitializer) { }; \
+private: \
+	/** Private move- and copy-constructors, should never be used */ \
+	NO_API UTriggerTaskSkip_AIStaticsSkip(UTriggerTaskSkip_AIStaticsSkip&&); \
+	NO_API UTriggerTaskSkip_AIStaticsSkip(const UTriggerTaskSkip_AIStaticsSkip&); \
+public: \
+	DECLARE_VTABLE_PTR_HELPER_CTOR(NO_API, UTriggerTaskSkip_AIStaticsSkip); \
+	DEFINE_VTABLE_PTR_HELPER_CTOR_CALLER(UTriggerTaskSkip_AIStaticsSkip); \
+	DEFINE_DEFAULT_OBJECT_INITIALIZER_CONSTRUCTOR_CALL(UTriggerTaskSkip_AIStaticsSkip)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_PRIVATE_PROPERTY_OFFSET
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_21_PROLOG
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_GENERATED_BODY_LEGACY \
+PRAGMA_DISABLE_DEPRECATION_WARNINGS \
+public: \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_PRIVATE_PROPERTY_OFFSET \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_SPARSE_DATA \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_RPC_WRAPPERS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_INCLASS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_STANDARD_CONSTRUCTORS \
+public: \
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_GENERATED_BODY \
+PRAGMA_DISABLE_DEPRECATION_WARNINGS \
+public: \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_PRIVATE_PROPERTY_OFFSET \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_SPARSE_DATA \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_RPC_WRAPPERS_NO_PURE_DECLS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_INCLASS_NO_PURE_DECLS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_24_ENHANCED_CONSTRUCTORS \
+static_assert(false, "Unknown access specifier for GENERATED_BODY() macro in class TriggerTaskSkip_AIStaticsSkip."); \
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+
+template<> TRIGGERRUNTIME_API UClass* StaticClass<class UTriggerTaskSkip_AIStaticsSkip>();
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_SPARSE_DATA
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_RPC_WRAPPERS \
+ \
+	DECLARE_FUNCTION(execSkipConditions);
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_RPC_WRAPPERS_NO_PURE_DECLS \
+ \
+	DECLARE_FUNCTION(execSkipConditions);
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_INCLASS_NO_PURE_DECLS \
+private: \
+	static void StaticRegisterNativesUTriggerTaskSkip_SkipConditions(); \
+	friend struct Z_Construct_UClass_UTriggerTaskSkip_SkipConditions_Statics; \
+public: \
+	DECLARE_CLASS(UTriggerTaskSkip_SkipConditions, UTriggerTaskSkipInformationBase, COMPILED_IN_FLAGS(0), CASTCLASS_None, TEXT("/Script/TriggerRunTime"), NO_API) \
+	DECLARE_SERIALIZER(UTriggerTaskSkip_SkipConditions)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_INCLASS \
+private: \
+	static void StaticRegisterNativesUTriggerTaskSkip_SkipConditions(); \
+	friend struct Z_Construct_UClass_UTriggerTaskSkip_SkipConditions_Statics; \
+public: \
+	DECLARE_CLASS(UTriggerTaskSkip_SkipConditions, UTriggerTaskSkipInformationBase, COMPILED_IN_FLAGS(0), CASTCLASS_None, TEXT("/Script/TriggerRunTime"), NO_API) \
+	DECLARE_SERIALIZER(UTriggerTaskSkip_SkipConditions)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_STANDARD_CONSTRUCTORS \
+	/** Standard constructor, called after all reflected properties have been initialized */ \
+	NO_API UTriggerTaskSkip_SkipConditions(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
+	DEFINE_DEFAULT_OBJECT_INITIALIZER_CONSTRUCTOR_CALL(UTriggerTaskSkip_SkipConditions) \
+	DECLARE_VTABLE_PTR_HELPER_CTOR(NO_API, UTriggerTaskSkip_SkipConditions); \
+	DEFINE_VTABLE_PTR_HELPER_CTOR_CALLER(UTriggerTaskSkip_SkipConditions); \
+private: \
+	/** Private move- and copy-constructors, should never be used */ \
+	NO_API UTriggerTaskSkip_SkipConditions(UTriggerTaskSkip_SkipConditions&&); \
+	NO_API UTriggerTaskSkip_SkipConditions(const UTriggerTaskSkip_SkipConditions&); \
+public:
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_ENHANCED_CONSTRUCTORS \
+	/** Standard constructor, called after all reflected properties have been initialized */ \
+	NO_API UTriggerTaskSkip_SkipConditions(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()) : Super(ObjectInitializer) { }; \
+private: \
+	/** Private move- and copy-constructors, should never be used */ \
+	NO_API UTriggerTaskSkip_SkipConditions(UTriggerTaskSkip_SkipConditions&&); \
+	NO_API UTriggerTaskSkip_SkipConditions(const UTriggerTaskSkip_SkipConditions&); \
+public: \
+	DECLARE_VTABLE_PTR_HELPER_CTOR(NO_API, UTriggerTaskSkip_SkipConditions); \
+	DEFINE_VTABLE_PTR_HELPER_CTOR_CALLER(UTriggerTaskSkip_SkipConditions); \
+	DEFINE_DEFAULT_OBJECT_INITIALIZER_CONSTRUCTOR_CALL(UTriggerTaskSkip_SkipConditions)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_PRIVATE_PROPERTY_OFFSET
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_39_PROLOG
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_GENERATED_BODY_LEGACY \
+PRAGMA_DISABLE_DEPRECATION_WARNINGS \
+public: \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_PRIVATE_PROPERTY_OFFSET \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_SPARSE_DATA \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_RPC_WRAPPERS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_INCLASS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_STANDARD_CONSTRUCTORS \
+public: \
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_GENERATED_BODY \
+PRAGMA_DISABLE_DEPRECATION_WARNINGS \
+public: \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_PRIVATE_PROPERTY_OFFSET \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_SPARSE_DATA \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_RPC_WRAPPERS_NO_PURE_DECLS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_INCLASS_NO_PURE_DECLS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h_42_ENHANCED_CONSTRUCTORS \
+static_assert(false, "Unknown access specifier for GENERATED_BODY() macro in class TriggerTaskSkip_SkipConditions."); \
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+
+template<> TRIGGERRUNTIME_API UClass* StaticClass<class UTriggerTaskSkip_SkipConditions>();
+
+#undef CURRENT_FILE_ID
+#define CURRENT_FILE_ID Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_Tool_OperationInformation_TriggerTaskSkipInformation_TriggerTaskSkipCommonOperationInfos_h
+
+
+PRAGMA_ENABLE_DEPRECATION_WARNINGS

@@ -1,0 +1,125 @@
+#pragma once
+
+/*
+* Author:	Liulianyou
+* Time:		2021/3/30
+* Purpose:	The data is used to store the several respawn data which is only used in the editor mode
+*/
+
+#include "CoreMinimal.h"
+#include "UObject/ObjectMacros.h"
+
+#include "Editor/ResespawnData/RespawnEditorDataBase.h"
+
+#include "RespawnEditorGroupData.generated.h"
+
+class USplineComponent;
+class UBillboardComponent;
+class ARespawnEditorPoint;
+
+USTRUCT(BlueprintType)
+struct FRespawnEditorGroupDataMapInfo
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY()
+	URespawnDataBase* RuntimeData;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	int GroupIndex;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	TArray<ARespawnEditorPoint*> EditorPoints;
+
+	UPROPERTY()
+	USplineComponent* RelationShipLine;
+
+
+	/*
+	* Flag to check weather to add new point when the number of data in respawn data is more then editor points
+	*
+	* If this data don't hold enough point to stand for the respawn data then I will use this flag to check weather to create new point
+	*/
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	bool CreateNewPointAutomatically = true;
+
+public:
+	void SetEditorDataOwer(ARespawnEditorDataBase* Owner) { EditorData = Owner; }
+	int IsContainRespawnPoint(ARespawnEditorPointBase* Point);
+	void UpdateRelationShipLine();
+	void ClearData(URespawnDataBase* RuntimeData);
+private:
+
+	UPROPERTY()
+	ARespawnEditorDataBase* EditorData;
+};
+
+
+UCLASS(BlueprintType, Blueprintable, Category = "TriggerEditor")
+class TRIGGERRUNTIME_API ARespawnEditorGroupData : public ARespawnEditorDataBase
+{
+	GENERATED_UCLASS_BODY()
+
+public:
+	virtual void Destroyed() override;
+
+public:
+
+
+	virtual void InitializeEditorGroupData(URespawnDataBase* RespawnData, int LocalGroupIndex);
+
+	//Override URespawnEditorDataBase begin
+	virtual void InitializeData(URespawnDataBase* RespawnData) override;
+	virtual void ClearData(URespawnDataBase* RespawnData) override;
+	virtual void UpdateEditorViewInfo(URespawnDataBase* RuntimeData) override;
+	virtual bool IsContainRespawnPoint(ARespawnEditorPointBase* Point) override;
+	//Override URespawnEditorDataBase end
+
+	//Remove unused data which is stored in the actor but not in the runtime data
+	virtual void RemoveUnusedPointInfo(URespawnDataBase* RuntimeData);
+	
+	/*
+	* Find the first element with the same runtime data in its map infos
+	* 
+	* #return INDEX_NONE means there is no element with the RuntimeData
+	*/
+	int FindRuntimeDataMapInfoIndex(URespawnDataBase* RuntimeData);
+
+	/*
+	* Find the index with the same RuntimeData and LocalGroupIndex
+	* 
+	* #return INDEX_NONE means there is no element with 
+	*/
+	int FindRuntimeDataMapInfoIndex(URespawnDataBase* RuntimeData, int LocalGroupIndex);
+
+	void RemoveEditorPoint(ARespawnEditorPoint* Point);
+
+public:
+	int GetMathchedPointAtLocalPointsPool(int MapInfoIndex, int GroupIndex, int PointIndex);
+	ARespawnEditorPoint* GetMathchedPointAtWorldPointsPool(int MapInfoIndex, int GroupIndex, int PointIndex);
+
+public:
+#if WITH_EDITOR
+	virtual void ApplyEditorConfigData(ARespawnEditorPointBase* PointInfo) override;
+
+	virtual void EditorApplyTranslation(const FVector& DeltaTranslation, bool bAltDown, bool bShiftDown, bool bCtrlDown) override;
+	virtual void EditorApplyRotation(const FRotator& DeltaRotation, bool bAltDown, bool bShiftDown, bool bCtrlDown) override;
+	virtual void EditorApplyScale(const FVector& DeltaScale, const FVector* PivotLocation, bool bAltDown, bool bShiftDown, bool bCtrlDown)override;
+#endif
+
+protected:
+
+	void RemoveUnusedPointInfoInternal(URespawnDataBase* RuntimeData, int MapInfoIndex);
+	void UpdateEditorViewInfoInternal(URespawnDataBase* RuntimeData);
+	
+
+public:
+	
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "TrigerEditor|RespawnData")
+	TArray<FRespawnEditorGroupDataMapInfo> MapInfos;
+
+	UPROPERTY()
+	UBillboardComponent* SpriteComponent;
+};

@@ -1,0 +1,263 @@
+#pragma once
+
+/*
+* Author:	Liulianyou
+* Time:		2021/3/15
+* Purpose:	This data is used to spawn several groups at one frame.
+*			each pawn will have its own spawn point to respawn
+*/
+
+#include "CoreMinimal.h"
+#include "UObject/ObjectMacros.h"
+#include "Templates/SubclassOf.h"
+
+#include "Editor/ResespawnData/RespawnEditorDataBase.h"
+#include "RespawnDataBase.h"
+
+#include "RespawnTaskGroupData.generated.h"
+
+class ARespawnEditorPoint;
+class UEvaluatorOperation;
+class URespawnTaskGroupData;
+
+namespace RespawnTaskGroupData
+{
+	enum EPickUpRepsawnPointType
+	{
+		RandomeGroup =	1<<0,
+		RandomePoint =	1<<1
+	};
+
+	struct FRespawInfoExtend : public FNeedSpawnedPawnInfo
+	{
+		//The index for the target respawn info in the FGroupRespawnPointInfo
+		int RespawnPointIndex;
+
+		//The index for the target respawn info in the FRespawnTemplateData
+		int RespawnGruopIndex;
+
+		//The pawn will pick up random point to respawn
+		EPickUpRepsawnPointType PickUpRespawnPointType;
+
+	public:
+		FRespawInfoExtend(const FNeedSpawnedPawnInfo& Info) :
+			FNeedSpawnedPawnInfo(Info.OldPawn),
+			RespawnPointIndex(INDEX_NONE),
+			RespawnGruopIndex(INDEX_NONE)
+		{
+		}
+	};
+}
+
+/*
+* the single respawn information for one respawn point
+*/
+USTRUCT(BlueprintType)
+struct TRIGGERRUNTIME_API FSingleRespawnPointInfo
+{
+	GENERATED_BODY()
+
+public:
+
+	//The condition to filter weather this point can be used to spawn the player
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Instanced, Category = "Respawn")
+	UEvaluatorOperation* PreFilterCondition = nullptr;
+
+	//These post process will be used to apply additional effect to the new pawn, Such as add new animation.
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Instanced, Category = "Respawn")
+	TArray<URespawnPostProcessBase*> PostProcess;
+
+	/*
+	* The transformation for this point, It will define weather the new pawn should be spawned
+	* This transform maybe override by the postprocess actions
+	*/
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Respawn")
+	FTransform Transform;
+
+	
+
+public:
+
+	void PopulateSpawnedPawnInfo(FNeedSpawnedPawnInfo& Info);
+
+	/*
+	* Evaluate weather this point can be used to spawn new pawn
+	* #return the index in the pawn info, if the index is INDEX_NONE means this point can not spawn any of the pawns in the PawnInfo
+	*/
+	bool CanbeUsedToSpawnNewPawn(const RespawnTaskGroupData::FRespawInfoExtend& PawnInfo);
+
+	//Make this point unusable
+	void MarkDirty();
+
+	//Make this point can be reuse again
+	void Clear();
+
+	//Add new respawn post process this this data
+	void AddRespawnPostProcess(const TArray<URespawnPostProcessBase*>& RespawnPostProcess);
+
+private:
+	bool HasBeenUsed = false;
+};
+
+/*
+* One spawn point should contain several points in it,
+* If one player need to respawn in these points, I will pick up one appropriate point to spawn new pawn
+*/
+USTRUCT(BlueprintType)
+struct TRIGGERRUNTIME_API FGroupRespawnPointInfo
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Respawn")
+	TArray<FSingleRespawnPointInfo> GroupPoints;
+
+	/*
+	* Try to get the actual respawn informations
+	* @param PawnInfos the pawn need to respawn.
+	* 
+	* #return <=0 means there is no player can spawned at this group
+	*/
+	int TryToGetRespawnInfo(TArray<RespawnTaskGroupData::FRespawInfoExtend>& PawnInfos);
+
+	bool IsValid();
+
+	static FGroupRespawnPointInfo InvalidData;
+
+	int GetNumOfValidCandidatePoint();
+
+	void FindAppropriatePoints(TArray<int>& ExculdePointIndex, int& MatchedCount,
+		TArray<RespawnTaskGroupData::FRespawInfoExtend>& PawnInfo);
+
+	//Add new respawn post process this this data
+	void AddRespawnPostProcess(const TArray<URespawnPostProcessBase*>& RespawnPostProcess);
+};
+
+/*
+* There is some group respawn point for this respawn task,
+* I will pick up one of them to respawn new player. the order is random.
+*/
+USTRUCT(BlueprintType)
+struct TRIGGERRUNTIME_API FRespawnTemplateData
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Respawn")
+	TArray<FGroupRespawnPointInfo> GruopInfos;
+
+public:
+
+	void FindAppropiateGroupPoint(TArray<RespawnTaskGroupData::FRespawInfoExtend>& PawnInfos);
+
+	//Get the number of all candidate respawn point 
+	int GetNumOfCandidateRespawnPoint();
+
+
+	/*
+	* Set the RepsawnDat to this data
+	*/
+	void SetData(int GroupIndex, int PointIndex, const FSingleRespawnPointInfo& RespawnData);
+	void RemoveData(int GroupIndex, int PointIndex);
+
+
+	void SetRuntimeDataOwner(URespawnTaskGroupData* Owner) { RespawnRuntimeData = Owner; }
+
+	/*
+	* Add new respawn post process this this data
+	*/
+	void AddRespawnPostProcess(const TArray<URespawnPostProcessBase*>& RespawnPostProcess);
+
+protected:
+
+	/*
+	* @param ExcudeGroupIndex the groups should be exclude to search for the pawns
+	*/
+	void FindAppropiateGroupPointIndex(TArray<int>& ExcludeGroupIndex,
+		TArray<RespawnTaskGroupData::FRespawInfoExtend>& PawnInfos);
+
+private:
+
+	URespawnTaskGroupData* RespawnRuntimeData;
+
+
+};
+
+UCLASS(BlueprintType, Blueprintable)
+class TRIGGERRUNTIME_API URespawnTaskGroupData : public URespawnDataBase
+{
+	GENERATED_UCLASS_BODY()
+
+public:
+
+	virtual void BeginDestroy() override;
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+public:
+	FRespawnTemplateData& GetRespawnData() { return Data; };
+
+	//The out teammates don't contain the target pawn
+	static void GetTeammates(TArray<APawn*> Teammates, const APawn* Pawn);
+
+	/*
+	* Get the group index of teammate who was respawned last time.
+	*
+	* If the need to respawned pawn have been respawned once then return INDEX_NONE. which means it will find new group to spawn.
+	*/
+	int GetTeammateImmediateRespawnGroupIndex(const APawn* NeedToRespawnedPawn);
+
+	/*
+	* Find appropriate respawn information to prepare to respawn the new pawn.
+	*/
+	int FindAppropriateRespawnInfo(const TArray<APawn*>& Teammates);
+
+public:
+
+	//Override RespawnDataBase
+	virtual void GetRespawnInfo(TArray<FNeedSpawnedPawnInfo>& RespawnInfo) override;
+
+	virtual void Reset(UOperationInformationBase* ResetOperation) override;
+
+#if WITH_EDITOR
+	virtual void ApplyEditorConfigData(ARespawnEditorPointBase* PointInfo) override;
+#endif
+
+#if WITH_EDITORONLY_DATA
+	virtual void CreateEditorViewInfo() override;
+	virtual void UpdateEditorViewInfo() override;
+	virtual void GetBelongedEditorDataActor(TArray<AActor*>& BelongedActors, ARespawnEditorPointBase* RespawnPoint) override;
+#endif
+	//Override RespawnDataBase
+
+	
+	//Add new respawn post process this this data
+	void AddRespawnPostProcess(const TArray<URespawnPostProcessBase*>& RespawnPostProcess) { Data.AddRespawnPostProcess(RespawnPostProcess); }
+public:
+
+	//The group data which will be used to respawn new pawn
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Respawn")
+	FRespawnTemplateData Data;
+
+#if WITH_EDITORONLY_DATA
+public:
+	ARespawnEditorDataBase* GetRespawnEditorData(int index);
+
+	void ClearEditorData();
+
+public:
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "TriggerEditor|Respawn")
+	TSubclassOf<ARespawnEditorDataBase> EditorRespawnDataClass;
+private:
+	UPROPERTY()
+	TArray<ARespawnEditorDataBase*> EditorRespawnDatas;
+#endif
+
+private:
+	TArray<RespawnTaskGroupData::FRespawInfoExtend> RespawnInfomations;
+
+};
+

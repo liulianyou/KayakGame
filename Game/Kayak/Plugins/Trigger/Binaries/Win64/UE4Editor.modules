@@ -1,0 +1,8 @@
+{
+	"BuildId": "c8b1a249-e2ec-415e-b7ff-5f365f05453f",
+	"Modules": 
+	{
+		"TriggerEditor": "UE4Editor-TriggerEditor.dll",
+		"TriggerRunTime": "UE4Editor-TriggerRunTime.dll"
+	}
+}

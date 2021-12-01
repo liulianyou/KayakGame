@@ -1,0 +1,142 @@
+#pragma once
+
+/*
+* Author:		Liulianyou
+* Time:			2021/3/17
+* Purpose:		This point will be used for group respawn data in the editor
+*/
+
+#include "CoreMinimal.h"
+#include "UObject/ObjectMacros.h"
+
+#include "Editor/ResespawnData/RespawnEditorPointBase.h"
+
+#include "RespawnEditorPoint.generated.h"
+
+
+class USplineComponent;
+class URespawnDataBase;
+class ARespawnEditorPoint;
+class ARespawnEditorDataBase;
+class ARespawnEditorGroupData;
+
+/*
+* The information for each respawn task
+*/
+USTRUCT(BlueprintType)
+struct FRespawnPointSingleInfo
+{
+	GENERATED_BODY()
+
+	//The index of group which this point should belong to
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "TriggerEditor|ARespawnEditorPoint")
+	int GroupIndex = INDEX_NONE;
+
+	//The index of point which this info stands for
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "TriggerEditor|ARespawnEditorPoint")
+	int PointIndex = INDEX_NONE;
+
+	//The data this info will inspect 
+	UPROPERTY(/*BlueprintReadOnly, EditAnywhere, Category = "TriggerEditor|ARespawnEditorPoint"*/)
+	URespawnDataBase* RespawnData = nullptr;
+
+	UPROPERTY(/*BlueprintReadOnly, EditAnywhere, Category = "TriggerEditor|ARespawnEditorPoint"*/)
+	ARespawnEditorGroupData* EditorDataActor;
+
+	//I will use this component to show the relation ship between the the respawn data with this point
+	UPROPERTY(VisibleAnywhere, Transient, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	USplineComponent* RelationShipLine = nullptr;
+
+	static FRespawnPointSingleInfo InvaildData;
+
+public:
+	void UpdateRelationShipLine();
+	void UpdateGroupAndPointIndex();
+
+	void ClearData(URespawnDataBase* RuntimeData);
+
+	void SetOwner(ARespawnEditorPoint* V) { Owner = V; };
+
+private:
+
+	UPROPERTY()
+	ARespawnEditorPoint* Owner;
+
+};
+
+/*
+* Hold all the data which will be used by all other respawn task
+*/
+USTRUCT(BlueprintType)
+struct FRespawnPointGroupInfo 
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "TriggerEditor|ARespawnEditorPoint")
+	TArray<FRespawnPointSingleInfo> GroupInfos;
+
+public:
+
+	void FindSingleInfo( TArray<int>& Indexs, URespawnDataBase* RespawnData);
+	//#return INDEDX_NONE means this respawn data is new to this info, I maybe add it in the feature
+	int FindSingleInfo(URespawnDataBase* RespawnData, int LocalGroupIndex, int LocalPointIndex);
+
+	int AddNewSingleInfo(const FRespawnPointSingleInfo& NewData);
+
+	void RemoveSindleInfo(int& index);
+
+	FRespawnPointSingleInfo& operator[](int index);
+
+};
+
+
+UCLASS(BlueprintType, Blueprintable, Category = "TriggerEditor")
+class TRIGGERRUNTIME_API ARespawnEditorPoint : public ARespawnEditorPointBase
+{
+	GENERATED_UCLASS_BODY()
+
+public:
+	//Override UObject
+	virtual void Destroyed() override;
+	virtual void PostInitProperties() override;
+	virtual void PostInitializeComponents() override;
+	//Override UObject
+
+	virtual void ApplayLocalData();
+
+
+
+public:
+
+	virtual void InitializeActor( URespawnDataBase* RespawnData, ARespawnEditorGroupData* EditorDataActor, int GroupIndex = 0, int PointIndex = 0 );
+	virtual void ClearData(URespawnDataBase* RuntimeData);
+
+	FRespawnPointGroupInfo& GetRespawnInfo() { return RespawnInfo; }
+
+	void GetMatchedIndexForData( TArray<int>& Indexs, URespawnDataBase* RuntimeData);
+	void GetMatchedIndexForData(TArray<int>& Indexs, URespawnDataBase* RuntimeData, int GroupIndex);
+	//Get the index in the respawn info
+	int GetMatchedIndexForData(URespawnDataBase* RuntimeData, int GroupIndex, int PawnIndex);
+
+	//Update point
+	void UpdatePointDataFromData(URespawnDataBase* RuntimeData, int GroupIndex, int PawnIndex);
+	void UpdatePointDataFromData(URespawnDataBase* RuntimeData);
+
+	//Update relationship line which refer to target editor data
+	void UpdateRelationshipLine(ARespawnEditorDataBase* EditorData);
+
+	void RemovePointInfo(URespawnDataBase* RuntimeData, int GroupIndex = INDEX_NONE, int PawIndex = INDEX_NONE);
+
+public:
+	void OnMapChanged(uint32 MapChangeFlags);
+	void OnSelectedInEditor(UObject* Object);
+
+public:
+
+private:
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "TriggerEditor|ARespawnEditorPoint", meta = (AllowPrivateAccess="true"))
+	FRespawnPointGroupInfo RespawnInfo;
+};

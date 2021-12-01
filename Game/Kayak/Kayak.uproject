@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{CD732900-4B86-5C34-3EAD-9A961786E057}",
+	"EngineAssociation": "{89FD12A1-49E6-F7A4-6DBA-C3A27C26EC34}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -12,7 +12,11 @@
 	],
 	"Plugins": [
 		{
-			"Name": "Paper2D",
+			"Name": "GameplayAbilities",
+			"Enabled": true
+		},
+		{
+			"Name": "Trigger",
 			"Enabled": true
 		}
 	]

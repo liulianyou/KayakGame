@@ -1,0 +1,336 @@
+// Copyright Epic Games, Inc. All Rights Reserved.
+/*===========================================================================
+	Generated code exported from UnrealHeaderTool.
+	DO NOT modify this manually! Edit the corresponding .h files instead!
+===========================================================================*/
+
+#include "UObject/ObjectMacros.h"
+#include "UObject/ScriptMacros.h"
+
+PRAGMA_DISABLE_DEPRECATION_WARNINGS
+class UObject;
+#ifdef TRIGGERRUNTIME_EffectDataOperationStyle_generated_h
+#error "EffectDataOperationStyle.generated.h already included, missing '#pragma once' in EffectDataOperationStyle.h"
+#endif
+#define TRIGGERRUNTIME_EffectDataOperationStyle_generated_h
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_SPARSE_DATA
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_RPC_WRAPPERS
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_RPC_WRAPPERS_NO_PURE_DECLS
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_INCLASS_NO_PURE_DECLS \
+private: \
+	static void StaticRegisterNativesUTriggerEffectDataOperationStyleBase(); \
+	friend struct Z_Construct_UClass_UTriggerEffectDataOperationStyleBase_Statics; \
+public: \
+	DECLARE_CLASS(UTriggerEffectDataOperationStyleBase, UObject, COMPILED_IN_FLAGS(CLASS_Abstract), CASTCLASS_None, TEXT("/Script/TriggerRunTime"), NO_API) \
+	DECLARE_SERIALIZER(UTriggerEffectDataOperationStyleBase)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_INCLASS \
+private: \
+	static void StaticRegisterNativesUTriggerEffectDataOperationStyleBase(); \
+	friend struct Z_Construct_UClass_UTriggerEffectDataOperationStyleBase_Statics; \
+public: \
+	DECLARE_CLASS(UTriggerEffectDataOperationStyleBase, UObject, COMPILED_IN_FLAGS(CLASS_Abstract), CASTCLASS_None, TEXT("/Script/TriggerRunTime"), NO_API) \
+	DECLARE_SERIALIZER(UTriggerEffectDataOperationStyleBase)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_STANDARD_CONSTRUCTORS \
+	/** Standard constructor, called after all reflected properties have been initialized */ \
+	NO_API UTriggerEffectDataOperationStyleBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
+	DEFINE_ABSTRACT_DEFAULT_OBJECT_INITIALIZER_CONSTRUCTOR_CALL(UTriggerEffectDataOperationStyleBase) \
+	DECLARE_VTABLE_PTR_HELPER_CTOR(NO_API, UTriggerEffectDataOperationStyleBase); \
+	DEFINE_VTABLE_PTR_HELPER_CTOR_CALLER(UTriggerEffectDataOperationStyleBase); \
+private: \
+	/** Private move- and copy-constructors, should never be used */ \
+	NO_API UTriggerEffectDataOperationStyleBase(UTriggerEffectDataOperationStyleBase&&); \
+	NO_API UTriggerEffectDataOperationStyleBase(const UTriggerEffectDataOperationStyleBase&); \
+public:
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_ENHANCED_CONSTRUCTORS \
+	/** Standard constructor, called after all reflected properties have been initialized */ \
+	NO_API UTriggerEffectDataOperationStyleBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()) : Super(ObjectInitializer) { }; \
+private: \
+	/** Private move- and copy-constructors, should never be used */ \
+	NO_API UTriggerEffectDataOperationStyleBase(UTriggerEffectDataOperationStyleBase&&); \
+	NO_API UTriggerEffectDataOperationStyleBase(const UTriggerEffectDataOperationStyleBase&); \
+public: \
+	DECLARE_VTABLE_PTR_HELPER_CTOR(NO_API, UTriggerEffectDataOperationStyleBase); \
+	DEFINE_VTABLE_PTR_HELPER_CTOR_CALLER(UTriggerEffectDataOperationStyleBase); \
+	DEFINE_ABSTRACT_DEFAULT_OBJECT_INITIALIZER_CONSTRUCTOR_CALL(UTriggerEffectDataOperationStyleBase)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_PRIVATE_PROPERTY_OFFSET
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_15_PROLOG
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_GENERATED_BODY_LEGACY \
+PRAGMA_DISABLE_DEPRECATION_WARNINGS \
+public: \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_PRIVATE_PROPERTY_OFFSET \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_SPARSE_DATA \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_RPC_WRAPPERS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_INCLASS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_STANDARD_CONSTRUCTORS \
+public: \
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_GENERATED_BODY \
+PRAGMA_DISABLE_DEPRECATION_WARNINGS \
+public: \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_PRIVATE_PROPERTY_OFFSET \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_SPARSE_DATA \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_RPC_WRAPPERS_NO_PURE_DECLS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_INCLASS_NO_PURE_DECLS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_18_ENHANCED_CONSTRUCTORS \
+static_assert(false, "Unknown access specifier for GENERATED_BODY() macro in class TriggerEffectDataOperationStyleBase."); \
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+
+template<> TRIGGERRUNTIME_API UClass* StaticClass<class UTriggerEffectDataOperationStyleBase>();
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_SPARSE_DATA
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_RPC_WRAPPERS \
+ \
+	DECLARE_FUNCTION(execGetCausers); \
+	DECLARE_FUNCTION(execAddCausers); \
+	DECLARE_FUNCTION(execAddCauser);
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_RPC_WRAPPERS_NO_PURE_DECLS \
+ \
+	DECLARE_FUNCTION(execGetCausers); \
+	DECLARE_FUNCTION(execAddCausers); \
+	DECLARE_FUNCTION(execAddCauser);
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_INCLASS_NO_PURE_DECLS \
+private: \
+	static void StaticRegisterNativesUEffectDataStyleBase(); \
+	friend struct Z_Construct_UClass_UEffectDataStyleBase_Statics; \
+public: \
+	DECLARE_CLASS(UEffectDataStyleBase, UTriggerEffectDataOperationStyleBase, COMPILED_IN_FLAGS(CLASS_Abstract), CASTCLASS_None, TEXT("/Script/TriggerRunTime"), NO_API) \
+	DECLARE_SERIALIZER(UEffectDataStyleBase)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_INCLASS \
+private: \
+	static void StaticRegisterNativesUEffectDataStyleBase(); \
+	friend struct Z_Construct_UClass_UEffectDataStyleBase_Statics; \
+public: \
+	DECLARE_CLASS(UEffectDataStyleBase, UTriggerEffectDataOperationStyleBase, COMPILED_IN_FLAGS(CLASS_Abstract), CASTCLASS_None, TEXT("/Script/TriggerRunTime"), NO_API) \
+	DECLARE_SERIALIZER(UEffectDataStyleBase)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_STANDARD_CONSTRUCTORS \
+	/** Standard constructor, called after all reflected properties have been initialized */ \
+	NO_API UEffectDataStyleBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
+	DEFINE_ABSTRACT_DEFAULT_OBJECT_INITIALIZER_CONSTRUCTOR_CALL(UEffectDataStyleBase) \
+	DECLARE_VTABLE_PTR_HELPER_CTOR(NO_API, UEffectDataStyleBase); \
+	DEFINE_VTABLE_PTR_HELPER_CTOR_CALLER(UEffectDataStyleBase); \
+private: \
+	/** Private move- and copy-constructors, should never be used */ \
+	NO_API UEffectDataStyleBase(UEffectDataStyleBase&&); \
+	NO_API UEffectDataStyleBase(const UEffectDataStyleBase&); \
+public:
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_ENHANCED_CONSTRUCTORS \
+	/** Standard constructor, called after all reflected properties have been initialized */ \
+	NO_API UEffectDataStyleBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()) : Super(ObjectInitializer) { }; \
+private: \
+	/** Private move- and copy-constructors, should never be used */ \
+	NO_API UEffectDataStyleBase(UEffectDataStyleBase&&); \
+	NO_API UEffectDataStyleBase(const UEffectDataStyleBase&); \
+public: \
+	DECLARE_VTABLE_PTR_HELPER_CTOR(NO_API, UEffectDataStyleBase); \
+	DEFINE_VTABLE_PTR_HELPER_CTOR_CALLER(UEffectDataStyleBase); \
+	DEFINE_ABSTRACT_DEFAULT_OBJECT_INITIALIZER_CONSTRUCTOR_CALL(UEffectDataStyleBase)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_PRIVATE_PROPERTY_OFFSET \
+	FORCEINLINE static uint32 __PPO__Causers() { return STRUCT_OFFSET(UEffectDataStyleBase, Causers); }
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_21_PROLOG
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_GENERATED_BODY_LEGACY \
+PRAGMA_DISABLE_DEPRECATION_WARNINGS \
+public: \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_PRIVATE_PROPERTY_OFFSET \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_SPARSE_DATA \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_RPC_WRAPPERS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_INCLASS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_STANDARD_CONSTRUCTORS \
+public: \
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_GENERATED_BODY \
+PRAGMA_DISABLE_DEPRECATION_WARNINGS \
+public: \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_PRIVATE_PROPERTY_OFFSET \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_SPARSE_DATA \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_RPC_WRAPPERS_NO_PURE_DECLS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_INCLASS_NO_PURE_DECLS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_24_ENHANCED_CONSTRUCTORS \
+static_assert(false, "Unknown access specifier for GENERATED_BODY() macro in class EffectDataStyleBase."); \
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+
+template<> TRIGGERRUNTIME_API UClass* StaticClass<class UEffectDataStyleBase>();
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_SPARSE_DATA
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_RPC_WRAPPERS
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_RPC_WRAPPERS_NO_PURE_DECLS
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_INCLASS_NO_PURE_DECLS \
+private: \
+	static void StaticRegisterNativesUEffectDataOpenStyleBase(); \
+	friend struct Z_Construct_UClass_UEffectDataOpenStyleBase_Statics; \
+public: \
+	DECLARE_CLASS(UEffectDataOpenStyleBase, UEffectDataStyleBase, COMPILED_IN_FLAGS(0), CASTCLASS_None, TEXT("/Script/TriggerRunTime"), NO_API) \
+	DECLARE_SERIALIZER(UEffectDataOpenStyleBase)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_INCLASS \
+private: \
+	static void StaticRegisterNativesUEffectDataOpenStyleBase(); \
+	friend struct Z_Construct_UClass_UEffectDataOpenStyleBase_Statics; \
+public: \
+	DECLARE_CLASS(UEffectDataOpenStyleBase, UEffectDataStyleBase, COMPILED_IN_FLAGS(0), CASTCLASS_None, TEXT("/Script/TriggerRunTime"), NO_API) \
+	DECLARE_SERIALIZER(UEffectDataOpenStyleBase)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_STANDARD_CONSTRUCTORS \
+	/** Standard constructor, called after all reflected properties have been initialized */ \
+	NO_API UEffectDataOpenStyleBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
+	DEFINE_DEFAULT_OBJECT_INITIALIZER_CONSTRUCTOR_CALL(UEffectDataOpenStyleBase) \
+	DECLARE_VTABLE_PTR_HELPER_CTOR(NO_API, UEffectDataOpenStyleBase); \
+	DEFINE_VTABLE_PTR_HELPER_CTOR_CALLER(UEffectDataOpenStyleBase); \
+private: \
+	/** Private move- and copy-constructors, should never be used */ \
+	NO_API UEffectDataOpenStyleBase(UEffectDataOpenStyleBase&&); \
+	NO_API UEffectDataOpenStyleBase(const UEffectDataOpenStyleBase&); \
+public:
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_ENHANCED_CONSTRUCTORS \
+	/** Standard constructor, called after all reflected properties have been initialized */ \
+	NO_API UEffectDataOpenStyleBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()) : Super(ObjectInitializer) { }; \
+private: \
+	/** Private move- and copy-constructors, should never be used */ \
+	NO_API UEffectDataOpenStyleBase(UEffectDataOpenStyleBase&&); \
+	NO_API UEffectDataOpenStyleBase(const UEffectDataOpenStyleBase&); \
+public: \
+	DECLARE_VTABLE_PTR_HELPER_CTOR(NO_API, UEffectDataOpenStyleBase); \
+	DEFINE_VTABLE_PTR_HELPER_CTOR_CALLER(UEffectDataOpenStyleBase); \
+	DEFINE_DEFAULT_OBJECT_INITIALIZER_CONSTRUCTOR_CALL(UEffectDataOpenStyleBase)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_PRIVATE_PROPERTY_OFFSET
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_59_PROLOG
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_GENERATED_BODY_LEGACY \
+PRAGMA_DISABLE_DEPRECATION_WARNINGS \
+public: \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_PRIVATE_PROPERTY_OFFSET \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_SPARSE_DATA \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_RPC_WRAPPERS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_INCLASS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_STANDARD_CONSTRUCTORS \
+public: \
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_GENERATED_BODY \
+PRAGMA_DISABLE_DEPRECATION_WARNINGS \
+public: \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_PRIVATE_PROPERTY_OFFSET \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_SPARSE_DATA \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_RPC_WRAPPERS_NO_PURE_DECLS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_INCLASS_NO_PURE_DECLS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_62_ENHANCED_CONSTRUCTORS \
+static_assert(false, "Unknown access specifier for GENERATED_BODY() macro in class EffectDataOpenStyleBase."); \
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+
+template<> TRIGGERRUNTIME_API UClass* StaticClass<class UEffectDataOpenStyleBase>();
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_SPARSE_DATA
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_RPC_WRAPPERS
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_RPC_WRAPPERS_NO_PURE_DECLS
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_INCLASS_NO_PURE_DECLS \
+private: \
+	static void StaticRegisterNativesUEffectDataCloseStyleBase(); \
+	friend struct Z_Construct_UClass_UEffectDataCloseStyleBase_Statics; \
+public: \
+	DECLARE_CLASS(UEffectDataCloseStyleBase, UEffectDataStyleBase, COMPILED_IN_FLAGS(0), CASTCLASS_None, TEXT("/Script/TriggerRunTime"), NO_API) \
+	DECLARE_SERIALIZER(UEffectDataCloseStyleBase)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_INCLASS \
+private: \
+	static void StaticRegisterNativesUEffectDataCloseStyleBase(); \
+	friend struct Z_Construct_UClass_UEffectDataCloseStyleBase_Statics; \
+public: \
+	DECLARE_CLASS(UEffectDataCloseStyleBase, UEffectDataStyleBase, COMPILED_IN_FLAGS(0), CASTCLASS_None, TEXT("/Script/TriggerRunTime"), NO_API) \
+	DECLARE_SERIALIZER(UEffectDataCloseStyleBase)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_STANDARD_CONSTRUCTORS \
+	/** Standard constructor, called after all reflected properties have been initialized */ \
+	NO_API UEffectDataCloseStyleBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
+	DEFINE_DEFAULT_OBJECT_INITIALIZER_CONSTRUCTOR_CALL(UEffectDataCloseStyleBase) \
+	DECLARE_VTABLE_PTR_HELPER_CTOR(NO_API, UEffectDataCloseStyleBase); \
+	DEFINE_VTABLE_PTR_HELPER_CTOR_CALLER(UEffectDataCloseStyleBase); \
+private: \
+	/** Private move- and copy-constructors, should never be used */ \
+	NO_API UEffectDataCloseStyleBase(UEffectDataCloseStyleBase&&); \
+	NO_API UEffectDataCloseStyleBase(const UEffectDataCloseStyleBase&); \
+public:
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_ENHANCED_CONSTRUCTORS \
+	/** Standard constructor, called after all reflected properties have been initialized */ \
+	NO_API UEffectDataCloseStyleBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()) : Super(ObjectInitializer) { }; \
+private: \
+	/** Private move- and copy-constructors, should never be used */ \
+	NO_API UEffectDataCloseStyleBase(UEffectDataCloseStyleBase&&); \
+	NO_API UEffectDataCloseStyleBase(const UEffectDataCloseStyleBase&); \
+public: \
+	DECLARE_VTABLE_PTR_HELPER_CTOR(NO_API, UEffectDataCloseStyleBase); \
+	DEFINE_VTABLE_PTR_HELPER_CTOR_CALLER(UEffectDataCloseStyleBase); \
+	DEFINE_DEFAULT_OBJECT_INITIALIZER_CONSTRUCTOR_CALL(UEffectDataCloseStyleBase)
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_PRIVATE_PROPERTY_OFFSET
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_72_PROLOG
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_GENERATED_BODY_LEGACY \
+PRAGMA_DISABLE_DEPRECATION_WARNINGS \
+public: \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_PRIVATE_PROPERTY_OFFSET \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_SPARSE_DATA \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_RPC_WRAPPERS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_INCLASS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_STANDARD_CONSTRUCTORS \
+public: \
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+
+#define Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_GENERATED_BODY \
+PRAGMA_DISABLE_DEPRECATION_WARNINGS \
+public: \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_PRIVATE_PROPERTY_OFFSET \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_SPARSE_DATA \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_RPC_WRAPPERS_NO_PURE_DECLS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_INCLASS_NO_PURE_DECLS \
+	Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h_75_ENHANCED_CONSTRUCTORS \
+static_assert(false, "Unknown access specifier for GENERATED_BODY() macro in class EffectDataCloseStyleBase."); \
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+
+template<> TRIGGERRUNTIME_API UClass* StaticClass<class UEffectDataCloseStyleBase>();
+
+#undef CURRENT_FILE_ID
+#define CURRENT_FILE_ID Kayak_Plugins_Trigger_Source_TriggerRunTime_Public_TriggerTask_EffectTask_DataOperationStyle_EffectDataOperationStyle_h
+
+
+PRAGMA_ENABLE_DEPRECATION_WARNINGS

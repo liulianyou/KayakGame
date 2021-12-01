@@ -12,33 +12,23 @@ public class Kayak : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new string[] {
             "Core", "CoreUObject", "Engine", "InputCore",
-            "SlateCore", "Slate", "UMG"});
+            "SlateCore", "Slate", "UMG",
+            "AIModule",
+            "GameplayAbilities", "GameplayTags"});
 
         PublicIncludePaths.AddRange(GetPublicIncludePath());
 
         PrivateIncludePaths.AddRange(GetPrivateIncludePath());
     }
 
-    public string[] GetPublicIncludePath()
+    public virtual string[] GetPublicIncludePath()
     {
-       return Directory.GetDirectories(ModulePath);
-
+       return Directory.GetDirectories(ModuleDirectory + "/Public", "*", SearchOption.AllDirectories);
     }
 
-    public string[] GetPrivateIncludePath()
+    public virtual string[] GetPrivateIncludePath()
     {
         return new string[] {
         };
-    }
-
-    private string ModulePath
-    {
-        get
-        {
-            //return Path.GetDirectoryName(RulesCompiler.GetModuleFilename(this.GetType().Name));
-            string ModuleFilename = UnrealBuildTool.RulesCompiler.GetFileNameFromType(GetType());
-            string ModuleBaseDirectory = Path.GetDirectoryName(ModuleFilename);
-            return ModuleBaseDirectory;
-        }
     }
 }

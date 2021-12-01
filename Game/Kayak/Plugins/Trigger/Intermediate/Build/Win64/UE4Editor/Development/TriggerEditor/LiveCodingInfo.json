@@ -1,0 +1,39 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.TriggerEditor.cpp.obj": [
+			"TriggerTreeEntryWidget.cpp.obj",
+			"TriggerTaskDetailCusomize.cpp.obj",
+			"TriggerEditorInput.cpp.obj",
+			"TriggerLevelModule.cpp.obj",
+			"TriggerEditor.cpp.obj",
+			"TriggerEditorDefinition.cpp.obj",
+			"TriggerEditorEngine.cpp.obj",
+			"SpawnPointActorPicker.cpp.obj",
+			"TriggerEditorUI.cpp.obj",
+			"TriggerChainHelper.cpp.obj",
+			"SCustomTagWidget.cpp.obj",
+			"STriggerPointIndexPanel.cpp.obj",
+			"TriggerChainPanel.cpp.obj",
+			"TriggerDetailsView.cpp.obj",
+			"TriggerEditPanel.cpp.obj",
+			"TriggerEditSplitter.cpp.obj",
+			"TriggerEditSplitterSlot.cpp.obj",
+			"TriggerRadioButton.cpp.obj",
+			"TriggerTagWidget.cpp.obj",
+			"TriggerTreeViewObject.cpp.obj"
+		],
+		"Module.TriggerEditor.gen.cpp.obj": [
+			"TriggerChainPanel.gen.cpp.obj",
+			"TriggerDetailsView.gen.cpp.obj",
+			"TriggerEditor.init.gen.cpp.obj",
+			"TriggerEditPanel.gen.cpp.obj",
+			"TriggerEditSplitter.gen.cpp.obj",
+			"TriggerEditSplitterSlot.gen.cpp.obj",
+			"TriggerRadioButton.gen.cpp.obj",
+			"TriggerTagWidget.gen.cpp.obj",
+			"TriggerTreeEntryWidget.gen.cpp.obj",
+			"TriggerTreeViewObject.gen.cpp.obj"
+		]
+	}
+}
