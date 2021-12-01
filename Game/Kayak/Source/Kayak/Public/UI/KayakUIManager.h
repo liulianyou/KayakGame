@@ -16,7 +16,7 @@
 
 class UUserWidget;
 
-UCLASS()
+UCLASS(Blueprintable, Blueprintable, Config=UI, Category = "Kayak|UI")
 class KAYAK_API UKayakUIManager : public UObject
 {
 	GENERATED_UCLASS_BODY()
