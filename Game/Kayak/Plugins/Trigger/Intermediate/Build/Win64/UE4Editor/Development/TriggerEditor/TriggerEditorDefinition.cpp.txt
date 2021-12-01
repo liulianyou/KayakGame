@@ -1,2 +1,0 @@
-E:\Kayak\Kayak\Plugins\Trigger\Intermediate\Build\Win64\UE4Editor\Development\TriggerEditor\Definitions.TriggerEditor.h
-E:\Kayak\Kayak\Plugins\Trigger\Source\TriggerEditor\Public\TriggerEditorDefinition.h
