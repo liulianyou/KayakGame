@@ -13,6 +13,8 @@
 
 #include "KayakCharacterBase.generated.h"
 
+class UKayakAbilitySystemComponentBase;
+
 /*
 * All pawns which is used to show some local appearance should derived from this class, include player and AI
 */
@@ -23,4 +25,26 @@ class KAYAK_API AKayakCharacterBase : public ACharacter
 
 public:
 
+	//Override AActor
+	virtual void PostInitializeComponents() override;
+	//Override AActor
+
+
+public:
+
+	/*
+	* Get the ability system component;
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Kayak|Player|Ability")
+	UKayakAbilitySystemComponentBase* GetAbilityComponent() const { return AbilityComponent };
+
+
+private:
+
+	/*
+	* The instance of ability components
+	* One character should only have one ability component.
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Kayak|Ability", meta = (AllowPrivateAccess = true))
+	UKayakAbilitySystemComponentBase* AbilityComponent;
 };

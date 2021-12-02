@@ -14,10 +14,32 @@
 
 #include "KayakUserWidget.generated.h"
 
+class UKayakUIManager;
+
 UCLASS(Blueprintable, BlueprintType, Abstract, Category = "KayakGame|UI")
 class KAYAK_API UKayakUserWidget : public UUserWidget
 {
 	GENERATED_UCLASS_BODY()
 
 public:
+
+	/*
+	* Initialize by the UIManager
+	*/
+	UFUNCTION(BlueprintImplementable, Category = "Kayak|UI")
+	void OnInitialize(UKayakUIManager* UIManagerOwer);
+
+	/*
+	* Initialize by the UIManager
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
+	virtual void Initialize(UKayakUIManager* UIManager);
+
+	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
+	UKayakUIManager* GetUIManager() const { return  UIManagerOwner; }
+
+private:
+
+	UKayakUIManager* UIManagerOwner;
+
 };

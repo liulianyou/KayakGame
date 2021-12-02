@@ -14,9 +14,9 @@ void UKayakLoginStyleBase::Initialize(UKayakLoginManger* LoginManager)
 	OnInitialize(LoginManager);
 }
 
-bool UKayakLoginStyleBase::IsLogined(APlayerController* Player) const
+bool UKayakLoginStyleBase::IsOnline(APlayerController* Player) const
 {
-	EOnlineState* OnlineStatePtr = LoginStates.Find(Player);
+	const EOnlineState* OnlineStatePtr = LoginStates.Find(Player);
 
 	return OnlineStatePtr != nullptr && *OnlineStatePtr == EOnlineState::EOnline;
 }

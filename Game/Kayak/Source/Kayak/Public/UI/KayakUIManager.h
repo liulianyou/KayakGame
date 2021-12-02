@@ -14,8 +14,20 @@
 
 #include "KayakUIManager.generated.h"
 
-class UUserWidget;
+class UKayakUIBase;
 
+UENUM(BlueprintType)
+enum class EWidgetLayer : uint8
+{
+	EButtom,
+	ENormal,
+	ETop
+};
+
+/*
+* This class will manager all widgets in our game.
+* The instance of this class should never exist at dedicated server
+*/
 UCLASS(Blueprintable, Blueprintable, Config=UI, Category = "Kayak|UI")
 class KAYAK_API UKayakUIManager : public UObject
 {
@@ -23,7 +35,58 @@ class KAYAK_API UKayakUIManager : public UObject
 
 
 public:
+
+	//Override UObject
+	virtual void BeginDestroy() override;
+	//Override UObject
+
+public:
+
+
+	/*
+	* Initialize this Manager by the HUD
+	*/
+	UFUNCTION(BlueprintImplementableEvent, Category = "Kayak|UI", meta=(DisplayName="Initialize"))
+	void OnInitialize(AKayakHUDBase* HUDOwner);
+
+	/*
+	* Initialize this Manager by the HUD
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
+	void Initialize( AKayakHUDBase* HUDOwner );
+
+	/*
+	* Create new widget according to the widget class
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
+	UUserWidget* CreateWidget( TSubclassOf<UKayakUIBase> WidgetClass, EWidgetLayer Layer = EWidgetLayer::ENormal);
+
+	/*
+	* Show 
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
+	virtual void ShowUI();
+
+#pragma region Get_Set_Implementation
+
+	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
+	AKayakHUDBase* GetHUDOwner() const { return Owner; }
+
+	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
+	const TArray<UKayakUIBase*>& GetAllOpenedWidgets() const { return OpenedWidget; }
+
+	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
+	TArray<UKayakUIBase*>& GetAllOpenedWidgets_Mutable() { return OpenedWidget; }
+
+#pragma endregion Get_Set_Implementation
+private:
+
 	UPROPERTY(Transient)
-	TArray<UUserWidget*> OpenedWidgetCashed;
+	TArray<UKayakUIBase*> OpenedWidget;
+
+private:
+
+	//The owner of this manager
+	AKayakHUDBase* Owner = nullptr;
 
 };

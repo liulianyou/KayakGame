@@ -5,11 +5,3 @@ AKayakCharacterBase::AKayakCharacterBase( const FObjectInitializer& ObjectInitia
 {
 	
 }
-
-void AKayakCharacterBase::PostInitializeComponents()
-{
-	Super::PostInitializeComponents();
-
-
-}
-

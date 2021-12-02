@@ -9,25 +9,22 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UserWidget.h"
+#include "KayakUserWidget.h"
 
 #include "KayakUIBase.generated.h"
 
 UCLASS(Config = UI, HideDropdown)
-class KAYAK_API UKayakUIBase : public UUserWidget
+class KAYAK_API UKayakUIBase : public UKayakUserWidget
 {
 	GENERATED_UCLASS_BODY()
 
 public:
+
+
 	//Override the base class in the UUserWidget
 	void NativePreConstruct() override;
 	void NativeConstruct() override;
 	void NativeDestruct() override;
 
-public:
-
-	//True means this widget will disable other widget's input states.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool IsModalWidget;
 };
 

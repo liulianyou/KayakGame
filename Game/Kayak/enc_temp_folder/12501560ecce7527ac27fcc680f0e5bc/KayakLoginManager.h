@@ -92,7 +92,4 @@ public:
 	*/
 	UPROPERTY( BlueprintReadWrite, EditAnywhere, Category = "Kayak|Login")
 	TArray<TSubclassOf<UKayakLoginStyleBase>> TargetSystems;
-
-
-
 };

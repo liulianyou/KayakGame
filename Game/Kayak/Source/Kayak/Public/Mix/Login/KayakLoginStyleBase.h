@@ -55,7 +55,7 @@ public:
 	* Weather the target player is logined
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Kayak|Login")
-	bool IsLogined( APlayerController* Player ) const;
+	bool IsOnline( APlayerController* Player ) const;
 
 	/*
 	* The feed back of login request
