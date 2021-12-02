@@ -7,9 +7,9 @@
 */
 
 #include "CoreMinimal.h"
-#include "UObject/ObjectMarcos.h"
+#include "UObject/ObjectMacros.h"
 
-#include "KayakLoginStyleBase.h"
+#include "KayakLoginStyleBase.generated.h"
 
 class UKayakLoginManger;
 
@@ -20,13 +20,13 @@ UENUM(BlueprintType)
 enum class EOnlineState : uint8
 {
 	//Have requested to login and waiting the feedback
-	ERequestedToLogin		UENUM(DisplayName = "RequestedLogin"),
+	ERequestedToLogin		UMETA(DisplayName = "RequestedLogin"),
 	//Have logined
-	EOnline					UENUM(DisplayName = "Online"),
-	//Have reqeuestd to logout and waiting the feed back
-	ERequestedToLogout		UENUM(DisplayName = "RequestedLogout"),
+	EOnline					UMETA(DisplayName = "Online"),
+	//Have requested to logout and waiting the feed back
+	ERequestedToLogout		UMETA(DisplayName = "RequestedLogout"),
 	//Have logouted
-	EOffline				UENUM(DisplayName = "Offline")
+	EOffline				UMETA(DisplayName = "Offline")
 };
 
 /*
@@ -63,8 +63,8 @@ public:
 	* @param IsSuccessed		true means login successfully
 	* @param LoginFailedReason	the reason of login failed
 	*/
-	UFUNCTION(BlueprintImplementableEvent, meta = (AdvancedDisplay=2), Category = "Kayak|Login")
-	void OnLoginCallback( APlayerController* Player  bool IsSuccessed, const FString& LoginFailedReason);
+	UFUNCTION(BlueprintImplementableEvent, meta = ( AdvancedDisplay = 2 ), Category = "Kayak|Login")
+	void OnLoginCallback( APlayerController* Player,  bool IsSuccessed, const FString& LoginFailedReason );
 
 	/*
 	* The feed back of login request
@@ -73,12 +73,12 @@ public:
 	* @param LoginFailedReason	the reason of login failed
 	*/
 	UFUNCTION(BlueprintCallable, meta = (AdvancedDisplay = 2), Category = "Kayak|Login")
-	virtual void LoginCallback(APlayerController* Player  bool IsSuccessed, const FString& LoginFailedReason);
+	virtual void LoginCallback(APlayerController* Player,  bool IsSuccessed, const FString& LoginFailedReason);
 
 	/*
 	* Request to login
 	*/
-	UFUNCTION(BlueprintCallable, Category = "Kayak|Login")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Kayak|Login")
 	void OnRequestLogin(APlayerController* PlayerController);
 
 	/*

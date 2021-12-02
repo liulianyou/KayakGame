@@ -3,7 +3,7 @@
 UKayakLoginStyleBase::UKayakLoginStyleBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
-	TargetSystems.Empty();
+	
 }
 
 
@@ -16,10 +16,12 @@ void UKayakLoginStyleBase::Initialize(UKayakLoginManger* LoginManager)
 
 bool UKayakLoginStyleBase::IsLogined(APlayerController* Player) const
 {
-	return false;
+	EOnlineState* OnlineStatePtr = LoginStates.Find(Player);
+
+	return OnlineStatePtr != nullptr && *OnlineStatePtr == EOnlineState::EOnline;
 }
 
-void UKayakLoginStyleBase::LoginCallback(APlayerController* Player  bool IsSuccessed, const FString& LoginFailedReason)
+void UKayakLoginStyleBase::LoginCallback(APlayerController* Player,  bool IsSuccessed, const FString& LoginFailedReason)
 {
 	OnLoginCallback( Player, IsSuccessed, LoginFailedReason );
 }

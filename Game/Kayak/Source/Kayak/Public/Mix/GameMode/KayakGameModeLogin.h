@@ -14,7 +14,10 @@
 
 #include "KayakGameModeLogin.generated.h"
 
-UCLASS(Blueprintable, BlueprintType, Category = "KayakGame|GameMode")
+/*
+* This game mode is used for login map
+*/
+UCLASS(Blueprintable, BlueprintType, hidedropdown, Category = "KayakGame|GameMode")
 class KAYAK_API AKayakGameModeLogin : public AKayakGameModeBase
 {
 	GENERATED_UCLASS_BODY()

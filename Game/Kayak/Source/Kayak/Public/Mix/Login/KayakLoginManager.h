@@ -7,22 +7,21 @@
 */
 
 #include "CoreMinimal.h"
-#include "UObject/ObjectMarcos.h"
-
+#include "UObject/ObjectMacros.h"
 #include "Templates/SubclassOf.h"
-
-#include "KayakLoginManger.generated.h"
+		  
+#include "KayakLoginManager.generated.h"
 
 class UKayakLoginStyleBase;
-class APlayerController*;
+class APlayerController;
 
 /*
 * Brief to hold all information for login
 */
-UCLASS(Blueprintable, BlueprintType, Config = Game, Category = "Kayak|Login")
+UCLASS(Blueprintable, BlueprintType, hidedropdown, Config = Game, Category = "Kayak|Login")
 class KAYAK_API UKayakLoginManger : public UObject
 {
-	GENERATE_UCLASS_BODY()
+	GENERATED_UCLASS_BODY()
 
 public:
 
@@ -91,6 +90,6 @@ public:
 	/*
 	* How many system the player need to login/Logout.
 	*/
-	UPRPERTY( BlueprintReadWrite, EditAnywhere, Category = "Kayak|Login")
+	UPROPERTY( BlueprintReadWrite, EditAnywhere, Category = "Kayak|Login")
 	TArray<TSubclassOf<UKayakLoginStyleBase>> TargetSystems;
 };

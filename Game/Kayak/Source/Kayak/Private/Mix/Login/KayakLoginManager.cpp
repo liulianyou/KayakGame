@@ -29,7 +29,7 @@ void UKayakLoginManger::RequestLogout(APlayerController* Player, const TSubclass
 
 bool UKayakLoginManger::AddNewLoginSytel(const TSubclassOf<UKayakLoginStyleBase>& LoginSytle)
 {
-
+	return false;
 }
 
 void UKayakLoginManger::RemoveLoginSytel(const TSubclassOf<UKayakLoginStyleBase>& LoginSytle)

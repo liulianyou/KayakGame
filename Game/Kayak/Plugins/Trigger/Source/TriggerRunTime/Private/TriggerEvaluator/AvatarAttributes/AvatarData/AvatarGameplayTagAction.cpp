@@ -85,7 +85,10 @@ void UAvatarGameplayTagAction::Initialize(UCheckAvatarAttribute* Owner)
 
 void UAvatarGameplayTagAction::OnTagsChanged(FGameplayTag TagChange, int32 NewCount)
 {
-    NotifyEvalutorContentChanged();
+    if (NewCount > 0 && Tags.HasAnyExact(TagChange.GetSingleTagContainer()))
+    {
+        NotifyEvalutorContentChanged();
+    }
 }
 
 void UAvatarGameplayTagAction::RegisterEvents(const TArray<UObject*>& Avatars)
