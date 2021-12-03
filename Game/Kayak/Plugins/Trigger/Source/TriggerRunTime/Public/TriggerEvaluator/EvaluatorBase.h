@@ -32,8 +32,10 @@ public:
 	* 
 	* As this function will broadcast some events to other module, and this may cause infinity loop.
 	* You should use the EvaluatorDelegate for common cases
+	* 
+	* @param DoLocalCheck This function only is only used to check weather this evaluator is passed.
 	*/
-	virtual bool Evaluator();
+	virtual bool Evaluator( bool DoLoackCheck = false );
 
 	/*
 	* Allow one chance to the BP to override the native implementation

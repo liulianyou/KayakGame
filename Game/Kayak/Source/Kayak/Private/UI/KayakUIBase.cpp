@@ -1,8 +1,7 @@
 #include "KayakUIBase.h"
 
 UKayakUIBase::UKayakUIBase(const FObjectInitializer& ObjectInitializer) :
-	Super(ObjectInitializer),
-	IsModalWidget(false)
+	Super(ObjectInitializer)
 {
 
 }

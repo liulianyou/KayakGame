@@ -1,11 +1,12 @@
 ﻿#include "KayakCharacterAttributeSetBase.h"
+#include "Net/UnrealNetwork.h"
 
 UKayakCharacterAttributeSetBase::UKayakCharacterAttributeSetBase( const FObjectInitializer& ObjectInitializer )
-	:Super(ObjectInitializer)，
-	Health(100.h),
-	MaxHealth(100.h),
-	Mana(100.h)
-	MaxHealth(100.h)
+	:Super(ObjectInitializer),
+	Health(100.f),
+	MaxHealth(100.f),
+	Mana(100.f),
+	MaxMana(100.f)
 {
 	
 }

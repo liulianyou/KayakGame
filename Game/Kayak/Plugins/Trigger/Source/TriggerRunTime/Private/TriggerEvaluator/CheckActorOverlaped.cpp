@@ -77,8 +77,15 @@ void UCheckActorOverlaped::NativeInitialize(UObject* OwnerObject)
 	
 	if (TargetActor != nullptr && TargetActor->IsValidLowLevel())
 	{
-		TargetActor->OnActorBeginOverlap.AddDynamic(this, &UCheckActorOverlaped::OnActorBeginOverlap);
-		TargetActor->OnActorEndOverlap.AddDynamic(this, &UCheckActorOverlaped::OnActorEndOverlap);
+		if (!TargetActor->OnActorBeginOverlap.IsAlreadyBound(this, &UCheckActorOverlaped::OnActorBeginOverlap))
+		{
+			TargetActor->OnActorBeginOverlap.AddDynamic(this, &UCheckActorOverlaped::OnActorBeginOverlap);
+		}
+
+		if (!TargetActor->OnActorEndOverlap.IsAlreadyBound(this, &UCheckActorOverlaped::OnActorEndOverlap))
+		{
+			TargetActor->OnActorEndOverlap.AddDynamic(this, &UCheckActorOverlaped::OnActorEndOverlap);
+		}
 	}
 
 	//Remove empty filter

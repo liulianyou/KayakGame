@@ -350,7 +350,7 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 {
 	AActor* TargetActor = Contributor;
 
-	if(TargetActor == nullptr || *GamePlayAbilityClass == nullptr)
+	if (TargetActor == nullptr || *GamePlayAbilityClass == nullptr)
 		return true;
 
 	UAbilitySystemComponent* AbilitysSystem = Cast<UAbilitySystemComponent>(TargetActor->GetComponentByClass(UAbilitySystemComponent::StaticClass()));
@@ -363,28 +363,18 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 
 	FGameplayAbilitySpecHandle* ResultHandle = AbilityMap.Find(TargetActor);
 
-	FGameplayAbilitySpecHandle Handle;
-
 	FGameplayAbilitySpec* AS = nullptr;
 
-	if (ResultHandle != nullptr)
+	if (ResultHandle == nullptr)
 	{
-		AS = AbilitysSystem->FindAbilitySpecFromHandle(*ResultHandle);
-	}
-
-	if (AS != nullptr)
-	{
-		//When new contributor is added and there is one ability in the target component then just clear it and add new one
-		AbilitysSystem->ClearAbility(*ResultHandle);
-	}
-	
-	{
+		FGameplayAbilitySpecHandle Handle;
 		Handle = AbilitysSystem->GiveAbility(FGameplayAbilitySpec(GamePlayAbilityClass));
+		ResultHandle = &Handle;
 	}
 
-	AS = AbilitysSystem->FindAbilitySpecFromHandle(Handle);
+	AS = AbilitysSystem->FindAbilitySpecFromHandle(*ResultHandle);
 
-	if(AS == nullptr)
+	if (AS == nullptr)
 		return true;
 
 	//Always remove the old data
@@ -412,13 +402,15 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 		UE_LOG(LogTrigger, Warning, TEXT("The target ability is not inherited from IInteractionSupportInterface, which will make some features not work!!!"));
 	}
 
-	AbilitysSystem->TryActivateAbility(Handle, true);
+	//Add the new ability map
+	AbilityMap.Add(TargetActor, *ResultHandle);
+
+	AbilitysSystem->TryActivateAbility(*ResultHandle, true);
 
 	//Make sure the target ability should be removed when it is ended as if the player interact with the target interaction again, the interaction actor will give him new ability
 	//AbilitysSystem->SetRemoveAbilityOnEnd(Handle);
 
-	//Add the new ability map
-	AbilityMap.Add(TargetActor, Handle);
+
 
 	//Always return false as we should wait the ability to check weather we should continue this action
 	return false;

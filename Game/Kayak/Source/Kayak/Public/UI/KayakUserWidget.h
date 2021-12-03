@@ -26,14 +26,14 @@ public:
 	/*
 	* Initialize by the UIManager
 	*/
-	UFUNCTION(BlueprintImplementable, Category = "Kayak|UI")
-	void OnInitialize(UKayakUIManager* UIManagerOwer);
+	UFUNCTION(BlueprintImplementableEvent, Category = "Kayak|UI")
+	void OnInitializeByUIManager(UKayakUIManager* UIManagerOwer);
 
 	/*
 	* Initialize by the UIManager
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
-	virtual void Initialize(UKayakUIManager* UIManager);
+	virtual void InitializeByUIManager(UKayakUIManager* UIManager);
 
 	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
 	UKayakUIManager* GetUIManager() const { return  UIManagerOwner; }

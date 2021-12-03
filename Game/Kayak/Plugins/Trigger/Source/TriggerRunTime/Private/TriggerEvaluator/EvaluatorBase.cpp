@@ -8,7 +8,7 @@ UEvaluatorBase::UEvaluatorBase(const FObjectInitializer& ObjectInitializer) :
 {
 }
 
-bool UEvaluatorBase::Evaluator()
+bool UEvaluatorBase::Evaluator(bool DoLocalCheck /*= false*/)
 {
 	/*
 	* When this evaluator is passed then just return true
@@ -36,6 +36,9 @@ bool UEvaluatorBase::Evaluator()
 				CashedValue = false;
 		}
 	}
+
+	if (DoLocalCheck)
+		return CashedValue;
 
 	/*
 	* Give the other module one access to get the evaluator result

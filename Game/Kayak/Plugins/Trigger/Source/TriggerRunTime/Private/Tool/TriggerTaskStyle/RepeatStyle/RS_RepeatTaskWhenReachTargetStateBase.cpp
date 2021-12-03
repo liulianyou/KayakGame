@@ -46,6 +46,15 @@ bool URS_RepeatTaskWhenReachTargetStateBase::TryToRepeat_Implementation(UObject*
 {
 	bool Result = Super::TryToRepeat_Implementation(Object);
 
+	/*
+	* When start to repeat I need to copy the activation information for the actual repeat action.
+	* As sometimes when repeating the trigger task the target task have empty the activation info such as it have run into end state
+	*/
+	if (UTriggerTaskBase* TaskOwner = GetRepeatedTriggerTask())
+	{
+		CashedActivationInfos = TaskOwner->GetImmediateActivationInformation();
+	}
+
 	UTriggerTaskBase* Task = Cast<UTriggerTaskBase>(Object);
 
 	//This class only support trigger task
@@ -98,7 +107,7 @@ bool URS_RepeatTaskWhenReachTargetStateBase::RepeatTask(UTriggerTaskBase* Task)
 	if(Task == nullptr)
 		return false;
 
-	FTaskActivationInfo& ActivationInfo = Task->GetImmediateActivationInformation().FindActiveInfoByTriggerTask(Task);
+	FTaskActivationInfo& ActivationInfo = CashedActivationInfos.FindActiveInfoByTriggerTask(Task);
 
 	if (!ActivationInfo.IsVaild() || UTriggerBlueprintLib::GetOperationInfoManager() == nullptr)
 		return false;

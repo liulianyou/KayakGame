@@ -7,9 +7,9 @@ UKayakUserWidget::UKayakUserWidget(const FObjectInitializer& ObjectInitializer) 
 
 }
 
-void UKayakUserWidget::Initialize(UKayakUIManager* UIManager)
+void UKayakUserWidget::InitializeByUIManager(UKayakUIManager* UIManager)
 {
 	UIManagerOwner = UIManager;
 
-	OnInitialize( UIManager );
+	OnInitializeByUIManager( UIManager );
 }

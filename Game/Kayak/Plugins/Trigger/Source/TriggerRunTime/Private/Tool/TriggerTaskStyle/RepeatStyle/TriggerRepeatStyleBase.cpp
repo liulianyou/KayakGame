@@ -1,4 +1,5 @@
 #include "TriggerRepeatStyleBase.h"
+#include "TriggerTaskBase.h"
 
 UTriggerRepeatStyleBase::UTriggerRepeatStyleBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -17,3 +18,17 @@ bool UTriggerRepeatStyleBase::TryToRepeat_Implementation(UObject* Object)
 	return false;
 }
 
+void UTriggerRepeatStyleBase::InitializeStyle(UObject* OwnerObject)
+{
+	Super::InitializeStyle(OwnerObject);
+
+	if (RepeatedTask.GetTriggerTask() == nullptr)
+	{
+		RepeatedTask.UpdateTriggerTask(GetTypedOuter<UTriggerTaskBase>());
+	}
+}
+
+UTriggerTaskBase* UTriggerRepeatStyleBase::GetRepeatedTriggerTask()
+{
+	return RepeatedTask.GetTriggerTask();
+}

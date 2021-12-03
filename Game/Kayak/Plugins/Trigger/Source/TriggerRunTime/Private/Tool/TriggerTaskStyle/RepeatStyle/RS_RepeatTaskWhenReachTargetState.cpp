@@ -41,9 +41,19 @@ void URS_RepeatTaskUntilCompleteFinished::ReachTargetTriggerState(UTriggerTaskBa
 {
 	Super::ReachTargetTriggerState(Task);
 
+	UTriggerTaskBase* RepeatedTriggerTask = GetRepeatedTriggerTask();
+
+	if (RepeatedTriggerTask == nullptr)
+	{
+		RepeatedTriggerTask = GetTypedOuter<UTriggerTaskBase>();
+	}
+
+	if (RepeatedTriggerTask == nullptr)
+		return;
+
 	if (!Task->IsRunning())
 	{
-		RepeatTask(Task); 
+		RepeatTask(RepeatedTriggerTask);
 	}
 	else
 	{
@@ -71,7 +81,10 @@ void URS_RepeatTaskUntilCompleteFinished::TaskPostFinishedCallback(UTriggerTaskB
 
 	if (Index != INDEX_NONE)
 	{
-		RepeatTask(PendingToRepeatTasks[Index]);
+		PendingToRepeatTasks[Index]->RemoveTriggerTaskStateListener(ETriggerTaskState::ETriggerTaskState_End, this, &URS_RepeatTaskUntilCompleteFinished::TaskPostFinishedCallback);
+
+		RepeatTask(GetRepeatedTriggerTask());
+		RepeatTask(GetRepeatedTriggerTask());
 
 		PendingToRepeatTasks.RemoveAt(Index);
 	}

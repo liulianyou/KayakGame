@@ -10,6 +10,7 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 
+#include "AbilitySystemComponent.h"
 #include "AttributeSet.h"
 
 #include "KayakAttributeSetBase.generated.h"

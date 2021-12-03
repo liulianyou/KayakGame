@@ -189,7 +189,7 @@ void UTTSS_AnyConditionMeet::Evaluator()
 		//if any of the switch satisfy the condition, the trigger task should switch to target state
 		if (Switches[i].Condition == nullptr || 
 			//When the condition has not passed I need to evaluate it again
-			Switches[i].Condition->Evaluator())
+			Switches[i].Condition->Evaluator(true))
 		{
 			SwitchState();
 
@@ -210,7 +210,7 @@ bool UTTSS_AnyConditionMeet::IsSwitchOn() const
 		HasNoValidCondition = false;
 
 		//When the condition has not passed I need to evaluate it again
-		if (Switch.Condition->Evaluator())
+		if (Switch.Condition->Evaluator(true))
 		{
 			return true;
 		}

@@ -9,6 +9,8 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 
+#include "FTriggerTask.h"
+
 #include "TriggerStyleBase.h"
 
 #include "TriggerRepeatStyleBase.generated.h"
@@ -22,6 +24,7 @@ public:
 
 	//Override UTriggerStyleBase
 	virtual void Execute() override;
+	virtual void InitializeStyle(UObject* OwnerObject) override;
 	//Override UTriggerStyleBase
 
 	/*
@@ -31,4 +34,19 @@ public:
 	*/
 	UFUNCTION(BlueprintNativeEvent, Category = "TriggerTaskRepeatCondition")
 	bool TryToRepeat(UObject* Object);
+
+	/*
+	* Get the potential trigger task that this style will try to repeat
+	*/
+	UFUNCTION(BlueprintCallable, Category = "TriggerTaskRepeatCondition")
+	UTriggerTaskBase* GetRepeatedTriggerTask();
+
+public:
+
+	/*
+	* The target task that need to be repeated.
+	* By default it should be the outer which type is trigger task base
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "TriggerTaskRepeatCondition")
+	FTriggerTask RepeatedTask;
 };

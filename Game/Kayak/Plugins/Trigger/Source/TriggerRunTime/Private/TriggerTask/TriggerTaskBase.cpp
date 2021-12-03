@@ -142,7 +142,6 @@ void UTriggerTaskBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UTriggerTaskBase, UserDatas);
 	DOREPLIFETIME(UTriggerTaskBase, PendingToExecuteInfo);
 	DOREPLIFETIME(UTriggerTaskBase, ID);
-	DOREPLIFETIME(UTriggerTaskBase, TaskHandle);
 	DOREPLIFETIME_CONDITION_NOTIFY(UTriggerTaskBase, ActivatedCount, COND_Custom, REPNOTIFY_OnChanged);
 }
 

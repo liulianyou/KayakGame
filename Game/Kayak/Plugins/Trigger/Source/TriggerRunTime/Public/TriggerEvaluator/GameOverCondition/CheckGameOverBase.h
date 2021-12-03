@@ -20,7 +20,7 @@ class TRIGGERRUNTIME_API UCheckGameOverBase : public UEvaluatorCondition
 
 public:
 	//Override Evaluator Base
-	virtual bool Evaluator();
+	virtual bool Evaluator(bool DoLocalCheck);
 	virtual bool NativeEvaluator() override;
 	virtual void NativeInitialize(UObject* OwnerObject) override;
 	virtual void NativeReset() override;

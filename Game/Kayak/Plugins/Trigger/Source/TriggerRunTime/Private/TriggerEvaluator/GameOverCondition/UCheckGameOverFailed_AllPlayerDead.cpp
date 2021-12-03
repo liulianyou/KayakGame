@@ -108,12 +108,6 @@ void UCheckGameOverFailed_AllPlayerDead::NativeInitialize(UObject* OwnerObject)
 
 void UCheckGameOverFailed_AllPlayerDead::NativeReset()
 {
-	//When this condition do not pass then we can treat it invisible, so don't need to reset
-	if (GetLastEvaluatorResult() == false)
-	{
-		return;
-	}
-
 	Super::NativeReset();
 
 	CharactersInfo.Empty();

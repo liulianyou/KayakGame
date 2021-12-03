@@ -50,7 +50,7 @@ public:
 protected:
 
 	//Invoked when the target task have reach the confined state.
-	virtual void ReachTargetTriggerState( UTriggerTaskBase* Task ){};
+	virtual void ReachTargetTriggerState(UTriggerTaskBase* Task) {};
 
 
 	/*
@@ -80,4 +80,12 @@ public:
 	//Used to check weather this task has reached the target state
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Instanced, Category = "TriggerTaskRepeatCondition", meta= (DisplayAfter="RepeatAutomatically"))
 	UCheckTaskState* CheckTaskState = nullptr;
+
+private:
+
+	/*
+	* When reach to target target state and try to repeat I need to cashed the activation informations of the trigger task outer
+	* So that when repeat task I can get the valid activation information no matter the task have reach to the end state which will empty its activation information
+	*/
+	FTaskActivationInfoContainer CashedActivationInfos;
 };

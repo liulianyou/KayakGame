@@ -37,9 +37,9 @@ UCheckGameOverFailedBase::UCheckGameOverFailedBase(const FObjectInitializer& Obj
 
 //Override Evaluator Base
 
-bool UCheckGameOverBase::Evaluator()
+bool UCheckGameOverBase::Evaluator(bool DoLocalCheck)
 {
-	bool Result = Super::Evaluator();
+	bool Result = Super::Evaluator(DoLocalCheck);
 
 	if (Result)
 	{
