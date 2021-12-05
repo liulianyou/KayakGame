@@ -1,7 +1,7 @@
 ﻿/*
 * Copyright form 2019-2019 YIYOU, Inc. All Rights Reserved.
 * Author:	Liulianyou
-* Time:		2019/7/22
+* Time:		2021/12/1
 * Purpose:	The manager class for Game UI.
 *			Although the slate have some manage class and make some categories to distinguish different types of widget,
 *			such as SGameLayerManager, EWindowsType...and so on, I think these presets do not meet all game circumstance.
@@ -11,6 +11,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/ObjectMacros.h"
 
 #include "KayakUIManager.generated.h"
 
@@ -62,10 +63,34 @@ public:
 	UUserWidget* CreateWidget( TSubclassOf<UKayakUIBase> WidgetClass, EWidgetLayer Layer = EWidgetLayer::ENormal);
 
 	/*
-	* Show 
+	* Show all UI which have been opened
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
 	virtual void ShowUI();
+
+	/*
+	* Hide all UI with spcific UIclass 
+	* 
+	* @param Destroyed true means this UI will be removed from parent, false means just make it invisible
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
+	virtual void HideAllUIWithClass( TSubclassOf<UKayakUIBase> WidgetClass, bool Destroyed );
+
+	/*
+	* Hide all UI with spcific UIclass
+	*
+	* @param Destroyed true means this UI will be removed from parent, false means just make it invisible
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
+	virtual void HideUIInTargetLayer(EWidgetLayer WidgetLayer, bool Destroyed);
+
+	/*
+	* Hide all UI with spcific UIclass
+	*
+	* @param Destroyed true means this UI will be removed from parent, false means just make it invisible
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
+	virtual void HideUIWithInstance( UKayakUIBase* UIInstance, bool Destroyed);
 
 #pragma region Get_Set_Implementation
 

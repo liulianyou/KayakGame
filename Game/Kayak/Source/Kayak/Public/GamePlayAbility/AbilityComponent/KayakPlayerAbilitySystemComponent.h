@@ -14,7 +14,7 @@
 #include "KayakPlayerAbilitySystemComponent.generated.h"
 
 
-UCLASS(Blueprintable, BlueprintType, Abstract, Category = "Kayak|Ability")
+UCLASS(Blueprintable, BlueprintType, Category = "Kayak|Ability")
 class KAYAK_API UKayakPlayerAbilitySystemComponent : public UKayakCharacterAbilitySystemComponentBase
 {
 	GENERATED_UCLASS_BODY()

@@ -30,3 +30,17 @@ UUserWidget* UKayakUIManager::CreateWidget(TSubclassOf<UKayakUIBase> WidgetClass
 	return nullptr;
 }
 
+void UKayakUIManager::HideAllUIWithClass(TSubclassOf<UKayakUIBase> WidgetClass, bool Destroyed)
+{
+	
+}	
+
+void UKayakUIManager::HideUIInTargetLayer(EWidgetLayer WidgetLayer, bool Destroyed)
+{
+	
+}
+
+void UKayakUIManager::HideUIWithInstance(UKayakUIBase* UIInstance, bool Destroyed)
+{
+	
+}
