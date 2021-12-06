@@ -16,9 +16,6 @@ void UKayakUIBase::NativePreConstruct()
 void UKayakUIBase::NativeConstruct()
 {
 	Super::NativeConstruct();
-
-
-
 }
 
 void UKayakUIBase::NativeDestruct()
@@ -26,3 +23,8 @@ void UKayakUIBase::NativeDestruct()
 	Super::NativeDestruct();
 }
 
+
+EWidgetLayer UKayakUIBase::GetDefaultLayer_Implementation()
+{
+	return DefalutLayer;
+}

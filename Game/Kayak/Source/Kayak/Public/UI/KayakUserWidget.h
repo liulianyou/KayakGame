@@ -38,6 +38,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Kayak|UI")
 	UKayakUIManager* GetUIManager() const { return  UIManagerOwner; }
 
+
+
+
 private:
 
 	UKayakUIManager* UIManagerOwner;

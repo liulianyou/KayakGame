@@ -11,7 +11,10 @@
 #include "CoreMinimal.h"
 #include "KayakUserWidget.h"
 
+#include "KayakUIInclude.h"
+
 #include "KayakUIBase.generated.h"
+
 
 UCLASS(Config = UI, HideDropdown)
 class KAYAK_API UKayakUIBase : public UKayakUserWidget
@@ -26,5 +29,19 @@ public:
 	void NativeConstruct() override;
 	void NativeDestruct() override;
 
+public:
+
+	/*
+	* Get Default layer that this UI will lying at
+	*/
+	UFUNCTION(BlueprintNativeEvent, Category = "Kayak|UI")
+	EWidgetLayer GetDefaultLayer();
+
+
+private:
+
+	//The default layer this widget will be shown, it can be override by the ShowUI in the UIManager
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Kayak|UI", meta = (AllowPrivateAccess = true))
+	EWidgetLayer DefalutLayer;
 };
 
