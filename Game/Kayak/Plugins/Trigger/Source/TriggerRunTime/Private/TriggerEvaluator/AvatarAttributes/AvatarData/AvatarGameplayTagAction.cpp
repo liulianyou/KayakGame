@@ -47,14 +47,9 @@ bool UAvatarGameplayTagAction::IsDataExceedExpectation_Implementation()
             FGameplayTagContainer TagContainer;
             ASC->GetOwnedGameplayTags(TagContainer);
             bHasTagsMatched = true;
-            const TMap<FGameplayTag, int32>& CurTagMap = ASC->GetMinimalReplicationTags().TagMap;
             for (TArray<FGameplayTag>::TConstIterator TagIter = Tags.CreateConstIterator(); TagIter; ++TagIter)
             {
                 if (TagContainer.HasTag(*TagIter))
-                {
-                    continue;
-                }
-                if (CurTagMap.Find(*TagIter) != nullptr)
                 {
                     continue;
                 }

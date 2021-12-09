@@ -13,7 +13,7 @@
 
 #include "KayakCharacterAnimationBase.generated.h"
 
-UCLASS(Blueprintable, BlueprintType, Abstract, Category = "Kayak|Animation")
+UCLASS(Blueprintable, BlueprintType, Abstract, hidedropdown, Category = "Kayak|Animation")
 class KAYAK_API UKayakCharacterAnimationBase : public UKayakAnimaitonScriptBase
 {
 	GENERATED_UCLASS_BODY()

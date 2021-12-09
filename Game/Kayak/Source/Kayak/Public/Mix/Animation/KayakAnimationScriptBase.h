@@ -14,7 +14,7 @@
 
 #include "KayakAnimationScriptBase.generated.h"
 
-UCLASS(BlueprintType, Blueprintable, Abstract, Category = "Kayak|Animation")
+UCLASS(BlueprintType, Blueprintable, Abstract, hidedropdown, Category = "Kayak|Animation")
 class KAYAK_API UKayakAnimaitonScriptBase : public UAnimInstance
 {
 	GENERATED_UCLASS_BODY()

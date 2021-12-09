@@ -1,9 +1,5 @@
 #include "AIInfoAccessor/AIInfoAccessor.h"
 #include "AISpawnData/AISpawnDataGroup.h"
-#include "EnemyGroup_pb.h"
-#include "NPC_pb.h"
-#include "GroupID_pb.h"
-#include "GExcelDataManager.h"
 #include "TriggerDefinition.h"
 
 UAIInfoAccessorBase::UAIInfoAccessorBase(const FObjectInitializer& ObjectInitialzier)
@@ -46,6 +42,8 @@ void UAIInfoAccessFromGroupIDExcel::GetVaildNPCInfos_Implementation(TArray<FEnem
 
 	if(GetAISpawnDataGroup() == nullptr)
 		return;
+
+#if 0
 
 	TArray<FSingleGroupSpawnRoundInfo>& RoundInfos = GetAISpawnDataGroup()->RoundInfos;
 
@@ -135,6 +133,7 @@ void UAIInfoAccessFromGroupIDExcel::GetVaildNPCInfos_Implementation(TArray<FEnem
 			NPCInfos.Add(EnemyInfo);
 		}
 	}
+#endif
 }
 
 void UAIInfoAccessFromEnemyIDExcel::GetVaildNPCInfos_Implementation(TArray<FEnemyIDInfo>& NPCInfos)
@@ -144,6 +143,7 @@ void UAIInfoAccessFromEnemyIDExcel::GetVaildNPCInfos_Implementation(TArray<FEnem
 	if (GetAISpawnDataGroup() == nullptr)
 		return;
 
+#if 0
 	const TArray<FSingleGroupSpawnRoundInfo>& RoundInfos = GetAISpawnDataGroup()->RoundInfos;
 
 	if (GetRoundIndex() >= RoundInfos.Num() ||
@@ -205,4 +205,5 @@ void UAIInfoAccessFromEnemyIDExcel::GetVaildNPCInfos_Implementation(TArray<FEnem
 			NPCInfos.Add(EnemyInfo);
 		}
 	}
+#endif
 }

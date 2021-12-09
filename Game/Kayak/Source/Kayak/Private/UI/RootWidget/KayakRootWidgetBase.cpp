@@ -38,6 +38,9 @@ bool UKayakRootWidgetBase::AssignWigetToTargetLayer(UKayakUIBase* UIWidget, EWid
 
 	TSharedRef<SWidget> RootInlayerWidget = LayerRootWidget->GetRootWidget()->TakeWidget();
 
+	/*
+	* The root widget for each layer should be one overlay widget
+	*/
 	TSharedRef<SOverlay> OverLay = StaticCastSharedRef<SOverlay>(RootInlayerWidget);
 
 	OverLay->AddSlot(ZOrder)[UIWidget->TakeWidget()];

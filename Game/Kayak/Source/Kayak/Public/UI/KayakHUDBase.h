@@ -51,6 +51,7 @@ public:
 private:
 	
 	//Instance of UI manager
+	UPROPERTY()
 	UKayakUIManager* UIManager = nullptr;
 
 };
