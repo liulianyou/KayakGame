@@ -29,7 +29,7 @@ bool UTriggerEvaluator_AND::NativeEvaluator()
 
 	for (auto Operator : Operators)
 	{
-		if (Operator == nullptr || Operator->GetLastEvaluatorResult())
+		if (Operator == nullptr)
 			continue;
 
 		if (!Operator->Evaluator())
@@ -40,7 +40,7 @@ bool UTriggerEvaluator_AND::NativeEvaluator()
 
 	for (auto Condtion : Condtions)
 	{
-		if (Condtion == nullptr || Condtion->GetLastEvaluatorResult())
+		if (Condtion == nullptr)
 			continue;
 
 		if (!Condtion->Evaluator())
@@ -64,6 +64,9 @@ void UTriggerEvaluator_AND::BeginDestroy()
 
 bool UTriggerEvaluator_AND::IsPassed() const
 {
+	if(GetCashedResult().Num() == 0)
+		return false;
+
 	for (auto CashedResultIT = GetCashedResult().CreateConstIterator(); CashedResultIT; ++CashedResultIT)
 	{
 		if (CashedResultIT.Value().Result == false)

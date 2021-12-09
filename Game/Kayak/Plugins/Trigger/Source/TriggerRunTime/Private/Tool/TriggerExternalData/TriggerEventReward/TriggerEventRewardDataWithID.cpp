@@ -14,10 +14,7 @@ void UTriggerEventRewardDataWithID::Initialize(UTriggerTaskBase* Owner)
 {
 	Super::Initialize(Owner);
 
-	if (ID == INDEX_NONE)
-	{
-		GeneratedRewardID();
-	}
+	RewardID = GeneratedRewardID();
 }
 
 FString UTriggerEventRewardDataWithID::GeneratedRewardID_Implementation()

@@ -35,7 +35,7 @@ public:
 	* 
 	* @param DoLocalCheck This function only is only used to check weather this evaluator is passed.
 	*/
-	virtual bool Evaluator( bool DoLoackCheck = false );
+	virtual bool Evaluator( bool DoLocalCheck = false );
 
 	/*
 	* Allow one chance to the BP to override the native implementation

@@ -1,5 +1,6 @@
 #include "AvatarData/AvatarInspectedDataBase.h"
 #include "CheckAvatarAttribute.h"
+#include "AvatarAccessRuleBase.h"
 
 UAvatarInspectedDataBase::UAvatarInspectedDataBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -11,7 +12,10 @@ void UAvatarInspectedDataBase::Initialize(UCheckAvatarAttribute* Owner)
 {
 	ConditionOwner = Owner;
 
-	GetConditionOwner()->AvatarsChangedEvent.AddUniqueDynamic(this, &UAvatarInspectedDataBase::OnAvatarChanged);
+	if (GetConditionOwner() && GetConditionOwner()->GetAvatorAccessRule())
+	{
+		GetConditionOwner()->GetAvatorAccessRule()->AvatarsChangedEvent.AddUniqueDynamic(this, &UAvatarInspectedDataBase::OnAvatarChanged);
+	}
 
 	OnInitialize(Owner);
 }
@@ -80,9 +84,9 @@ void UAvatarInspectedDataBase::OnAvatarChanged(const TArray<UObject*>& Avatars, 
 
 void UAvatarInspectedDataBase::BeginDestroy()
 {
-	if (GetConditionOwner())
+	if (GetConditionOwner() && GetConditionOwner()->GetAvatorAccessRule())
 	{
-		GetConditionOwner()->AvatarsChangedEvent.RemoveDynamic(this, &UAvatarInspectedDataBase::OnAvatarChanged);
+		GetConditionOwner()->GetAvatorAccessRule()->AvatarsChangedEvent.RemoveDynamic(this, &UAvatarInspectedDataBase::OnAvatarChanged);
 	}
 
 	Super::BeginDestroy();

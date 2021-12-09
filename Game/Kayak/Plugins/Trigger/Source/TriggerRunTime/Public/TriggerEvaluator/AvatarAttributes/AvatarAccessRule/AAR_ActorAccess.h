@@ -109,3 +109,28 @@ public:
 	bool IncludeControlledPawns = true;
 
 };
+
+UCLASS(BlueprintType, Blueprintable, meta = (DisplayName = "ActorsInMap"))
+class TRIGGERRUNTIME_API UAAR_ActorsInMap : public UAAR_AvatarAccessWithFilter
+{
+	GENERATED_UCLASS_BODY()
+
+public:
+
+	//Override UAvatarAccessRuleBase
+	virtual void GetTargetAvatars_Implementation(TArray<UObject*>& Avatars) const override;
+	//Override UAvatarAccessRuleBase
+
+public:
+
+#if WITH_EDITOR
+
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+
+#endif
+
+public:
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Accessor")
+	TArray<TSoftObjectPtr<AActor>> Actors;
+};

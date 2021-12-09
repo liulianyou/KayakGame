@@ -39,7 +39,7 @@ UCheckGameOverFailedBase::UCheckGameOverFailedBase(const FObjectInitializer& Obj
 
 bool UCheckGameOverBase::Evaluator(bool DoLocalCheck)
 {
-	bool Result = Super::Evaluator(DoLocalCheck);
+	bool Result = Super::Evaluator( DoLocalCheck );
 
 	if (Result)
 	{

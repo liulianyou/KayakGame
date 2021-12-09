@@ -14,7 +14,9 @@
 
 #include "AvatarAccessRuleBase.generated.h"
 
-UCLASS(BlueprintType, Blueprintable, Abstract, editinlinenew, DefaultToInstanced, Within = "CheckAvatarAttribute")
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAvatarsChangedEvent, const TArray<UObject*>&, Avatars, bool, bIsAdded);
+
+UCLASS(BlueprintType, Blueprintable, Abstract, editinlinenew, DefaultToInstanced)
 class TRIGGERRUNTIME_API UAvatarAccessRuleBase : public UObject
 {
 	GENERATED_UCLASS_BODY()
@@ -59,6 +61,14 @@ protected:
 	*/
 	UFUNCTION(BlueprintCallable)
 	void NotifyOwnerNewAvatarRemoved(UObject* OldAvatar);
+
+public:
+	
+	/*
+	* Invoked when the avatar access rule find new avatars
+	*/
+	UPROPERTY(BlueprintAssignable)
+	FAvatarsChangedEvent AvatarsChangedEvent;
 
 private:
 

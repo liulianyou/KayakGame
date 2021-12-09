@@ -147,3 +147,29 @@ void UAAR_AllPlayerControllers::GetTargetAvatars_Implementation(TArray<UObject*>
 		}
 	}
 }
+
+UAAR_ActorsInMap::UAAR_ActorsInMap(const FObjectInitializer& ObjectInitializer)
+	:Super(ObjectInitializer)
+{
+
+}
+
+void UAAR_ActorsInMap::GetTargetAvatars_Implementation(TArray<UObject*>& Avatars) const
+{
+	Avatars.Empty();
+
+	for (int i = 0; i < Actors.Num(); i++)
+	{
+		if (IsFilterPassed(Actors[i].Get()))
+		{
+			Avatars.AddUnique(Actors[i].Get());
+		}
+	}
+}
+
+#if WITH_EDITOR
+void UAAR_ActorsInMap::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+}
+#endif

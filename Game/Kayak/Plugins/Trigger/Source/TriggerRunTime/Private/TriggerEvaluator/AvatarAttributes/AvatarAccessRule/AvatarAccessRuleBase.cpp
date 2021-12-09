@@ -1,5 +1,4 @@
 #include "AvatarAccessRule/AvatarAccessRuleBase.h"
-#include "CheckAvatarAttribute.h"
 
 UAvatarAccessRuleBase::UAvatarAccessRuleBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -34,22 +33,16 @@ UObject* UAvatarAccessRuleBase::GetOwner()
 
 void UAvatarAccessRuleBase::NotifyOwnerNewAvatarAdded(UObject* NewAvatar)
 {
-	if (UCheckAvatarAttribute* AvatarAttributeCondition = Cast<UCheckAvatarAttribute>(GetOwner()))
-	{
-		TArray<UObject*> Avatars;
-		Avatars.Add(NewAvatar);
+	TArray<UObject*> Avatars;
+	Avatars.Add(NewAvatar);
 
-		AvatarAttributeCondition->AvatarsChangedEvent.Broadcast(Avatars, true);
-	}
+	AvatarsChangedEvent.Broadcast(Avatars, true);
 }
 
 void UAvatarAccessRuleBase::NotifyOwnerNewAvatarRemoved(UObject* OldAvatar)
 {
-	if (UCheckAvatarAttribute* AvatarAttributeCondition = Cast<UCheckAvatarAttribute>(GetOwner()))
-	{
-		TArray<UObject*> Avatars;
-		Avatars.Add(OldAvatar);
+	TArray<UObject*> Avatars;
+	Avatars.Add(OldAvatar);
 
-		AvatarAttributeCondition->AvatarsChangedEvent.Broadcast(Avatars, false);
-	}
+	AvatarsChangedEvent.Broadcast(Avatars, false);
 }

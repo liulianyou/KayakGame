@@ -17,9 +17,6 @@
 class UAvatarAccessRuleBase;
 class UAvatarInspectedDataBase;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAvatarsChangedEvent, const TArray<UObject*>&, Avatars, bool, bIsAdded);
-
-
 UCLASS(BlueprintType, Blueprintable)
 class TRIGGERRUNTIME_API UCheckAvatarAttribute : public UEvaluatorCondition
 {
@@ -62,10 +59,4 @@ public:
 	*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Instanced)
 	TArray<UAvatarInspectedDataBase*> InspectedDatas;
-
-	/*
-	* Invoked when the avatar access rule find new avatars
-	*/
-	UPROPERTY(BlueprintAssignable)
-	FAvatarsChangedEvent AvatarsChangedEvent;
 };
