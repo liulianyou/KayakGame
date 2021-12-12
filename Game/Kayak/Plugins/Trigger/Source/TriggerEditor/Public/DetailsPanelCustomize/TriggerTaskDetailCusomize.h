@@ -7,12 +7,180 @@
 */
 
 #include "CoreMinimal.h"
-#include "IPropertyTypeCustomization.h"
-#include "Templates/SharedPointer.h"
-#include "TriggerTaskComponent/TriggerTaskComponentBase.h"
-#include "Widgets/Views/SListView.h"
+#include "UObject/ObjectMacros.h"
 
+#include "IPropertyTypeCustomization.h"
+
+#include "Blueprint/UserWidget.h"
+#include "Blueprint/IUserObjectListEntry.h"
+
+#include "TriggerTaskDetailCusomize.generated.h"
+
+class UTriggerTaskComponentBase;
 class UTriggerTaskBase;
+class UComboBoxString;
+class UHorizontalBox;
+class UTextBlock;
+class UListView;
+class AActor;
+
+#define USE_UMG 1
+
+DECLARE_MULTICAST_DELEGATE_OneParam( FNewTriggerTaskAssigned, UTriggerTaskBase* /* = NewTriggerTask*/);
+
+UCLASS(Blueprintable, BlueprintType)
+class TRIGGEREDITOR_API UTriggerTaskListItemData : public UObject
+{
+	GENERATED_UCLASS_BODY()
+
+public:
+
+	/*
+	* The pending trigger task 
+	*/
+	UPROPERTY(Transient)
+	TSoftObjectPtr<UTriggerTaskBase> RootTaskToFindChildTasks = nullptr;
+
+	/*
+	* The actual trigger task for the list entry
+	* If this value is not null then TriggerTaskName will be shown
+	*/
+	UPROPERTY(Transient)
+	TSoftObjectPtr<UTriggerTaskBase> TriggerTask = nullptr;
+
+	//If this variable is not null then the PendingTask combobox will shown to make the user to select one trigger task
+	UPROPERTY(Transient)
+	TSoftObjectPtr<UTriggerTaskComponentBase> TriggerTaskComponent = nullptr;
+
+};
+
+
+UCLASS(Blueprintable, BlueprintType)
+class TRIGGEREDITOR_API UFTriggerTaskListEntry : public UUserWidget, public IUserObjectListEntry
+{
+	GENERATED_UCLASS_BODY()
+
+public:
+
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+
+	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
+	
+protected:
+
+	UFUNCTION()
+	void OnPendingTaskSelectedChange(FString SelectedItem, ESelectInfo::Type SelectionType);
+
+public:
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UComboBoxString* PendingTask;
+
+private:
+	
+	UPROPERTY(Transient)
+	UTriggerTaskListItemData* ListData = nullptr;
+
+};
+
+/*
+* This widget is used to maintain the Struct FTriggerTask in the details panel
+*/
+UCLASS(Blueprintable, BlueprintType )
+class TRIGGEREDITOR_API UFTriggerTaskDetailPanelWidget : public UUserWidget
+{
+	GENERATED_UCLASS_BODY()
+
+public:
+
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+
+
+public:
+	
+	void SetTriggerTask(UTriggerTaskBase* NewTriggerTask);
+
+	void SetPropertyHandle(TSharedRef<IPropertyHandle> InPropertyHandle);
+
+protected:
+
+	UFUNCTION()
+	void OnOpeningCombox();
+
+	UFUNCTION()
+	void OnSelctedChangeInTriggerTaskComponent(FString SelectedItem, ESelectInfo::Type SelectionType);
+
+protected:
+
+	//Get all components in the world
+	void GetAllComponents( TArray<UTriggerTaskComponentBase*>& Components );
+
+	//Callback when the develop click the browser button
+	void BrowserTo();
+
+	/*
+	* Delegate for handling classes of objects that can be picked.
+	* @param	AllowedClasses	The array of classes we allow
+	*/
+	void OnGetAllowedClasses(TArray<const UClass*>& AllowedClasses);
+
+	/*
+	* Delegate for handling selection in the scene outline.
+	* @param	InActor	The chosen actor
+	*/
+	void OnActorSelected(AActor* InActor);
+
+
+protected:
+
+	void UpdateTriggerTaskComponentWidget();
+
+	/*
+	* @param RegeneratedCashedTaskLiastData true means the trigger task list will be regenerated in this function
+	*/
+	void UpdateTriggerTaskViewlist(bool RegeneratedCashedTaskLiastData = true);
+
+protected:
+
+	/*
+	* Refresh the cashed list data when the trigger task is changed
+	*/
+	void UpdateCashedTriggerListData();
+
+private:
+
+	FString GetComponentName( UTriggerTaskComponentBase* Component );
+
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UComboBoxString* TriggerTaskComponentWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UListView* TriggerTaskViewlist;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UHorizontalBox* TrigerTaskComponentOverlay;
+
+private:
+
+	//The value in the trigger task struct
+	TSoftObjectPtr<UTriggerTaskBase> TriggerTask = nullptr;
+
+	UTriggerTaskComponentBase* SelctedComponent = nullptr;
+
+	//All components in the world
+	TArray<UTriggerTaskComponentBase*> CashedComponents;
+
+	//The temp data used to set to TriggerTaskViewList
+	UPROPERTY(Transient)
+	TArray<UTriggerTaskListItemData*> CashedTriggerTaskListDatas;
+
+	//The property this widget need to inspect
+	TSharedPtr<IPropertyHandle> PropertyHandle;
+};
 
 /*
 * Customize all trigger tasks properties showed in the details panel
@@ -32,6 +200,19 @@ public:
 	virtual void CustomizeChildren(TSharedRef<IPropertyHandle> InPropertyHandle, IDetailChildrenBuilder& ChildBuilder, IPropertyTypeCustomizationUtils& CustomizationUtils) override;
 	// End of IPropertyTypeCustomization interface
 
+
+
+#if USE_UMG
+
+public:
+	
+	TSharedRef<SWidget> CrateTriggerTaskDetailsPanel(TSharedRef<IPropertyHandle> InPropertyHandle);
+
+private:
+	
+	UFTriggerTaskDetailPanelWidget* TriggerTaskWidget = nullptr;
+
+#else
 public:
 
 	/*
@@ -131,7 +312,7 @@ private:
 private:
 	//Cash all trigger task components
 	TArray<UTriggerTaskComponentBase*> Components;
-
+#endif
 };
 
 

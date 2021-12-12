@@ -1,45 +1,584 @@
-#include "TriggerTaskDetailCusomize.h"
+﻿#include "TriggerTaskDetailCusomize.h"
 #include "DetailLayoutBuilder.h"
 #include "IDetailChildrenBuilder.h"
-#include "TriggerDefinition.h"
-#include "TriggerTask/TriggerTaskBase.h"
 #include "DetailWidgetRow.h"
 #include "PropertyHandle.h"
 #include "Editor.h"
 #include "Styling/SlateBrush.h"
 #include "Styling/SlateIconFinder.h"
 #include "PropertyCustomizationHelpers.h"
-#include "CustomizeDetailPanel/FTriggerTask.h"
 #include "EngineUtils.h"
-#include "NewTriggerBase.h"
 
-FTriggerTaskDetailCustomize::FTriggerTaskDetailCustomize()
+#include "Components/ComboBoxString.h"
+#include "Components/HorizontalBox.h"
+#include "Components/ListView.h"
+#include "Components/TextBlock.h"
+
+#include "TriggerDefinition.h"
+#include "FTriggerTask.h"
+#include "TriggerTaskBase.h"
+#include "NewTriggerBase.h"
+#include "TriggerConfig.h"
+#include "TriggerManager.h"
+#include "TriggerOctreeControllerBase.h"
+#include "TriggerBlueprintLib.h"
+#include "TriggerTaskComponentBase.h"
+
+#define EMPTYSELECTEDCOMPONENT TEXT("Select New Trigger Task Component Here!")
+#define EMPTYSELECTEDTRIGGERTASK TEXT("Select New Trigger Task Here!")
+
+UTriggerTaskListItemData::UTriggerTaskListItemData(const FObjectInitializer& ObjectInitializer)
+	:Super(ObjectInitializer)
+{
+
+}
+
+UFTriggerTaskListEntry::UFTriggerTaskListEntry(const FObjectInitializer& ObjectInitializer)
+	:Super(ObjectInitializer)
+{
+	
+}
+
+void UFTriggerTaskListEntry::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	PendingTask->SetVisibility(ESlateVisibility::Visible);
+
+	if(!PendingTask->OnSelectionChanged.IsAlreadyBound(this, &UFTriggerTaskListEntry::OnPendingTaskSelectedChange))
+	{
+		PendingTask->OnSelectionChanged.AddDynamic(this, &UFTriggerTaskListEntry::OnPendingTaskSelectedChange);
+	}
+}
+
+void UFTriggerTaskListEntry::NativeDestruct()
+{
+	Super::NativeDestruct();
+
+
+}
+
+void UFTriggerTaskListEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
+{
+	IUserObjectListEntry::NativeOnListItemObjectSet(ListItemObject);
+
+	UTriggerTaskListItemData* Data = Cast<UTriggerTaskListItemData>(ListItemObject);
+	
+	ListData = Data;
+
+	if(Data == nullptr)
+		return;
+
+	PendingTask->ClearOptions();
+
+	TArray<UTriggerTaskBase*>LocalTasks;
+
+	int SelectedIndex = INDEX_NONE;
+
+	if(Data->TriggerTask != nullptr)
+	{
+		if(Data->TriggerTask->GetParentTask() != nullptr)
+		{
+			LocalTasks = Data->TriggerTask->GetParentTask()->GetChildTasks();
+
+			SelectedIndex = LocalTasks.Find(Data->TriggerTask.Get());
+		}
+		else if( UTriggerTaskComponentBase* Component = Data->TriggerTask->GetTriggerOwner())
+		{
+			Component->GetAllTriggerTasks(LocalTasks);
+
+			SelectedIndex = LocalTasks.Find(Data->TriggerTask.Get());
+		}else
+		{
+			LocalTasks.Add(Data->TriggerTask.Get());
+			SelectedIndex = 0;
+		}
+	}
+	else if (Data->TriggerTaskComponent != nullptr)
+	{
+		TArray<UTriggerTaskBase*> Tasks;
+		Data->TriggerTaskComponent->GetAllTriggerTasks(LocalTasks);
+
+		SelectedIndex = INDEX_NONE;
+	} else if(Data->RootTaskToFindChildTasks != nullptr)
+	{
+		LocalTasks = Data->RootTaskToFindChildTasks->GetChildTasks();
+
+		SelectedIndex = INDEX_NONE;
+	}
+	else
+	{
+		//Invalid Data
+		return;
+	}
+
+	for (int i = 0; i < LocalTasks.Num(); i++)
+	{
+		if (LocalTasks[i] == nullptr)
+			continue;
+
+		PendingTask->AddOption(LocalTasks[i]->GetName());
+	}
+
+	if(SelectedIndex == INDEX_NONE)
+	{
+		PendingTask->SetSelectedOption(EMPTYSELECTEDTRIGGERTASK);
+	}
+	else
+	{
+		PendingTask->SetSelectedIndex(SelectedIndex);
+	}
+}
+
+void UFTriggerTaskListEntry::OnPendingTaskSelectedChange(FString SelectedItem, ESelectInfo::Type SelectionType)
+{
+	if (SelectionType == ESelectInfo::OnMouseClick)
+	{
+		UTriggerTaskBase* SelectedTriggerTask = nullptr;
+
+		TArray<UTriggerTaskBase*> Tasks;
+
+		if (ListData->RootTaskToFindChildTasks != nullptr)
+		{
+			Tasks = ListData->RootTaskToFindChildTasks->GetChildTasks();
+		}
+		else if (ListData->TriggerTask != nullptr )
+		{
+			if (ListData->TriggerTask->GetParentTask() != nullptr)
+			{
+				Tasks = ListData->TriggerTask->GetParentTask()->GetChildTasks();
+			}
+			else
+			{
+				UTriggerTaskComponentBase* Component = ListData->TriggerTask->GetTriggerOwner();
+
+				if(Component)
+				{
+					Component->GetAllTriggerTasks(Tasks);
+				}
+			}
+
+		} else if(ListData->TriggerTaskComponent != nullptr)
+		{
+			ListData->TriggerTaskComponent->GetAllTriggerTasks(Tasks);
+		}
+		else
+		{
+			//Invalid Data
+			return ;
+		}
+
+		SelectedTriggerTask = Tasks[PendingTask->GetSelectedIndex()];
+
+		UFTriggerTaskDetailPanelWidget* DetailPanelWidget = GetTypedOuter<UFTriggerTaskDetailPanelWidget>();
+
+		if (DetailPanelWidget != nullptr && SelectedTriggerTask != nullptr)
+		{
+			DetailPanelWidget->SetTriggerTask(SelectedTriggerTask);
+		}
+
+	}
+}
+
+
+
+UFTriggerTaskDetailPanelWidget::UFTriggerTaskDetailPanelWidget(const FObjectInitializer& ObjectInitializer)
+	:Super(ObjectInitializer)
+{
+
+}
+
+void UFTriggerTaskDetailPanelWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	if(TrigerTaskComponentOverlay != nullptr)
+	{
+		TSharedRef<SHorizontalBox> HorizontalBox = StaticCastSharedRef<SHorizontalBox>(TrigerTaskComponentOverlay->TakeWidget());
+
+		HorizontalBox->AddSlot().AutoWidth()
+			.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
+		[
+			PropertyCustomizationHelpers::MakeBrowseButton(FSimpleDelegate::CreateUObject(this, &UFTriggerTaskDetailPanelWidget::BrowserTo),
+				FText::FromString(TEXT("Browser to Trigger actor")))
+		];
+
+		HorizontalBox->AddSlot().AutoWidth()
+			.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
+		[
+			PropertyCustomizationHelpers::MakeInteractiveActorPicker(FOnGetAllowedClasses::CreateUObject(this, &UFTriggerTaskDetailPanelWidget::OnGetAllowedClasses),
+			FOnShouldFilterActor(),
+			FOnActorSelected::CreateUObject(this, &UFTriggerTaskDetailPanelWidget::OnActorSelected))
+		];
+	}
+
+	if(TriggerTaskComponentWidget != nullptr)
+	{
+		if (!TriggerTaskComponentWidget->OnOpening.IsAlreadyBound(this, &UFTriggerTaskDetailPanelWidget::OnOpeningCombox))
+		{
+			TriggerTaskComponentWidget->OnOpening.AddDynamic(this, &UFTriggerTaskDetailPanelWidget::OnOpeningCombox);
+		}
+
+		if (!TriggerTaskComponentWidget->OnSelectionChanged.IsAlreadyBound(this, &UFTriggerTaskDetailPanelWidget::OnSelctedChangeInTriggerTaskComponent))
+		{
+			TriggerTaskComponentWidget->OnSelectionChanged.AddDynamic(this, &UFTriggerTaskDetailPanelWidget::OnSelctedChangeInTriggerTaskComponent);
+		}
+	}
+
+	SetTriggerTask(TriggerTask.Get());
+}
+
+void UFTriggerTaskDetailPanelWidget::UpdateCashedTriggerListData()
+{
+	CashedTriggerTaskListDatas.Empty();
+
+	if (TriggerTask != nullptr)
+	{
+		UTriggerTaskBase* LocalTask = TriggerTask->GetParentTask();
+
+		TArray<UTriggerTaskBase*> LocalTasks;
+		LocalTasks.Add(TriggerTask.Get());
+
+		while (LocalTask)
+		{
+			LocalTasks.Add(LocalTask);
+
+			LocalTask = LocalTask->GetParentTask();
+		}
+
+		for (int i = LocalTasks.Num() - 1; i >= 0; i--)
+		{
+			UTriggerTaskListItemData* ListData = NewObject<UTriggerTaskListItemData>(this, UTriggerTaskListItemData::StaticClass());
+
+			ListData->TriggerTask = LocalTasks[i];
+
+			CashedTriggerTaskListDatas.Add(ListData);
+		}
+
+		if (TriggerTask->GetChildTasks().Num())
+		{
+			UTriggerTaskListItemData* ListData = NewObject<UTriggerTaskListItemData>(this, UTriggerTaskListItemData::StaticClass());
+			ListData->RootTaskToFindChildTasks = TriggerTask;
+			CashedTriggerTaskListDatas.Add(ListData);
+		}
+	}
+}
+
+void UFTriggerTaskDetailPanelWidget::UpdateTriggerTaskComponentWidget()
+{
+	if (TriggerTaskComponentWidget != nullptr)
+	{
+		GetAllComponents(CashedComponents);
+
+		TriggerTaskComponentWidget->ClearOptions();
+		TriggerTaskComponentWidget->ClearSelection();
+
+		for (int i = 0; i < CashedComponents.Num(); i++)
+		{
+			TriggerTaskComponentWidget->AddOption(GetComponentName(CashedComponents[i]));
+		}
+
+		if (TriggerTask != nullptr)
+		{
+			int Index = CashedComponents.Find(TriggerTask->GetTriggerOwner());
+
+			TriggerTaskComponentWidget->SetSelectedIndex(Index == INDEX_NONE ? 0 : Index);
+		}
+		else
+		{
+			TriggerTaskComponentWidget->SetSelectedOption(EMPTYSELECTEDCOMPONENT);
+		}
+	}
+}
+
+void UFTriggerTaskDetailPanelWidget::UpdateTriggerTaskViewlist(bool RegeneratedCashedTaskLiastData /*= true*/)
+{
+	if(TriggerTaskViewlist == nullptr)
+		return;
+
+	if(RegeneratedCashedTaskLiastData)
+	{
+		UpdateCashedTriggerListData();
+	}
+
+	TriggerTaskViewlist->ClearListItems();
+
+	TriggerTaskViewlist->SetListItems(CashedTriggerTaskListDatas);
+}
+
+void UFTriggerTaskDetailPanelWidget::GetAllComponents(TArray<UTriggerTaskComponentBase*>& Components)
 {
 	Components.Empty();
 
-	//FWorldDelegates::OnWorldCleanup.AddRaw(this, &FTriggerTaskDetailCustomize::OnWorldCleanUp);
+	UTriggerManager* TriggerManager = UTriggerBlueprintLib::GetTriggerManager();
 
+	if(TriggerManager == nullptr)
+		return;
+
+	UTriggerOctreeControllerBase* Controller = TriggerManager->GetTriggerController();
+
+	if(Controller == nullptr)
+		return;
+
+	TArray<UObject*> Objects;
+
+	Controller->GetAllTriggersInsideBox(Objects, FVector::ZeroVector, FVector(INT_MAX, INT_MAX, INT_MAX));
+
+	for(int i = 0; i < Objects.Num(); i++)
+	{
+		if(Objects[i] == nullptr)
+			continue;
+
+		if (Objects[i]->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
+		{
+			ITriggerInterface* Interface = Cast<ITriggerInterface>(Objects[i]);
+
+			if(Interface)
+			{
+				Interface->GetTriggerTaskComponents(Components);
+			}
+			else
+			{
+				ITriggerInterface::Execute_OnGetTriggerTaskComponents(Objects[i], Components);
+			}	
+		}
+	}
+}
+
+FString UFTriggerTaskDetailPanelWidget::GetComponentName(UTriggerTaskComponentBase* Component)
+{
+	if(Component == nullptr)
+	{
+		return TEXT("Select new trigger task component here");
+	}
+
+	TScriptInterface<ITriggerInterface> Owner = Component->GetTriggerObjectOwner();
+
+	int ComponentIndex = 0;
+
+	if (Owner != nullptr)
+	{
+		TArray<UTriggerTaskComponentBase*> Components;
+
+		Owner->GetTriggerTaskComponents(Components);
+
+		ComponentIndex = Components.Find(Component);
+
+		ComponentIndex = ComponentIndex== INDEX_NONE ? 0 : ComponentIndex;
+	}
+
+	FString Result = Component->GetOuter()->GetName();
+
+	Result += TEXT("_Component:") + FString::FromInt(ComponentIndex);
+
+	return Result;
+}
+
+void UFTriggerTaskDetailPanelWidget::BrowserTo()
+{
+	AActor* Actor = nullptr;
+
+	if(TriggerTask == nullptr)
+	{
+		if(SelctedComponent != nullptr)
+		{
+			Actor = SelctedComponent->GetTypedOuter<AActor>();
+		}
+	}
+	else
+	{
+		Actor = TriggerTask->TryToGetOwnerActor();
+	}
+
+	if (Actor == nullptr)
+		return;
+
+	TArray<AActor*> Actors;
+	Actors.Add(Actor);
+
+	GEditor->SelectNone(/*bNoteSelectionChange=*/false, /*bDeselectBSPSurfs=*/true);
+	GEditor->SelectActor(Actor, /*InSelected=*/true, /*bNotify=*/true, /*bSelectEvenIfHidden=*/true);
+
+	// Jump to the location of the actor
+	GEditor->MoveViewportCamerasToActor(Actors, /*bActiveViewportOnly=*/false);
+}
+
+void UFTriggerTaskDetailPanelWidget::OnOpeningCombox()
+{
+	/*
+	* When the trigger task component combo box is opening I need to update the options in this widget.
+	*/
+
+	TriggerTaskComponentWidget->ClearOptions();
+
+	GetAllComponents(CashedComponents);
+
+	for (int i = 0; i < CashedComponents.Num(); i++)
+	{
+		TriggerTaskComponentWidget->AddOption(GetComponentName(CashedComponents[i]));
+	}
+
+	int Index = CashedComponents.Find(SelctedComponent);
+
+	if(Index == INDEX_NONE)
+	{
+		TriggerTaskComponentWidget->SetSelectedOption(EMPTYSELECTEDCOMPONENT);
+
+		TriggerTaskViewlist->ClearListItems();
+	}
+	else
+	{
+		TriggerTaskComponentWidget->SetSelectedIndex(Index);
+	}
+}
+
+void UFTriggerTaskDetailPanelWidget::OnSelctedChangeInTriggerTaskComponent(FString SelectedItem, ESelectInfo::Type SelectionType)
+{	
+	//Only care about the selection for task list
+	if(SelectionType == ESelectInfo::OnMouseClick)
+	{
+		if(GetComponentName(SelctedComponent) != SelectedItem)
+		{
+			SelctedComponent = CashedComponents[TriggerTaskComponentWidget->GetSelectedIndex()];
+
+			CashedTriggerTaskListDatas.Empty();
+
+			UTriggerTaskListItemData* Data = NewObject<UTriggerTaskListItemData>(this, UTriggerTaskListItemData::StaticClass());
+
+			Data->TriggerTaskComponent = SelctedComponent;
+
+			CashedTriggerTaskListDatas.Add(Data);
+
+			UpdateTriggerTaskViewlist(false);
+		}
+	}
+}
+
+void UFTriggerTaskDetailPanelWidget::OnGetAllowedClasses(TArray<const UClass*>& AllowedClasses)
+{
+	AllowedClasses.Empty();
+
+	for (TObjectIterator< UClass > ClassIt; ClassIt; ++ClassIt)
+	{
+		UClass* Class = *ClassIt;
+
+		if (Class == nullptr)
+			continue;
+
+		//Allow all triggers which derived from ITriggerInterface
+		if (Class->ImplementsInterface(UTriggerInterface::StaticClass()))
+		{
+			AllowedClasses.Add(Class);
+		}
+	}
+}
+
+void  UFTriggerTaskDetailPanelWidget::OnActorSelected(AActor* InActor)
+{
+	if(InActor == nullptr)
+		return;
+
+	if(InActor->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
+	{
+		ITriggerInterface* Trigger = Cast<ITriggerInterface>(InActor);
+
+		TArray<UTriggerTaskComponentBase*> TriggerTaskComponents;
+		
+		if(Trigger == nullptr)
+		{
+			ITriggerInterface::Execute_OnGetTriggerTaskComponents(InActor, TriggerTaskComponents);
+		}
+		else
+		{
+			Trigger->GetTriggerTaskComponents(TriggerTaskComponents);
+		}
+
+		//As the designer want to select new trigger, I need to make this value to be null
+		TriggerTask = nullptr;
+
+		UpdateTriggerTaskComponentWidget();
+
+		TArray<UTriggerTaskComponentBase*> AllComponents;
+		GetAllComponents(AllComponents);
+
+		for (int i = 0; i < TriggerTaskComponents.Num(); i++)
+		{
+			if (TriggerTaskComponents[i] == nullptr)
+				continue;
+
+			int Index = AllComponents.Find(TriggerTaskComponents[i]);
+
+			TriggerTaskComponentWidget->SetSelectedIndex(Index);
+
+			break;
+		}
+	}
+}
+
+void UFTriggerTaskDetailPanelWidget::NativeDestruct()
+{
+	Super::NativeDestruct();
+}
+
+void UFTriggerTaskDetailPanelWidget::SetTriggerTask(UTriggerTaskBase* NewTriggerTask)
+{
+	if(TriggerTask == NewTriggerTask)
+		return;
+
+	TriggerTask = NewTriggerTask;
+
+	if(TriggerTask)
+	{
+		SelctedComponent = TriggerTask->GetTriggerOwner();
+	}
+
+	UpdateTriggerTaskComponentWidget();
+
+	UpdateTriggerTaskViewlist();
+
+	//Make the target value which this widget inspect changed
+	{
+		TArray<FString> NewValues;
+
+		NewValues.Add(TriggerTask->GetPathName());
+
+		PropertyHandle->GetChildHandle(0)->SetPerObjectValues(NewValues);
+	}
+
+}
+
+void UFTriggerTaskDetailPanelWidget::SetPropertyHandle(TSharedRef<IPropertyHandle> InPropertyHandle)
+{
+	PropertyHandle = InPropertyHandle;
+
+	UObject* CurrentValue = nullptr;
+
+	//Assume the  first member of FTriggerTask is the task I need to customize
+	FPropertyAccess::Result Result = InPropertyHandle->GetChildHandle(0)->GetValue(CurrentValue);
+
+	SetTriggerTask(Cast<UTriggerTaskBase>(CurrentValue));
+}
+
+FTriggerTaskDetailCustomize::FTriggerTaskDetailCustomize()
+{
 }
 
 FTriggerTaskDetailCustomize::~FTriggerTaskDetailCustomize()
 {
+#if USE_UMG
+	
+	if(TriggerTaskWidget != nullptr && TriggerTaskWidget->IsValidLowLevel())
+	{
+		TriggerTaskWidget->RemoveFromParent();
+
+		TriggerTaskWidget->MarkPendingKill();
+
+		TriggerTaskWidget = nullptr;
+	}
+
+#else
 	CleanUp();
-}
-
-void FTriggerTaskDetailCustomize::CleanUp()
-{
-	if (PropertyHandle.IsValid())
-		PropertyHandle = nullptr;
-	if(TaskComponentWidget.IsValid())
-		TaskComponentWidget = nullptr;
-	if(TaskComponentTextWidget.IsValid())
-		TaskComponentTextWidget = nullptr;
-	if(ComponentListViewWidget.IsValid())
-		ComponentListViewWidget = nullptr;
-
-	TaskWidgets.Empty();
-	TaskTextWidgets.Empty();
-	ComboButtons.Empty();
+#endif
 }
 
 TSharedRef<IPropertyTypeCustomization> FTriggerTaskDetailCustomize::MakeInstance()
@@ -47,25 +586,79 @@ TSharedRef<IPropertyTypeCustomization> FTriggerTaskDetailCustomize::MakeInstance
 	return MakeShareable(new FTriggerTaskDetailCustomize());
 }
 
-void FTriggerTaskDetailCustomize::CustomizeHeader(TSharedRef<IPropertyHandle> InPropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& CustomizationUtils)
+void FTriggerTaskDetailCustomize::CustomizeHeader(TSharedRef<IPropertyHandle> PropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& CustomizationUtils)
 {
+#if !USE_UMG
 	PropertyHandle = InPropertyHandle;
-
 	Components.Empty();
+#endif
 
 	HeaderRow
 		.NameContent()
 		[
-			PropertyHandle->CreatePropertyNameWidget(FText::FromString(InPropertyHandle->GetProperty()->GetNameCPP()), FText::FromString(TEXT("Refer to the existed task that have allreay created in this level")), false)
+			PropertyHandle->CreatePropertyNameWidget(FText::FromString(PropertyHandle->GetProperty()->GetNameCPP()), FText::FromString(TEXT("Refer to the existed task that have allreay created in this level")), false)
 		]
 		.ValueContent()
 		[
+#if USE_UMG
+			CrateTriggerTaskDetailsPanel(PropertyHandle)
+#else
 			GetCustomizedTaskComponentWidget()
+#endif
 		];
 }
 
 void FTriggerTaskDetailCustomize::CustomizeChildren(TSharedRef<IPropertyHandle> InPropertyHandle, IDetailChildrenBuilder& ChildBuilder, IPropertyTypeCustomizationUtils& CustomizationUtils)
 {
+}
+
+#if USE_UMG
+TSharedRef<SWidget> FTriggerTaskDetailCustomize::CrateTriggerTaskDetailsPanel(TSharedRef<IPropertyHandle> InPropertyHandle)
+{
+	UClass* WidgetClass = UFTriggerTaskDetailPanelWidget::StaticClass();
+
+	const UTriggerConfig* const TriggerConfig = Cast<UTriggerConfig>( UTriggerConfig::StaticClass()->GetDefaultObject() );
+
+	if (TriggerConfig)
+	{
+		if(TriggerConfig->TriggerTaskDetailsPanelWidget != nullptr)
+		{
+			WidgetClass = TriggerConfig->TriggerTaskDetailsPanelWidget.LoadSynchronous();
+		}
+	}
+
+	TriggerTaskWidget = NewObject<UFTriggerTaskDetailPanelWidget>(GetTransientPackage(), WidgetClass, NAME_None, RF_Transactional);
+
+	TriggerTaskWidget->Initialize();
+
+	if(TriggerTaskWidget != nullptr)
+	{
+		TriggerTaskWidget->SetPropertyHandle(InPropertyHandle);
+
+		return TriggerTaskWidget->TakeWidget();
+	}
+	else
+	{
+		return SNullWidget::NullWidget;
+	}
+}
+
+#else
+
+void FTriggerTaskDetailCustomize::CleanUp()
+{
+	if (PropertyHandle.IsValid())
+		PropertyHandle = nullptr;
+	if (TaskComponentWidget.IsValid())
+		TaskComponentWidget = nullptr;
+	if (TaskComponentTextWidget.IsValid())
+		TaskComponentTextWidget = nullptr;
+	if (ComponentListViewWidget.IsValid())
+		ComponentListViewWidget = nullptr;
+
+	TaskWidgets.Empty();
+	TaskTextWidgets.Empty();
+	ComboButtons.Empty();
 }
 
 TSharedRef<SWidget> FTriggerTaskDetailCustomize::GetCustomizedTaskComponentWidget()
@@ -89,12 +682,12 @@ TSharedRef<SWidget> FTriggerTaskDetailCustomize::GetCustomizedTaskComponentWidge
 
 		TaskChainTemp.Add(TaskValue);
 
-		for (UTriggerTaskBase* Parent = TaskValue->ParentTask; Parent != nullptr; )
+		for (UTriggerTaskBase* Parent = TaskValue->GetParentTask(); Parent != nullptr; )
 		{
 			if (Parent != nullptr)
 			{
 				TaskChainTemp.Add(Parent);
-				Parent = Parent->ParentTask;
+				Parent = Parent->GetParentTask();
 			}
 		}
 
@@ -132,13 +725,13 @@ TSharedRef<SWidget> FTriggerTaskDetailCustomize::GetCustomizedTaskComponentWidge
 
 TSharedRef<SWidget> FTriggerTaskDetailCustomize::CreateTaskWidgetRecursively(TSharedRef<SWidget> ParentWidget, UTriggerTaskBase* EndTask)
 {
-	if (EndTask->ParentTask == nullptr)
+	if (EndTask->GetParentTask() == nullptr)
 	{
 		return CreateCustomizedTaskWidget(ParentWidget, EndTask->GetName());
 	}
 	else
 	{
-		return CreateCustomizedTaskWidget(CreateTaskWidgetRecursively(ParentWidget, EndTask->ParentTask), EndTask->GetName());
+		return CreateCustomizedTaskWidget(CreateTaskWidgetRecursively(ParentWidget, EndTask->GetParentTask()), EndTask->GetName());
 	}
 
 }
@@ -660,3 +1253,4 @@ void FTriggerTaskDetailCustomize::OnTriggerTaskComponentSelectedChanged(UTrigger
 	RegeneratedTaskWidget();
 
 }
+#endif

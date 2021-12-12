@@ -565,6 +565,9 @@ public:
 	TArray<UTriggerTaskBase*> GetCopyChildTasks() const { return ChildTask; }
 
 	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime")
+	UTriggerTaskBase* GetParentTask() const { return ParentTask; }
+
+	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime")
 	UReplicateTypeBase* GetReplicateType() const { return ReplicateType; }
 
 	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Task")

@@ -23,45 +23,7 @@ class TRIGGERRUNTIME_API ITriggerInterface
 {
 	GENERATED_BODY()
 
-		// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual bool BeTriggered()
-	{
-		return SelfState() && OtherState();
-	};
-
-	virtual bool SelfState()
-	{
-		return true;
-	};
-
-	virtual bool OtherState()
-	{
-		return true;
-	};
-
-	UFUNCTION()
-		virtual bool Trigger()
-	{
-		if (BeTriggered())
-		{
-			ChangeSelf();
-
-			ChangeOther();
-
-			return true;
-		}
-
-		return false;
-	};
-
-	virtual void ChangeSelf()
-	{
-	};
-
-	virtual void ChangeOther()
-	{
-	};
 
 	/*
 	* Try to copy the this trigger to target level

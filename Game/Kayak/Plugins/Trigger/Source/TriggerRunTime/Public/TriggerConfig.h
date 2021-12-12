@@ -80,6 +80,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Config, Category = "Editor|Category")
 	FGameplayTagContainer EditorDefaultStartTriggerCategories;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Config, Category = "Editor|DetailsPanel")
+	TSoftClassPtr<UUserWidget> TriggerTaskDetailsPanelWidget;
+
 #endif
 
 };
