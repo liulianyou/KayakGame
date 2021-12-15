@@ -103,9 +103,9 @@ UEvaluatorDataBase* UEvaluatorBase::CreateNewExternalData(TSubclassOf<UEvaluator
 	return GetExternalData();
 }
 
-void UEvaluatorBase::NotifyToEvaluate()
+bool UEvaluatorBase::NotifyToEvaluate()
 {
-	Evaluator();
+	return Evaluator();
 }
 
 void UEvaluatorBase::MarkEvaluateable()

@@ -27,6 +27,23 @@
 #define EMPTYSELECTEDCOMPONENT TEXT("Select New Trigger Task Component Here!")
 #define EMPTYSELECTEDTRIGGERTASK TEXT("Select New Trigger Task Here!")
 
+static void GetComponents(TArray<UTriggerTaskComponentBase*>& Components, UObject* Trigger)
+{
+	if (Trigger->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
+	{
+		ITriggerInterface* Interface = Cast<ITriggerInterface>(Trigger);
+
+		if (Interface != nullptr)
+		{
+			Interface->GetTriggerTaskComponents(Components);
+		}
+		else
+		{
+			ITriggerInterface::Execute_OnGetTriggerTaskComponents(Trigger, Components);
+		}
+	}
+}
+
 UTriggerTaskListItemData::UTriggerTaskListItemData(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
@@ -34,9 +51,9 @@ UTriggerTaskListItemData::UTriggerTaskListItemData(const FObjectInitializer& Obj
 }
 
 UFTriggerTaskListEntry::UFTriggerTaskListEntry(const FObjectInitializer& ObjectInitializer)
-	:Super(ObjectInitializer)
+	: Super(ObjectInitializer)
 {
-	
+
 }
 
 void UFTriggerTaskListEntry::NativeConstruct()
@@ -45,7 +62,7 @@ void UFTriggerTaskListEntry::NativeConstruct()
 
 	PendingTask->SetVisibility(ESlateVisibility::Visible);
 
-	if(!PendingTask->OnSelectionChanged.IsAlreadyBound(this, &UFTriggerTaskListEntry::OnPendingTaskSelectedChange))
+	if (!PendingTask->OnSelectionChanged.IsAlreadyBound(this, &UFTriggerTaskListEntry::OnPendingTaskSelectedChange))
 	{
 		PendingTask->OnSelectionChanged.AddDynamic(this, &UFTriggerTaskListEntry::OnPendingTaskSelectedChange);
 	}
@@ -63,10 +80,10 @@ void UFTriggerTaskListEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
 	IUserObjectListEntry::NativeOnListItemObjectSet(ListItemObject);
 
 	UTriggerTaskListItemData* Data = Cast<UTriggerTaskListItemData>(ListItemObject);
-	
+
 	ListData = Data;
 
-	if(Data == nullptr)
+	if (Data == nullptr)
 		return;
 
 	PendingTask->ClearOptions();
@@ -75,20 +92,21 @@ void UFTriggerTaskListEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
 
 	int SelectedIndex = INDEX_NONE;
 
-	if(Data->TriggerTask != nullptr)
+	if (Data->TriggerTask != nullptr)
 	{
-		if(Data->TriggerTask->GetParentTask() != nullptr)
+		if (Data->TriggerTask->GetParentTask() != nullptr)
 		{
 			LocalTasks = Data->TriggerTask->GetParentTask()->GetChildTasks();
 
 			SelectedIndex = LocalTasks.Find(Data->TriggerTask.Get());
 		}
-		else if( UTriggerTaskComponentBase* Component = Data->TriggerTask->GetTriggerOwner())
+		else if (UTriggerTaskComponentBase* Component = Data->TriggerTask->GetTriggerOwner())
 		{
 			Component->GetAllTriggerTasks(LocalTasks);
 
 			SelectedIndex = LocalTasks.Find(Data->TriggerTask.Get());
-		}else
+		}
+		else
 		{
 			LocalTasks.Add(Data->TriggerTask.Get());
 			SelectedIndex = 0;
@@ -100,7 +118,8 @@ void UFTriggerTaskListEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
 		Data->TriggerTaskComponent->GetAllTriggerTasks(LocalTasks);
 
 		SelectedIndex = INDEX_NONE;
-	} else if(Data->RootTaskToFindChildTasks != nullptr)
+	}
+	else if (Data->RootTaskToFindChildTasks != nullptr)
 	{
 		LocalTasks = Data->RootTaskToFindChildTasks->GetChildTasks();
 
@@ -120,7 +139,7 @@ void UFTriggerTaskListEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
 		PendingTask->AddOption(LocalTasks[i]->GetName());
 	}
 
-	if(SelectedIndex == INDEX_NONE)
+	if (SelectedIndex == INDEX_NONE)
 	{
 		PendingTask->SetSelectedOption(EMPTYSELECTEDTRIGGERTASK);
 	}
@@ -142,7 +161,7 @@ void UFTriggerTaskListEntry::OnPendingTaskSelectedChange(FString SelectedItem, E
 		{
 			Tasks = ListData->RootTaskToFindChildTasks->GetChildTasks();
 		}
-		else if (ListData->TriggerTask != nullptr )
+		else if (ListData->TriggerTask != nullptr)
 		{
 			if (ListData->TriggerTask->GetParentTask() != nullptr)
 			{
@@ -152,20 +171,21 @@ void UFTriggerTaskListEntry::OnPendingTaskSelectedChange(FString SelectedItem, E
 			{
 				UTriggerTaskComponentBase* Component = ListData->TriggerTask->GetTriggerOwner();
 
-				if(Component)
+				if (Component)
 				{
 					Component->GetAllTriggerTasks(Tasks);
 				}
 			}
 
-		} else if(ListData->TriggerTaskComponent != nullptr)
+		}
+		else if (ListData->TriggerTaskComponent != nullptr)
 		{
 			ListData->TriggerTaskComponent->GetAllTriggerTasks(Tasks);
 		}
 		else
 		{
 			//Invalid Data
-			return ;
+			return;
 		}
 
 		SelectedTriggerTask = Tasks[PendingTask->GetSelectedIndex()];
@@ -192,36 +212,49 @@ void UFTriggerTaskDetailPanelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	if(TrigerTaskComponentOverlay != nullptr)
+	if (TrigerHorizontal != nullptr)
 	{
-		TSharedRef<SHorizontalBox> HorizontalBox = StaticCastSharedRef<SHorizontalBox>(TrigerTaskComponentOverlay->TakeWidget());
+		TSharedRef<SHorizontalBox> HorizontalBox = StaticCastSharedRef<SHorizontalBox>(TrigerHorizontal->TakeWidget());
 
 		HorizontalBox->AddSlot().AutoWidth()
 			.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
-		[
-			PropertyCustomizationHelpers::MakeBrowseButton(FSimpleDelegate::CreateUObject(this, &UFTriggerTaskDetailPanelWidget::BrowserTo),
+			[
+				PropertyCustomizationHelpers::MakeBrowseButton(FSimpleDelegate::CreateUObject(this, &UFTriggerTaskDetailPanelWidget::BrowserTo),
 				FText::FromString(TEXT("Browser to Trigger actor")))
-		];
+			];
 
 		HorizontalBox->AddSlot().AutoWidth()
 			.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
-		[
-			PropertyCustomizationHelpers::MakeInteractiveActorPicker(FOnGetAllowedClasses::CreateUObject(this, &UFTriggerTaskDetailPanelWidget::OnGetAllowedClasses),
-			FOnShouldFilterActor(),
-			FOnActorSelected::CreateUObject(this, &UFTriggerTaskDetailPanelWidget::OnActorSelected))
-		];
+			[
+				PropertyCustomizationHelpers::MakeInteractiveActorPicker(FOnGetAllowedClasses::CreateUObject(this, &UFTriggerTaskDetailPanelWidget::OnGetAllowedClasses),
+				FOnShouldFilterActor(),
+				FOnActorSelected::CreateUObject(this, &UFTriggerTaskDetailPanelWidget::OnActorSelected))
+			];
 	}
 
-	if(TriggerTaskComponentWidget != nullptr)
+	if (TriggerTaskComponentWidget != nullptr)
 	{
-		if (!TriggerTaskComponentWidget->OnOpening.IsAlreadyBound(this, &UFTriggerTaskDetailPanelWidget::OnOpeningCombox))
+		if (!TriggerTaskComponentWidget->OnOpening.IsAlreadyBound(this, &UFTriggerTaskDetailPanelWidget::OnOpeningTriggerComponentCombox))
 		{
-			TriggerTaskComponentWidget->OnOpening.AddDynamic(this, &UFTriggerTaskDetailPanelWidget::OnOpeningCombox);
+			TriggerTaskComponentWidget->OnOpening.AddDynamic(this, &UFTriggerTaskDetailPanelWidget::OnOpeningTriggerComponentCombox);
 		}
 
 		if (!TriggerTaskComponentWidget->OnSelectionChanged.IsAlreadyBound(this, &UFTriggerTaskDetailPanelWidget::OnSelctedChangeInTriggerTaskComponent))
 		{
 			TriggerTaskComponentWidget->OnSelectionChanged.AddDynamic(this, &UFTriggerTaskDetailPanelWidget::OnSelctedChangeInTriggerTaskComponent);
+		}
+	}
+
+	if (TriggerWidget != nullptr)
+	{
+		if (!TriggerWidget->OnOpening.IsAlreadyBound(this, &UFTriggerTaskDetailPanelWidget::OnOpeningTriggerWidget))
+		{
+			TriggerWidget->OnOpening.AddDynamic(this, &UFTriggerTaskDetailPanelWidget::OnOpeningTriggerWidget);
+		}
+
+		if (!TriggerWidget->OnSelectionChanged.IsAlreadyBound(this, &UFTriggerTaskDetailPanelWidget::OnSelctedChangeInTriggerWidget))
+		{
+			TriggerWidget->OnSelectionChanged.AddDynamic(this, &UFTriggerTaskDetailPanelWidget::OnSelctedChangeInTriggerWidget);
 		}
 	}
 
@@ -262,92 +295,167 @@ void UFTriggerTaskDetailPanelWidget::UpdateCashedTriggerListData()
 			CashedTriggerTaskListDatas.Add(ListData);
 		}
 	}
+	else if(SelctedComponent)
+	{
+		UTriggerTaskListItemData* ListData = NewObject<UTriggerTaskListItemData>(this, UTriggerTaskListItemData::StaticClass());
+		ListData->TriggerTaskComponent = SelctedComponent;
+		CashedTriggerTaskListDatas.Add(ListData);
+	}
 }
 
-void UFTriggerTaskDetailPanelWidget::UpdateTriggerTaskComponentWidget()
+void UFTriggerTaskDetailPanelWidget::UpdateTriggerWidget(UObject* NewTrigger)
 {
+	SelectedTrigger = NewTrigger;
+
+	TArray<TScriptInterface<ITriggerInterface>> Triggers;
+	GetAllTriggers(Triggers);
+
+	TriggerTaskComponentWidget->ClearOptions();
+	TriggerTaskComponentWidget->ClearSelection();
+
+	int Index = Triggers.Find(SelectedTrigger);
+
+	if (TriggerWidget != nullptr)
+	{
+		for (int i = 0; i < Triggers.Num(); i++)
+		{
+			if (Triggers[i].GetObject() != nullptr)
+			{
+				TriggerWidget->AddOption(GetTriggerName(Triggers[i].GetObject()));
+			}
+		}
+
+		TriggerWidget->SetSelectedIndex(Index);
+	}
+
+	TriggerTaskComponentWidget->SetVisibility(ESlateVisibility::Hidden);
+	TriggerTaskViewlist->SetVisibility(ESlateVisibility::Hidden);
+
+	if(SelectedTrigger == nullptr )
+	{
+		return;
+	}
+
+	TArray<UTriggerTaskComponentBase*> Components;
+
+	GetComponents(Components, SelectedTrigger);
+
+	if(Components.Find(SelctedComponent) == INDEX_NONE)
+	{
+		SelctedComponent = nullptr;
+		TriggerTask = nullptr;
+	}
+	else
+	{
+		TArray<UTriggerTaskBase*> Tasks;
+
+		SelctedComponent->GetAllTriggerTasks(Tasks);
+
+		if(Tasks.Find(TriggerTask.Get()) == INDEX_NONE)
+		{
+			TriggerTask = nullptr;
+		}
+	}
+
+	UpdateTriggerTaskComponentWidget(SelctedComponent);
+}
+
+void UFTriggerTaskDetailPanelWidget::UpdateTriggerTaskComponentWidget(UTriggerTaskComponentBase* NewComponent)
+{
+	check(SelectedTrigger);
+
+	SelctedComponent = NewComponent;
+
 	if (TriggerTaskComponentWidget != nullptr)
 	{
-		GetAllComponents(CashedComponents);
+		TriggerTaskComponentWidget->SetVisibility(ESlateVisibility::Visible);
 
 		TriggerTaskComponentWidget->ClearOptions();
 		TriggerTaskComponentWidget->ClearSelection();
 
-		for (int i = 0; i < CashedComponents.Num(); i++)
+		TArray<UTriggerTaskComponentBase*> Components;
+
+		GetComponents(Components, SelectedTrigger);
+
+		for (int i = 0; i < Components.Num(); i++)
 		{
-			TriggerTaskComponentWidget->AddOption(GetComponentName(CashedComponents[i]));
+			TriggerTaskComponentWidget->AddOption(GetComponentName(Components[i]));
 		}
 
-		if (TriggerTask != nullptr)
+		if (SelctedComponent != nullptr)
 		{
-			int Index = CashedComponents.Find(TriggerTask->GetTriggerOwner());
+			int Index = Components.Find( SelctedComponent );
 
-			TriggerTaskComponentWidget->SetSelectedIndex(Index == INDEX_NONE ? 0 : Index);
+			TriggerTaskComponentWidget->SetSelectedIndex(Index);
+
+			TArray<UTriggerTaskBase*> Tasks;
+
+			SelctedComponent->GetAllTriggerTasks(Tasks);
+
+			if (Tasks.Find(TriggerTask.Get()) == INDEX_NONE)
+			{
+				TriggerTask = nullptr;
+			}
+
+			UpdateTriggerTaskViewlist(TriggerTask.Get());
 		}
 		else
 		{
-			TriggerTaskComponentWidget->SetSelectedOption(EMPTYSELECTEDCOMPONENT);
+			TriggerTaskViewlist->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 }
 
-void UFTriggerTaskDetailPanelWidget::UpdateTriggerTaskViewlist(bool RegeneratedCashedTaskLiastData /*= true*/)
+void UFTriggerTaskDetailPanelWidget::UpdateTriggerTaskViewlist(UTriggerTaskBase* NewTriggerTask)
 {
-	if(TriggerTaskViewlist == nullptr)
+	check(SelectedTrigger);
+	check(SelctedComponent);
+
+	TriggerTask = NewTriggerTask;
+
+	if (TriggerTaskViewlist == nullptr)
 		return;
 
-	if(RegeneratedCashedTaskLiastData)
-	{
-		UpdateCashedTriggerListData();
-	}
+	TriggerTaskViewlist->SetVisibility(ESlateVisibility::Visible);
+
+	UpdateCashedTriggerListData();
 
 	TriggerTaskViewlist->ClearListItems();
 
 	TriggerTaskViewlist->SetListItems(CashedTriggerTaskListDatas);
 }
 
-void UFTriggerTaskDetailPanelWidget::GetAllComponents(TArray<UTriggerTaskComponentBase*>& Components)
+void UFTriggerTaskDetailPanelWidget::GetAllTriggers(TArray<TScriptInterface<ITriggerInterface>>& Triggers)
 {
-	Components.Empty();
-
 	UTriggerManager* TriggerManager = UTriggerBlueprintLib::GetTriggerManager();
 
-	if(TriggerManager == nullptr)
+	if (TriggerManager == nullptr)
 		return;
 
 	UTriggerOctreeControllerBase* Controller = TriggerManager->GetTriggerController();
 
-	if(Controller == nullptr)
+	if (Controller == nullptr)
 		return;
 
 	TArray<UObject*> Objects;
 
 	Controller->GetAllTriggersInsideBox(Objects, FVector::ZeroVector, FVector(INT_MAX, INT_MAX, INT_MAX));
 
-	for(int i = 0; i < Objects.Num(); i++)
+	for (int i = 0; i < Objects.Num(); i++)
 	{
-		if(Objects[i] == nullptr)
+		if (Objects[i] == nullptr)
 			continue;
 
 		if (Objects[i]->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
 		{
-			ITriggerInterface* Interface = Cast<ITriggerInterface>(Objects[i]);
-
-			if(Interface)
-			{
-				Interface->GetTriggerTaskComponents(Components);
-			}
-			else
-			{
-				ITriggerInterface::Execute_OnGetTriggerTaskComponents(Objects[i], Components);
-			}	
+			Triggers.Add(Objects[i]);
 		}
 	}
 }
 
 FString UFTriggerTaskDetailPanelWidget::GetComponentName(UTriggerTaskComponentBase* Component)
 {
-	if(Component == nullptr)
+	if (Component == nullptr)
 	{
 		return TEXT("Select new trigger task component here");
 	}
@@ -364,23 +472,29 @@ FString UFTriggerTaskDetailPanelWidget::GetComponentName(UTriggerTaskComponentBa
 
 		ComponentIndex = Components.Find(Component);
 
-		ComponentIndex = ComponentIndex== INDEX_NONE ? 0 : ComponentIndex;
+		ComponentIndex = ComponentIndex == INDEX_NONE ? 0 : ComponentIndex;
 	}
 
-	FString Result = Component->GetOuter()->GetName();
-
-	Result += TEXT("_Component:") + FString::FromInt(ComponentIndex);
+	FString Result = Component->GetName();
 
 	return Result;
+}
+
+FString UFTriggerTaskDetailPanelWidget::GetTriggerName(UObject* Trigger)
+{
+	if(Trigger == nullptr)
+		return TEXT("");
+
+	return Trigger->GetName();
 }
 
 void UFTriggerTaskDetailPanelWidget::BrowserTo()
 {
 	AActor* Actor = nullptr;
 
-	if(TriggerTask == nullptr)
+	if (TriggerTask == nullptr)
 	{
-		if(SelctedComponent != nullptr)
+		if (SelctedComponent != nullptr)
 		{
 			Actor = SelctedComponent->GetTypedOuter<AActor>();
 		}
@@ -403,53 +517,88 @@ void UFTriggerTaskDetailPanelWidget::BrowserTo()
 	GEditor->MoveViewportCamerasToActor(Actors, /*bActiveViewportOnly=*/false);
 }
 
-void UFTriggerTaskDetailPanelWidget::OnOpeningCombox()
+void UFTriggerTaskDetailPanelWidget::OnOpeningTriggerComponentCombox()
 {
+	check(SelectedTrigger);
+
 	/*
 	* When the trigger task component combo box is opening I need to update the options in this widget.
 	*/
-
 	TriggerTaskComponentWidget->ClearOptions();
 
-	GetAllComponents(CashedComponents);
+	TArray<UTriggerTaskComponentBase*> Components;
 
-	for (int i = 0; i < CashedComponents.Num(); i++)
+	GetComponents(Components, SelectedTrigger);
+
+	for (int i = 0; i < Components.Num(); i++)
 	{
-		TriggerTaskComponentWidget->AddOption(GetComponentName(CashedComponents[i]));
+		TriggerTaskComponentWidget->AddOption(GetComponentName(Components[i]));
 	}
 
-	int Index = CashedComponents.Find(SelctedComponent);
+	int Index = Components.Find(SelctedComponent);
 
-	if(Index == INDEX_NONE)
-	{
-		TriggerTaskComponentWidget->SetSelectedOption(EMPTYSELECTEDCOMPONENT);
+	TriggerTaskComponentWidget->SetSelectedIndex(Index);
+}
 
-		TriggerTaskViewlist->ClearListItems();
-	}
-	else
+void UFTriggerTaskDetailPanelWidget::OnOpeningTriggerWidget()
+{
+	TArray<TScriptInterface<ITriggerInterface>> Triggers;
+
+	GetAllTriggers(Triggers);
+
+
+
+}
+
+void UFTriggerTaskDetailPanelWidget::OnSelctedChangeInTriggerWidget(FString SelectedItem, ESelectInfo::Type SelectionType)
+{
+	//Only care about the selection for task list
+	if (SelectionType == ESelectInfo::OnMouseClick)
 	{
-		TriggerTaskComponentWidget->SetSelectedIndex(Index);
+		TArray<TScriptInterface<ITriggerInterface>> Triggers;
+
+		GetAllTriggers(Triggers);
+
+		for (int i = 0; i < Triggers.Num(); i++)
+		{
+			if (GetTriggerName(Triggers[i].GetObject()) == SelectedItem)
+			{
+				if (Triggers[i].GetObject() != SelectedTrigger)
+				{
+					UpdateTriggerWidget(Triggers[i].GetObject());
+
+					break;
+				}
+			}
+		}
 	}
 }
 
+
 void UFTriggerTaskDetailPanelWidget::OnSelctedChangeInTriggerTaskComponent(FString SelectedItem, ESelectInfo::Type SelectionType)
-{	
+{
+	check(SelectedTrigger);
+
 	//Only care about the selection for task list
-	if(SelectionType == ESelectInfo::OnMouseClick)
+	if (SelectionType == ESelectInfo::OnMouseClick)
 	{
-		if(GetComponentName(SelctedComponent) != SelectedItem)
+		TArray<UTriggerTaskComponentBase*> Components;
+
+		GetComponents(Components, SelectedTrigger);
+
+		for(int i = 0; i <Components.Num(); i++)
 		{
-			SelctedComponent = CashedComponents[TriggerTaskComponentWidget->GetSelectedIndex()];
+			if (GetComponentName(Components[i]) == SelectedItem)
+			{
+				if (SelctedComponent != Components[TriggerTaskComponentWidget->GetSelectedIndex()])
+				{
+					SelctedComponent = Components[TriggerTaskComponentWidget->GetSelectedIndex()];
 
-			CashedTriggerTaskListDatas.Empty();
+					TriggerTask = nullptr;
 
-			UTriggerTaskListItemData* Data = NewObject<UTriggerTaskListItemData>(this, UTriggerTaskListItemData::StaticClass());
-
-			Data->TriggerTaskComponent = SelctedComponent;
-
-			CashedTriggerTaskListDatas.Add(Data);
-
-			UpdateTriggerTaskViewlist(false);
+					UpdateTriggerTaskViewlist(TriggerTask.Get());
+				}
+			}
 		}
 	}
 }
@@ -475,43 +624,12 @@ void UFTriggerTaskDetailPanelWidget::OnGetAllowedClasses(TArray<const UClass*>& 
 
 void  UFTriggerTaskDetailPanelWidget::OnActorSelected(AActor* InActor)
 {
-	if(InActor == nullptr)
+	if (InActor == nullptr)
 		return;
 
-	if(InActor->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
+	if (InActor->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
 	{
-		ITriggerInterface* Trigger = Cast<ITriggerInterface>(InActor);
-
-		TArray<UTriggerTaskComponentBase*> TriggerTaskComponents;
-		
-		if(Trigger == nullptr)
-		{
-			ITriggerInterface::Execute_OnGetTriggerTaskComponents(InActor, TriggerTaskComponents);
-		}
-		else
-		{
-			Trigger->GetTriggerTaskComponents(TriggerTaskComponents);
-		}
-
-		//As the designer want to select new trigger, I need to make this value to be null
-		TriggerTask = nullptr;
-
-		UpdateTriggerTaskComponentWidget();
-
-		TArray<UTriggerTaskComponentBase*> AllComponents;
-		GetAllComponents(AllComponents);
-
-		for (int i = 0; i < TriggerTaskComponents.Num(); i++)
-		{
-			if (TriggerTaskComponents[i] == nullptr)
-				continue;
-
-			int Index = AllComponents.Find(TriggerTaskComponents[i]);
-
-			TriggerTaskComponentWidget->SetSelectedIndex(Index);
-
-			break;
-		}
+		UpdateTriggerWidget(InActor);
 	}
 }
 
@@ -522,19 +640,16 @@ void UFTriggerTaskDetailPanelWidget::NativeDestruct()
 
 void UFTriggerTaskDetailPanelWidget::SetTriggerTask(UTriggerTaskBase* NewTriggerTask)
 {
-	if(TriggerTask == NewTriggerTask)
-		return;
-
 	TriggerTask = NewTriggerTask;
 
-	if(TriggerTask)
+	if (TriggerTask)
 	{
 		SelctedComponent = TriggerTask->GetTriggerOwner();
+
+		SelectedTrigger = SelctedComponent->GetOuter();
 	}
 
-	UpdateTriggerTaskComponentWidget();
-
-	UpdateTriggerTaskViewlist();
+	UpdateTriggerWidget(SelectedTrigger);
 
 	//Make the target value which this widget inspect changed
 	{
@@ -566,8 +681,8 @@ FTriggerTaskDetailCustomize::FTriggerTaskDetailCustomize()
 FTriggerTaskDetailCustomize::~FTriggerTaskDetailCustomize()
 {
 #if USE_UMG
-	
-	if(TriggerTaskWidget != nullptr && TriggerTaskWidget->IsValidLowLevel())
+
+	if (TriggerTaskWidget != nullptr && TriggerTaskWidget->IsValidLowLevel())
 	{
 		TriggerTaskWidget->RemoveFromParent();
 
@@ -598,7 +713,7 @@ void FTriggerTaskDetailCustomize::CustomizeHeader(TSharedRef<IPropertyHandle> Pr
 		[
 			PropertyHandle->CreatePropertyNameWidget(FText::FromString(PropertyHandle->GetProperty()->GetNameCPP()), FText::FromString(TEXT("Refer to the existed task that have allreay created in this level")), false)
 		]
-		.ValueContent()
+	.ValueContent()
 		[
 #if USE_UMG
 			CrateTriggerTaskDetailsPanel(PropertyHandle)
@@ -617,11 +732,11 @@ TSharedRef<SWidget> FTriggerTaskDetailCustomize::CrateTriggerTaskDetailsPanel(TS
 {
 	UClass* WidgetClass = UFTriggerTaskDetailPanelWidget::StaticClass();
 
-	const UTriggerConfig* const TriggerConfig = Cast<UTriggerConfig>( UTriggerConfig::StaticClass()->GetDefaultObject() );
+	const UTriggerConfig* const TriggerConfig = Cast<UTriggerConfig>(UTriggerConfig::StaticClass()->GetDefaultObject());
 
 	if (TriggerConfig)
 	{
-		if(TriggerConfig->TriggerTaskDetailsPanelWidget != nullptr)
+		if (TriggerConfig->TriggerTaskDetailsPanelWidget != nullptr)
 		{
 			WidgetClass = TriggerConfig->TriggerTaskDetailsPanelWidget.LoadSynchronous();
 		}
@@ -631,7 +746,7 @@ TSharedRef<SWidget> FTriggerTaskDetailCustomize::CrateTriggerTaskDetailsPanel(TS
 
 	TriggerTaskWidget->Initialize();
 
-	if(TriggerTaskWidget != nullptr)
+	if (TriggerTaskWidget != nullptr)
 	{
 		TriggerTaskWidget->SetPropertyHandle(InPropertyHandle);
 
@@ -691,7 +806,7 @@ TSharedRef<SWidget> FTriggerTaskDetailCustomize::GetCustomizedTaskComponentWidge
 			}
 		}
 
-		for (int i = TaskChainTemp.Num() -1; i >= 0; i--)
+		for (int i = TaskChainTemp.Num() - 1; i >= 0; i--)
 		{
 			TaskChain.Add(TaskChainTemp[i]);
 		}
@@ -699,7 +814,7 @@ TSharedRef<SWidget> FTriggerTaskDetailCustomize::GetCustomizedTaskComponentWidge
 
 		STextBlock* TextBlock = static_cast<STextBlock*>(TaskComponentTextWidget.Get());
 
-		if(TaskValue->GetTriggerOwner() == nullptr)
+		if (TaskValue->GetTriggerOwner() == nullptr)
 			return SNullWidget::NullWidget;
 
 		TextBlock->SetText(FText::FromString(TaskValue->GetTriggerOwner()->GetOuter()->GetName()));
@@ -708,7 +823,7 @@ TSharedRef<SWidget> FTriggerTaskDetailCustomize::GetCustomizedTaskComponentWidge
 
 		if (TaskValue->GetChildTasks().Num() != 0)
 		{
-			CreateCustomizedTaskWidget(TaskWidgets[TaskWidgets.Num()-1]);
+			CreateCustomizedTaskWidget(TaskWidgets[TaskWidgets.Num() - 1]);
 		}
 
 		Components.Add(TaskValue->GetTriggerOwner());
@@ -739,54 +854,54 @@ TSharedRef<SWidget> FTriggerTaskDetailCustomize::CreateTaskWidgetRecursively(TSh
 TSharedRef<SWidget> FTriggerTaskDetailCustomize::CreateTaskComponentWidget()
 {
 	return SAssignNew(TaskComponentWidget, SVerticalBox)
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
-			[
-				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
-				.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
-				[
-					SNew(SComboButton)
-					.OnGetMenuContent(this, &FTriggerTaskDetailCustomize::GenerateTriggerTaskComponentPicker)
-					.ContentPadding(0)
-					.ButtonContent()
-					[
-						SNew(SHorizontalBox)
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
-						.VAlign(VAlign_Center)
-						.Padding(0.0f, 0.0f, 4.0f, 0.0f)
-						[
-							SNew(SImage)
-							.Image(this, &FTriggerTaskDetailCustomize::GetTriggerTaskComponentDisplayValueIcon)
-						]
-						+ SHorizontalBox::Slot()
-						.VAlign(VAlign_Center)
-						[
-							SAssignNew(TaskComponentTextWidget, STextBlock)
-							.Text(this, &FTriggerTaskDetailCustomize::GetTriggerTaskComponentDisplayValueAsString)
-						]
-					]
-				]
-				+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
-					[
-						PropertyCustomizationHelpers::MakeBrowseButton( FSimpleDelegate::CreateSP(this, &FTriggerTaskDetailCustomize::BrowserTo), 
-							FText::FromString(TEXT("Browser to Trigger actor") ))
-					]
-				+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
-					[
-						PropertyCustomizationHelpers::MakeInteractiveActorPicker(FOnGetAllowedClasses::CreateSP(this, &FTriggerTaskDetailCustomize::OnGetAllowedClasses),
-						FOnShouldFilterActor(), 
-						FOnActorSelected::CreateSP(this, &FTriggerTaskDetailCustomize::OnActorSelected))
-					]
-				
-			];
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
+		[
+			SNew(SComboButton)
+			.OnGetMenuContent(this, &FTriggerTaskDetailCustomize::GenerateTriggerTaskComponentPicker)
+		.ContentPadding(0)
+		.ButtonContent()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.VAlign(VAlign_Center)
+		.Padding(0.0f, 0.0f, 4.0f, 0.0f)
+		[
+			SNew(SImage)
+			.Image(this, &FTriggerTaskDetailCustomize::GetTriggerTaskComponentDisplayValueIcon)
+		]
+	+ SHorizontalBox::Slot()
+		.VAlign(VAlign_Center)
+		[
+			SAssignNew(TaskComponentTextWidget, STextBlock)
+			.Text(this, &FTriggerTaskDetailCustomize::GetTriggerTaskComponentDisplayValueAsString)
+		]
+		]
+		]
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
+		[
+			PropertyCustomizationHelpers::MakeBrowseButton(FSimpleDelegate::CreateSP(this, &FTriggerTaskDetailCustomize::BrowserTo),
+			FText::FromString(TEXT("Browser to Trigger actor")))
+		]
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
+		[
+			PropertyCustomizationHelpers::MakeInteractiveActorPicker(FOnGetAllowedClasses::CreateSP(this, &FTriggerTaskDetailCustomize::OnGetAllowedClasses),
+			FOnShouldFilterActor(),
+			FOnActorSelected::CreateSP(this, &FTriggerTaskDetailCustomize::OnActorSelected))
+		]
+
+		];
 }
 
 TSharedRef<SWidget> FTriggerTaskDetailCustomize::CreateCustomizedTaskWidget(TSharedPtr<SWidget> ParentWidget, FString WidgetName)
@@ -804,50 +919,50 @@ TSharedRef<SWidget> FTriggerTaskDetailCustomize::CreateCustomizedTaskWidget(TSha
 		[
 			SAssignNew(TaskWidget, SVerticalBox)
 			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
-			[
-				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
-				.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
-				[
-					SNew(SSpacer)
-				]
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
-				.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
-				[
-					SNew(SSpacer)
-				]
-				+SHorizontalBox::Slot()
-				.AutoWidth()
-				.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
-				[
-					SAssignNew(ComboButton, SComboButton)
-					.OnGetMenuContent(this, &FTriggerTaskDetailCustomize::GenerateTaskPicker)
-					.ContentPadding(0)
-					.OnComboBoxOpened(this, &FTriggerTaskDetailCustomize::OnComboButtonOpen)
-					.ButtonContent()
-					[
-						SNew(SHorizontalBox)
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
-						.VAlign(VAlign_Center)
-						.Padding(0.0f, 0.0f, 4.0f, 0.0f)
-						[
-							SNew(SImage)
-							.Image(this, &FTriggerTaskDetailCustomize::GetTaskDisplayValueIcon)
-						]
-						+ SHorizontalBox::Slot()
-						.VAlign(VAlign_Center)
-						[
-							SAssignNew(TaskTextWidget, STextBlock)
-							.Text(FText::FromString(WidgetName))
-						]
-					]
-				]
-			]
+		.AutoHeight()
+		.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
+		[
+			SNew(SSpacer)
+		]
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
+		[
+			SNew(SSpacer)
+		]
+	+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.VAlign(VAlign_Center).Padding(0.0f, 0.0f, 4.0f, 0.0f)
+		[
+			SAssignNew(ComboButton, SComboButton)
+			.OnGetMenuContent(this, &FTriggerTaskDetailCustomize::GenerateTaskPicker)
+		.ContentPadding(0)
+		.OnComboBoxOpened(this, &FTriggerTaskDetailCustomize::OnComboButtonOpen)
+		.ButtonContent()
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.VAlign(VAlign_Center)
+		.Padding(0.0f, 0.0f, 4.0f, 0.0f)
+		[
+			SNew(SImage)
+			.Image(this, &FTriggerTaskDetailCustomize::GetTaskDisplayValueIcon)
+		]
+	+ SHorizontalBox::Slot()
+		.VAlign(VAlign_Center)
+		[
+			SAssignNew(TaskTextWidget, STextBlock)
+			.Text(FText::FromString(WidgetName))
+		]
+		]
+		]
+		]
 		];
 
 	ComboButtons.Add(ComboButton);
@@ -885,12 +1000,12 @@ void FTriggerTaskDetailCustomize::BrowserTo()
 void FTriggerTaskDetailCustomize::OnGetAllowedClasses(TArray<const UClass*>& AllowedClasses)
 {
 	AllowedClasses.Empty();
-	
+
 	for (TObjectIterator< UClass > ClassIt; ClassIt; ++ClassIt)
 	{
 		UClass* Class = *ClassIt;
 
-		if(Class == nullptr)
+		if (Class == nullptr)
 			continue;
 
 		if (Class->ImplementsInterface(UTriggerInterface::StaticClass()))
@@ -906,7 +1021,7 @@ void  FTriggerTaskDetailCustomize::OnActorSelected(AActor* InActor)
 	TScriptInterface<ITriggerInterface> Trigger;
 	void* Address = InActor->GetInterfaceAddress(UTriggerInterface::StaticClass());
 
-	if(Address == nullptr)
+	if (Address == nullptr)
 		return;
 
 	Trigger.SetObject(InActor);
@@ -918,7 +1033,7 @@ void  FTriggerTaskDetailCustomize::OnActorSelected(AActor* InActor)
 
 	for (int i = 0; i < TriggerTaskComponents.Num(); i++)
 	{
-		if(TriggerTaskComponents[i] == nullptr)
+		if (TriggerTaskComponents[i] == nullptr)
 			continue;
 
 		int Index = Components.Find(TriggerTaskComponents[i]);
@@ -1046,12 +1161,12 @@ TSharedRef<SWidget> FTriggerTaskDetailCustomize::GenerateTaskPicker()
 	}
 	else
 	{
-		if(CurrentTryToChangedTaskIndex > TaskChain.Num())
+		if (CurrentTryToChangedTaskIndex > TaskChain.Num())
 			return SNullWidget::NullWidget;
 
-		UTriggerTaskBase* Task = TaskChain[CurrentTryToChangedTaskIndex-1];
+		UTriggerTaskBase* Task = TaskChain[CurrentTryToChangedTaskIndex - 1];
 
-		if(Task == nullptr)
+		if (Task == nullptr)
 			return SNullWidget::NullWidget;
 
 		return SNew(SListView<UTriggerTaskBase*>)
@@ -1067,7 +1182,7 @@ TSharedRef<SWidget> FTriggerTaskDetailCustomize::GenerateTaskPicker()
 
 void FTriggerTaskDetailCustomize::OnComboButtonOpen()
 {
-	
+
 	{
 		for (int i = 0; i < ComboButtons.Num(); i++)
 		{
@@ -1127,7 +1242,7 @@ void FTriggerTaskDetailCustomize::OnTaskSelectedChanged(UTriggerTaskBase* Task, 
 		return;
 
 	//Reset the data 
-	if(CurrentTryToChangedTaskIndex != -1)
+	if (CurrentTryToChangedTaskIndex != -1)
 	{
 		for (int i = TaskChain.Num() - 1; i > CurrentTryToChangedTaskIndex; i--)
 		{

@@ -3,6 +3,7 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/GameMode.h"
 #include "TimerManager.h"
+#include "Engine/World.h"
 
 UCheckGameOverFailed_AllPlayerDead::UCheckGameOverFailed_AllPlayerDead(const FObjectInitializer& ObjectInitializer) :
 	Super(ObjectInitializer)
@@ -99,10 +100,7 @@ void UCheckGameOverFailed_AllPlayerDead::NativeInitialize(UObject* OwnerObject)
 		if (GetWorld())
 		{
 			ActorSawnDelegateHandle = GetWorld()->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateUObject(this, &UCheckGameOverFailed_AllPlayerDead::OnActorSpawned));
-			//NativeCharacterExitEventHandle = FTriggerNeededDelegate::ExitCurrentMapNativeEvent.AddUObject(this, &UCheckGameOverFailed_AllPlayerDead::OnCharacterExit);
 		}
-		//Should not concern the global game over delegate
-		//NativeFaildEventHandle = FTriggerNeededDelegate::GameFailedEvent.AddUObject(this, &UCheckGameOverFailed_AllPlayerDead::OnGameOverFaildEvent);
 	}
 }
 
@@ -110,7 +108,18 @@ void UCheckGameOverFailed_AllPlayerDead::NativeReset()
 {
 	Super::NativeReset();
 
-	CharactersInfo.Empty();
+	for (int i = 0; i < CharactersInfo.Num(); i++)
+	{
+		CharactersInfo[i].Reset();
+	}
+
+	if (CheckTimerHandle.IsValid())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CheckTimerHandle);
+		CheckTimerHandle.Invalidate();
+	}
+
+	RemainCheckTime = CheckTimeGranularity;
 }
 
 void UCheckGameOverFailed_AllPlayerDead::BeginDestroy()
@@ -122,18 +131,6 @@ void UCheckGameOverFailed_AllPlayerDead::BeginDestroy()
 		GetWorld()->RemoveOnActorSpawnedHandler(ActorSawnDelegateHandle);
 		ActorSawnDelegateHandle.Reset();
 	}
-
-	//if (NativeFaildEventHandle.IsValid())
-	//{
-	//	FTriggerNeededDelegate::GameFailedEvent.Remove(NativeFaildEventHandle);
-	//	NativeFaildEventHandle.Reset();
-	//}
-
-	//if (NativeCharacterExitEventHandle.IsValid())
-	//{
-	//	FTriggerNeededDelegate::ExitCurrentMapNativeEvent.Remove(NativeCharacterExitEventHandle);
-	//	NativeCharacterExitEventHandle.Reset();
-	//}
 }
 
 void UCheckGameOverFailed_AllPlayerDead::OnActorSpawned(AActor* Actor)
@@ -165,31 +162,6 @@ void UCheckGameOverFailed_AllPlayerDead::OnActorSpawned(AActor* Actor)
 	}
 }
 
-void UCheckGameOverFailed_AllPlayerDead::OnCharacterExit(AActor* Causer, FString URL)
-{
-	if(Cast<APawn>(Causer) == nullptr)
-		return;
-
-	bool HaveFindExitActor = false;
-
-	for (int i = 0; i < CharactersInfo.Num(); i++)
-	{
-		if (CharactersInfo[i].Player == Causer)
-		{
-			CharactersInfo[i].IsDead = true;
-			HaveFindExitActor = true;
-		}
-	}
-
-	if (!HaveFindExitActor)
-	{
-		FPlayerGameOverFalidInfo Info;
-		Info.Player = Cast<APawn>(Causer);
-		Info.IsDead = true;
-		CharactersInfo.Add(Info);
-	}
-}
-
 void UCheckGameOverFailed_AllPlayerDead::RegisterPawnTimeDelegate()
 {
 	if (DeferredPawns.Num() == 0 && RegisterPawnTimeHandle.IsValid())
@@ -213,7 +185,6 @@ void UCheckGameOverFailed_AllPlayerDead::RegisterPawnTimeDelegate()
 
 bool UCheckGameOverFailed_AllPlayerDead::RegisterPawn(APawn* Pawn)
 {
-
 	if (Cast<APlayerController>(Pawn->GetController()) == nullptr)
 		return false;
 
@@ -243,8 +214,8 @@ bool UCheckGameOverFailed_AllPlayerDead::RegisterPawn(APawn* Pawn)
 			{
 				FPlayerGameOverFalidInfo Info;
 				Info.Player = Pawn;
-				Info.DeadDelegateHandle = RespawnInterface->OnCharacterEnterDead.AddUObject(this, &UCheckGameOverFailed_AllPlayerDead::OnCharacterDead);
-
+				Info.DeadDelegateHandle = RespawnInterface->OnCharacterPreEnterDead.AddUObject(this, &UCheckGameOverFailed_AllPlayerDead::OnCharacterDead);
+				Info.RespawnHandle = RespawnInterface->OnCharacterConfirmDead.AddUObject(this, &UCheckGameOverFailed_AllPlayerDead::OnCharacterRespawn);
 				CharactersInfo.Add(Info);
 			}
 		}
@@ -264,6 +235,14 @@ void UCheckGameOverFailed_AllPlayerDead::ActorDestroyCallback(AActor* DestroyedA
 	if (Index != INDEX_NONE)
 	{
 		DeferredPawns.RemoveAt(Index);
+	}
+
+	for (int i = 0; i < CharactersInfo.Num(); i++)
+	{
+		if (CharactersInfo[i].Player == DestroyedActor)
+		{
+			CharactersInfo.RemoveAt(i--);
+		}
 	}
 }
 
@@ -291,10 +270,65 @@ void UCheckGameOverFailed_AllPlayerDead::OnCharacterDead(AActor* Actor)
 
 			AddGameOverPlayer(Cast<APlayerController>(It->Player->GetController()));
 
-			NotifyToEvaluate();
-
+			if (!CheckTimerHandle.IsValid())
+			{
+				GetWorld()->GetTimerManager().SetTimer(CheckTimerHandle, this, &UCheckGameOverFailed_AllPlayerDead::CheckPlayerDeadTimerCallback, 0.03, true);
+			}
+		
 			break;
 		}
+	}
+}
+
+void UCheckGameOverFailed_AllPlayerDead::OnCharacterRespawn(AActor* Actor)
+{
+	for (auto It = CharactersInfo.CreateIterator(); It; ++It)
+	{
+		if (It->Player == Actor)
+		{
+			It->IsDead = false;
+
+			if (Actor->GetClass()->ImplementsInterface(UDeadSupportInterface::StaticClass()))
+			{
+				IDeadSupportInterface* RespawnInterface = Cast<IDeadSupportInterface>(Actor);
+
+				if (RespawnInterface != nullptr)
+				{
+					if (!RespawnInterface->OnCharacterPreEnterDead.IsBoundToObject(this))
+					{
+						It->DeadDelegateHandle = RespawnInterface->OnCharacterPreEnterDead.AddUObject(this, &UCheckGameOverFailed_AllPlayerDead::OnCharacterDead);
+					}
+				}
+			}
+		}
+	}
+}
+
+void UCheckGameOverFailed_AllPlayerDead::CheckPlayerDeadTimerCallback()
+{
+	bool NeedResetCheckTimerHandle = false;
+
+	if (NotifyToEvaluate())
+	{
+		NeedResetCheckTimerHandle = true;
+	}
+	
+	if (RemainCheckTime > 0)
+	{
+		RemainCheckTime -= 0.03f;
+	}
+	else
+	{
+		NeedResetCheckTimerHandle = true;
+	}
+
+	if (NeedResetCheckTimerHandle)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CheckTimerHandle);
+
+		CheckTimerHandle.Invalidate();
+
+		RemainCheckTime = CheckTimeGranularity;
 	}
 }
 
@@ -330,9 +364,12 @@ void UCheckGameOverFailed_AllPlayerDead::RemoveGameOverPlayer(APlayerController*
 				CharactersInfo[i].DeadDelegateHandle.Reset();
 			}
 
-			if (CharactersInfo[i].Player->OnDestroyed.IsAlreadyBound(this, &UCheckGameOverFailed_AllPlayerDead::ActorDestroyCallback))
+			if (CharactersInfo[i].Player)
 			{
-				CharactersInfo[i].Player->OnDestroyed.RemoveDynamic(this, &UCheckGameOverFailed_AllPlayerDead::ActorDestroyCallback);
+				if (CharactersInfo[i].Player->OnDestroyed.IsAlreadyBound(this, &UCheckGameOverFailed_AllPlayerDead::ActorDestroyCallback))
+				{
+					CharactersInfo[i].Player->OnDestroyed.RemoveDynamic(this, &UCheckGameOverFailed_AllPlayerDead::ActorDestroyCallback);
+				}
 			}
 
 			CharactersInfo.RemoveAt(i--);
@@ -341,6 +378,9 @@ void UCheckGameOverFailed_AllPlayerDead::RemoveGameOverPlayer(APlayerController*
 
 	for (int i = 0; i < DeferredPawns.Num(); i++)
 	{
+		if(DeferredPawns[i] == nullptr)
+			continue;
+
 		if (DeferredPawns[i]->OnDestroyed.IsAlreadyBound(this, &UCheckGameOverFailed_AllPlayerDead::ActorDestroyCallback))
 		{
 			DeferredPawns[i]->OnDestroyed.RemoveDynamic(this, &UCheckGameOverFailed_AllPlayerDead::ActorDestroyCallback);

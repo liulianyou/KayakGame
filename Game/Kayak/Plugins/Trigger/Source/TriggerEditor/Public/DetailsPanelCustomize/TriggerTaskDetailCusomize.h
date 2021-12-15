@@ -3,16 +3,18 @@
 /*
 * Author:	Liulianyou
 * Time:		2020/9/8
-* Purpose:	Customize the properties in detail's panel 
+* Purpose:	Customize the properties in detail's panel
 */
 
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 
 #include "IPropertyTypeCustomization.h"
-
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/IUserObjectListEntry.h"
+#include "UObject/ScriptInterface.h"
+
+#include "TriggerInterface.h"
 
 #include "TriggerTaskDetailCusomize.generated.h"
 
@@ -26,7 +28,7 @@ class AActor;
 
 #define USE_UMG 1
 
-DECLARE_MULTICAST_DELEGATE_OneParam( FNewTriggerTaskAssigned, UTriggerTaskBase* /* = NewTriggerTask*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FNewTriggerTaskAssigned, UTriggerTaskBase* /* = NewTriggerTask*/);
 
 UCLASS(Blueprintable, BlueprintType)
 class TRIGGEREDITOR_API UTriggerTaskListItemData : public UObject
@@ -36,7 +38,7 @@ class TRIGGEREDITOR_API UTriggerTaskListItemData : public UObject
 public:
 
 	/*
-	* The pending trigger task 
+	* The pending trigger task
 	*/
 	UPROPERTY(Transient)
 	TSoftObjectPtr<UTriggerTaskBase> RootTaskToFindChildTasks = nullptr;
@@ -66,19 +68,19 @@ public:
 	virtual void NativeDestruct() override;
 
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
-	
+
 protected:
 
 	UFUNCTION()
 	void OnPendingTaskSelectedChange(FString SelectedItem, ESelectInfo::Type SelectionType);
 
 public:
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UComboBoxString* PendingTask;
 
 private:
-	
+
 	UPROPERTY(Transient)
 	UTriggerTaskListItemData* ListData = nullptr;
 
@@ -87,7 +89,7 @@ private:
 /*
 * This widget is used to maintain the Struct FTriggerTask in the details panel
 */
-UCLASS(Blueprintable, BlueprintType )
+UCLASS(Blueprintable, BlueprintType)
 class TRIGGEREDITOR_API UFTriggerTaskDetailPanelWidget : public UUserWidget
 {
 	GENERATED_UCLASS_BODY()
@@ -99,7 +101,7 @@ public:
 
 
 public:
-	
+
 	void SetTriggerTask(UTriggerTaskBase* NewTriggerTask);
 
 	void SetPropertyHandle(TSharedRef<IPropertyHandle> InPropertyHandle);
@@ -107,15 +109,21 @@ public:
 protected:
 
 	UFUNCTION()
-	void OnOpeningCombox();
+	void OnOpeningTriggerComponentCombox();
 
 	UFUNCTION()
 	void OnSelctedChangeInTriggerTaskComponent(FString SelectedItem, ESelectInfo::Type SelectionType);
 
+	UFUNCTION()
+	void OnOpeningTriggerWidget();
+
+	UFUNCTION()
+	void OnSelctedChangeInTriggerWidget(FString SelectedItem, ESelectInfo::Type SelectionType);
+
 protected:
 
 	//Get all components in the world
-	void GetAllComponents( TArray<UTriggerTaskComponentBase*>& Components );
+	void GetAllTriggers(TArray<TScriptInterface<ITriggerInterface>>& Triggers);
 
 	//Callback when the develop click the browser button
 	void BrowserTo();
@@ -132,15 +140,15 @@ protected:
 	*/
 	void OnActorSelected(AActor* InActor);
 
+	
 
 protected:
 
-	void UpdateTriggerTaskComponentWidget();
+	void UpdateTriggerWidget(UObject* NewTrigger);
 
-	/*
-	* @param RegeneratedCashedTaskLiastData true means the trigger task list will be regenerated in this function
-	*/
-	void UpdateTriggerTaskViewlist(bool RegeneratedCashedTaskLiastData = true);
+	void UpdateTriggerTaskComponentWidget( UTriggerTaskComponentBase* NewComponent );
+
+	void UpdateTriggerTaskViewlist( UTriggerTaskBase* NewTriggerTask );
 
 protected:
 
@@ -151,9 +159,15 @@ protected:
 
 private:
 
-	FString GetComponentName( UTriggerTaskComponentBase* Component );
+	FString GetComponentName(UTriggerTaskComponentBase* Component);
+
+	FString GetTriggerName( UObject* Trigger );
 
 public:
+
+	//This widget used to show all the triggers in the world
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UComboBoxString* TriggerWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UComboBoxString* TriggerTaskComponentWidget;
@@ -161,8 +175,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UListView* TriggerTaskViewlist;
 
+	//This will hold all the operations for the triggers
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	UHorizontalBox* TrigerTaskComponentOverlay;
+	UHorizontalBox* TrigerHorizontal;
 
 private:
 
@@ -171,8 +186,7 @@ private:
 
 	UTriggerTaskComponentBase* SelctedComponent = nullptr;
 
-	//All components in the world
-	TArray<UTriggerTaskComponentBase*> CashedComponents;
+	UObject* SelectedTrigger = nullptr;
 
 	//The temp data used to set to TriggerTaskViewList
 	UPROPERTY(Transient)
@@ -205,11 +219,11 @@ public:
 #if USE_UMG
 
 public:
-	
+
 	TSharedRef<SWidget> CrateTriggerTaskDetailsPanel(TSharedRef<IPropertyHandle> InPropertyHandle);
 
 private:
-	
+
 	UFTriggerTaskDetailPanelWidget* TriggerTaskWidget = nullptr;
 
 #else
@@ -224,7 +238,7 @@ public:
 	TSharedRef<SWidget> GetCustomizedTaskComponentWidget();
 
 	//Create the task widget recursively which will end by the end task  
-	TSharedRef<SWidget> CreateTaskWidgetRecursively(TSharedRef<SWidget> ParentWidget,UTriggerTaskBase* EndTask );
+	TSharedRef<SWidget> CreateTaskWidgetRecursively(TSharedRef<SWidget> ParentWidget, UTriggerTaskBase* EndTask);
 
 	//Create one widget which will show the trigger task component
 	TSharedRef<SWidget>CreateTaskComponentWidget();
@@ -263,7 +277,7 @@ protected:
 	void OnComboButtonOpen();
 
 	//Called when the player click the first button 
-	void OnTaskComponentClicked( UTriggerTaskComponentBase* Component);
+	void OnTaskComponentClicked(UTriggerTaskComponentBase* Component);
 
 	TSharedRef<ITableRow> OnGenerateTriggerTaskComponentRow(UTriggerTaskComponentBase* Component, const TSharedRef<STableViewBase>& OwnerTable);
 	void OnTriggerTaskComponentSelectedChanged(UTriggerTaskComponentBase* Component, ESelectInfo::Type SelectInfo);

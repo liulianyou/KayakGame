@@ -8,7 +8,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
-
+#include "Engine/EngineTypes.h"
 #include "TriggerTaskExternalDataBase.h"
 
 #include "TriggerEventRewardDataBase.generated.h"

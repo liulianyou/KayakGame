@@ -25,6 +25,9 @@ struct FPlayerGameOverFalidInfo
 
 	FDelegateHandle DeadDelegateHandle;
 
+	//The handle for respawn
+	FDelegateHandle RespawnHandle;
+
 	void Reset();
 };
 
@@ -61,9 +64,6 @@ public:
 	UFUNCTION()
 	void OnActorSpawned( AActor* Actor );
 
-	UFUNCTION()
-	void OnCharacterExit(AActor* Causer, FString URL);
-
 	/*
 	* Register event to global failed event
 	*/
@@ -73,6 +73,9 @@ public:
 	UFUNCTION()
 	void OnCharacterDead(AActor* Actor);
 
+	UFUNCTION()
+	void OnCharacterRespawn(AActor* Actor);
+
 protected:
 	bool RegisterPawn(APawn* Pawn);
 
@@ -81,6 +84,18 @@ protected:
 	//Callback function for the target actor destroyed;
 	UFUNCTION()
 	void ActorDestroyCallback(AActor* DestroyedActor);
+
+	void CheckPlayerDeadTimerCallback();
+
+public:
+
+	/*
+	* The time range after one player is dead to check weather all other player are dead
+	* zero means when the player dead it will check the other player at next frame.
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="GameOver")
+	float CheckTimeGranularity = 0.f;
+
 private:
 
 	bool DoesMeetCondition;
@@ -101,4 +116,11 @@ private:
 
 	//The handle to register the deffered pawn;
 	FTimerHandle RegisterPawnTimeHandle;
+
+	float RemainCheckTime;
+
+	/*
+	* The time handle to check weather all the player is dead
+	*/
+	FTimerHandle CheckTimerHandle;
 };

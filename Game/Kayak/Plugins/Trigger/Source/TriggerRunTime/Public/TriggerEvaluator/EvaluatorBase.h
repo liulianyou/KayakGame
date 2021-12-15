@@ -104,9 +104,11 @@ protected:
 	/*
 	* This function should also be invoked when some conditions of this evaluator have changed,
 	* so that the outer module can know the result of changed immediately.
+	* 
+	* #return the result for current evaluate
 	*/
 	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Evaluator")
-	void NotifyToEvaluate();
+	bool NotifyToEvaluate();
 
 public:
 
