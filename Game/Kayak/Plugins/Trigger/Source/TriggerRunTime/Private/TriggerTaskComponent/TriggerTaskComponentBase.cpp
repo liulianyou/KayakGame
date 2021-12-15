@@ -60,23 +60,54 @@ bool UTriggerTaskComponentBase::IsMatchedForCurrentRunTimeContent_Implementation
 	return false;
 }
 
-void UTriggerTaskComponentBase::GetAllTriggerTasks(TArray<UTriggerTaskBase*>& OutTasks) const
+void UTriggerTaskComponentBase::GetChildTaskInternal( TArray<UTriggerTaskBase*>& OuterTasks, UTriggerTaskBase* RootTask) const
+{
+	if(RootTask == nullptr)
+		return;
+
+	TArray<UTriggerTaskBase*> Tasks = RootTask->GetChildTasks();
+
+	OuterTasks.Append(Tasks);
+
+	for (int i = 0; i < Tasks.Num(); i++)
+	{
+		GetChildTaskInternal(OuterTasks, Tasks[i]);
+	}
+
+}
+
+void UTriggerTaskComponentBase::GetAllTriggerTasks(TArray<UTriggerTaskBase*>& OutTasks, bool IncludeChildTask) const
 {
 	OutTasks.Empty();
 
 	for (auto Task: TriggerTasks)
 	{
 		OutTasks.AddUnique(Task);
+
+		if (IncludeChildTask)
+		{
+			GetChildTaskInternal(OutTasks, Task);
+		}
 	}
 
 	for (auto Task : ReplicatedTasks)
 	{
 		OutTasks.AddUnique(Task);
+
+		if (IncludeChildTask)
+		{
+			GetChildTaskInternal(OutTasks, Task);
+		}
 	}
 
 	for (auto Task : UnReplicatedTasks)
 	{
 		OutTasks.AddUnique(Task);
+
+		if (IncludeChildTask)
+		{
+			GetChildTaskInternal(OutTasks, Task);
+		}
 	}
 }
 

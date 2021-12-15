@@ -106,9 +106,13 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "TriggerRuntime|TaskComponent")
 	bool IsMatchedForCurrentRunTimeContent() const;
 
-	//Get All trigger tasks in this component include Template task and instanced task
+	/*
+	* Get All trigger tasks in this component include Template task and instanced task
+	* 
+	* @param IncludeChildTask true means all task in the child task will also be reached
+	*/
 	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|TaskComponent")
-	void GetAllTriggerTasks( TArray<UTriggerTaskBase*>& OutTasks) const;
+	void GetAllTriggerTasks( TArray<UTriggerTaskBase*>& OutTasks, bool IncludeChildTask = false) const;
 
 	//Get the trigger tasks which is configured by the designer at editor mode
 	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|TaskComponent")
@@ -555,6 +559,8 @@ protected:
 
 	//Get the valid net support component form the external data or the target task
 	UTriggerNetPlayerSupportComponent* GetNetSupportComponent( UOperationInformationBase* StartOperationInfo = nullptr, UTriggerTaskBase* Task = nullptr );
+
+	void GetChildTaskInternal(TArray<UTriggerTaskBase*>& OuterTasks, UTriggerTaskBase* RootTask) const;
 
 private:
 
