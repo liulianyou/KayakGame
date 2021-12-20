@@ -220,7 +220,7 @@ public:
 
 	//The name for this interaction task which can be changed by the player
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Interaction")
-	FString Name;
+	FText Name;
 
 	/*
 	* The class for game play ability to hold some interaction rules for this interaction

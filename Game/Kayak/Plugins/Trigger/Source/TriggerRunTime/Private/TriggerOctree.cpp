@@ -40,7 +40,7 @@ FTriggerOctree::~FTriggerOctree()
 void FTriggerOctree::AddNode(TScriptInterface<ITriggerInterface> Trigger)
 {
 	//Don't process CDO of the target object
-	if (Trigger.GetObject()->HasAnyFlags(RF_ClassDefaultObject))
+	if (Trigger.GetObject()->IsTemplate())
 		return;
 	
 	//When this trigger has exist then remove it
@@ -81,6 +81,7 @@ void FTriggerOctree::RemoveNode(TScriptInterface<ITriggerInterface> Trigger)
 
 	//When remove node form octree also remove it form local pool
 	TriggerMapInfo.Remove(UniqueID);
+	TriggerMapInfo.Shrink();
 
 	TArray<UTriggerTaskComponentBase*> Components;
 	Trigger->GetTriggerTaskComponents(Components);
@@ -104,6 +105,8 @@ void FTriggerOctree::RemoveNode(TScriptInterface<ITriggerInterface> Trigger)
 			ComponentMaps.Remove(Component->GetComponentID());
 		}
 	}
+
+	ComponentMaps.Shrink();
 }
 
 void FTriggerOctree::RemoveNode(const FOctreeElementId2& ElementID)
@@ -116,6 +119,7 @@ void FTriggerOctree::RemoveNode(const FOctreeElementId2& ElementID)
 void FTriggerOctreeSemantics::SetElementId(FTriggerOctreeSemantics::FOctree& OctreeOwner, const FTriggerOctreeElement& Element, FOctreeElementId2 Id)
 {
 	int UniqueID = -1;
+
 	if (Element.GetTriggerData()->GetUniqueRuntimeID(UniqueID))
 	{
 		((FTriggerOctree&)OctreeOwner).AddNewInstanceToMapInfo(UniqueID, Id);
@@ -144,7 +148,10 @@ void FTriggerOctree::AddNewInstanceToMapInfo(const uint32 OwnerUniqueId, FOctree
 			TArray<UTriggerTaskComponentBase*> LocalComponents;
 			LocalComponents.Add(Component);
 
-			ComponentMaps.Add(Component->GetComponentID(), LocalComponents);
+			if (Component->GetComponentID().IsValid())
+			{
+				ComponentMaps.Add(Component->GetComponentID(), LocalComponents);
+			}
 		}
 		else if(ComponetnPtr->Find( Component) == INDEX_NONE)
 		{

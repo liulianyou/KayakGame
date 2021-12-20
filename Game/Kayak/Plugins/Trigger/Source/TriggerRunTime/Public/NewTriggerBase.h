@@ -87,10 +87,11 @@ protected:
 	*/
 	void SelectedInEditor( UObject* SelectedObject );
 	void SelectedChangeInEditor(UObject* SelectedObject);
-	//When in the editor we change the map level I need do some thing
-	void OnChangeMap(uint32 Flag);
-	//Callback when new level added to this world
-	void OnNewLevelAddToWorld(ULevel*, UWorld*);
+
+	////When in the editor we change the map level I need do some thing
+	//void OnChangeMap(uint32 Flag);
+	////Callback when new level added to this world
+	//void OnNewLevelAddToWorld(ULevel*, UWorld*);
 
 #endif
 

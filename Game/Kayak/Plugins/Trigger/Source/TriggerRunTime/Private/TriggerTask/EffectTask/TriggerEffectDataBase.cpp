@@ -39,6 +39,11 @@ bool UTriggerEffectDataBase::ReplicateSubobjects(class UActorChannel* Channel, c
 	return false;
 }
 
+void UTriggerEffectDataBase::BeginDestroy()
+{
+	Super::BeginDestroy();
+}
+
 void UTriggerEffectDataBase::Initialize(UTriggerTaskBase* InTaskOwner)
 {
 	TaskOwner = InTaskOwner;
@@ -69,6 +74,10 @@ void UTriggerEffectDataBase::CloseEffect(UTriggerEffectDataOperationStyleBase* C
 		{
 			TryToEndTargetObject(Object, CloseStyle);
 		}
+	}
+	else
+	{
+		//When at GC state delete all local resource directly
 	}
 
 	SetDataStatus(EffectDataStatus::CLOSED);
@@ -170,9 +179,28 @@ bool UTriggerEffectDataBase::IsClosed()
 	return DataStatus == EffectDataStatus::CLOSED;
 }
 
-bool UTriggerEffectDataBase::CanBeOpened()
+bool UTriggerEffectDataBase::CanBeOpened( const TArray<UObject*>& Causers )
 {
-	return (DataStatus != EffectDataStatus::OPENED);
+	bool Result = true;
+
+	if (GetClass()->IsFunctionImplementedInScript(TEXT("OnCanBeOpened")))
+	{
+		Result = OnCanBeOpened(Causers);
+	}
+
+	return  Result && ( DataStatus != EffectDataStatus::OPENED);
+}
+
+bool UTriggerEffectDataBase::CanBeClosed(const TArray<UObject*>& Causers)
+{
+	bool Result = true;
+
+	if (GetClass()->IsFunctionImplementedInScript(TEXT("OnCanBeClosed")))
+	{
+		Result = OnCanBeClosed(Causers);
+	}
+
+	return Result && (DataStatus == EffectDataStatus::OPENED);
 }
 
 void UTriggerEffectDataBase::SetDataStatus(FString CurrentStatus)

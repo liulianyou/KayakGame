@@ -10,10 +10,11 @@
 #include "UObject/ObjectMacros.h"
 
 #include "GameFramework/Character.h"
+#include "AbilitySystemInterface.h"
 
 #include "KayakCharacterBase.generated.h"
 
-class UKayakAbilitySystemComponentBase;
+class UAbilitySystemComponent;
 
 namespace KayakCharacterSubObjectName
 {
@@ -25,7 +26,7 @@ namespace KayakCharacterSubObjectName
 * All pawns which is used to show some local appearance should derived from this class, include player and AI
 */
 UCLASS(Blueprintable, BlueprintType, Abstract, Category = "Kayak|Player")
-class KAYAK_API AKayakCharacterBase : public ACharacter
+class KAYAK_API AKayakCharacterBase : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_UCLASS_BODY()
 
@@ -41,9 +42,7 @@ public:
 	/*
 	* Get the ability system component;
 	*/
-	UFUNCTION(BlueprintCallable, Category = "Kayak|Player|Ability")
-	UKayakAbilitySystemComponentBase* GetAbilityComponent() const { return AbilityComponent; }
-
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const { return AbilityComponent; }
 
 public:
 
@@ -92,5 +91,5 @@ private:
 	* One character should only have one ability component.
 	*/
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Kayak|Ability", meta = (AllowPrivateAccess = true))
-	UKayakAbilitySystemComponentBase* AbilityComponent;
+	UAbilitySystemComponent* AbilityComponent;
 };

@@ -13,6 +13,7 @@
 #include "Components/HorizontalBox.h"
 #include "Components/ListView.h"
 #include "Components/TextBlock.h"
+#include "Components/Button.h"
 
 #include "TriggerDefinition.h"
 #include "FTriggerTask.h"
@@ -258,6 +259,14 @@ void UFTriggerTaskDetailPanelWidget::NativeConstruct()
 		}
 	}
 
+	if(AssignSelfButton != nullptr)
+	{
+		if(!AssignSelfButton->OnClicked.IsAlreadyBound(this, &UFTriggerTaskDetailPanelWidget::OnClickAssignSelfButton))
+		{
+			AssignSelfButton->OnClicked.AddDynamic(this, &UFTriggerTaskDetailPanelWidget::OnClickAssignSelfButton);
+		}
+	}
+
 	SetTriggerTask(TriggerTask.Get());
 }
 
@@ -270,6 +279,7 @@ void UFTriggerTaskDetailPanelWidget::UpdateCashedTriggerListData()
 		UTriggerTaskBase* LocalTask = TriggerTask->GetParentTask();
 
 		TArray<UTriggerTaskBase*> LocalTasks;
+		
 		LocalTasks.Add(TriggerTask.Get());
 
 		while (LocalTask)
@@ -349,7 +359,7 @@ void UFTriggerTaskDetailPanelWidget::UpdateTriggerWidget(UObject* NewTrigger)
 	{
 		TArray<UTriggerTaskBase*> Tasks;
 
-		SelctedComponent->GetAllTriggerTasks(Tasks);
+		SelctedComponent->GetAllTriggerTasks(Tasks, true);
 
 		if(Tasks.Find(TriggerTask.Get()) == INDEX_NONE)
 		{
@@ -390,7 +400,7 @@ void UFTriggerTaskDetailPanelWidget::UpdateTriggerTaskComponentWidget(UTriggerTa
 
 			TArray<UTriggerTaskBase*> Tasks;
 
-			SelctedComponent->GetAllTriggerTasks(Tasks);
+			SelctedComponent->GetAllTriggerTasks(Tasks, true);
 
 			if (Tasks.Find(TriggerTask.Get()) == INDEX_NONE)
 			{
@@ -574,6 +584,43 @@ void UFTriggerTaskDetailPanelWidget::OnSelctedChangeInTriggerWidget(FString Sele
 	}
 }
 
+
+void UFTriggerTaskDetailPanelWidget::OnClickAssignSelfButton()
+{
+	if(!PropertyHandle.IsValid())
+		return;
+
+	TArray<UObject*> OuterObjects;
+	PropertyHandle->GetOuterObjects(OuterObjects);
+
+	TArray<UPackage*> OuterPackages;
+	PropertyHandle->GetOuterPackages(OuterPackages);
+
+	for (int i = 0; i < OuterObjects.Num(); i++)
+	{
+		UObject* Outer = OuterObjects[i];
+		UTriggerTaskBase* TaskOwner = nullptr;
+		while(Outer != nullptr)
+		{
+			TaskOwner = Cast<UTriggerTaskBase>(Outer);
+
+			if (TaskOwner == nullptr)
+			{
+				Outer = Outer->GetOuter();
+			}
+			else
+			{
+				break;
+			}
+		};
+
+		if(TaskOwner != nullptr)
+		{
+			SetTriggerTask(TaskOwner);
+			break;
+		}
+	}
+}
 
 void UFTriggerTaskDetailPanelWidget::OnSelctedChangeInTriggerTaskComponent(FString SelectedItem, ESelectInfo::Type SelectionType)
 {

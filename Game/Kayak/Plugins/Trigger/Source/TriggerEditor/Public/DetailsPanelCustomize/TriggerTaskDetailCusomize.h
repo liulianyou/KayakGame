@@ -24,6 +24,7 @@ class UComboBoxString;
 class UHorizontalBox;
 class UTextBlock;
 class UListView;
+class UButton;
 class AActor;
 
 #define USE_UMG 1
@@ -120,6 +121,9 @@ protected:
 	UFUNCTION()
 	void OnSelctedChangeInTriggerWidget(FString SelectedItem, ESelectInfo::Type SelectionType);
 
+	UFUNCTION()
+	void OnClickAssignSelfButton();
+
 protected:
 
 	//Get all components in the world
@@ -178,6 +182,9 @@ public:
 	//This will hold all the operations for the triggers
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UHorizontalBox* TrigerHorizontal;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UButton* AssignSelfButton;
 
 private:
 

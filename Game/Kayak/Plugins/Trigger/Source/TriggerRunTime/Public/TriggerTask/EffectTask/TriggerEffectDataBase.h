@@ -48,6 +48,10 @@ public:
 	virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags);
 #pragma endregion NetSupport
 
+	//Override UObject
+	virtual void BeginDestroy() override;
+	//Override UObject
+
 
 public:
 	
@@ -134,8 +138,28 @@ public:
 	/*
 	* Used to check weather this data can be opened by others
 	*/
+	UFUNCTION(BlueprintImplementableEvent, Category = "TriggerRuntime|EffectData")
+	bool OnCanBeOpened(const TArray<UObject*>& Causers);
+
+	/*
+	* Used to check weather this data can be opened by others
+	* When OnCanBeOpened return false this function will always return false
+	*/
 	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|UIData")
-	virtual bool CanBeOpened();
+	virtual bool CanBeOpened(const TArray<UObject*>& Causers);
+
+	/*
+	* Used to check weather this data can be opened by others
+	*/
+	UFUNCTION(BlueprintImplementableEvent, Category = "TriggerRuntime|EffectData")
+	bool OnCanBeClosed(const TArray<UObject*>& Causers);
+
+	/*
+	* Used to check weather this data can be opened by others
+	* When OnCanBeClosed return false this function will always return false
+	*/
+	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|UIData")
+	virtual bool CanBeClosed(const TArray<UObject*>& Causers);
 
 	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|UIData")
 	void SetDataStatus( FString CurrentStatus );
@@ -150,7 +174,7 @@ public:
 	template<class ValueType>
 	ValueType* GetValueByName(const FName& Name)
 	{
-		FProperty* Property = FindFieldChecked<FProperty>(GetClass(), Name);
+		UProperty* Property = FindFieldChecked<UProperty>(GetClass(), Name);
 
 		if(Property == nullptr)
 			return nullptr;

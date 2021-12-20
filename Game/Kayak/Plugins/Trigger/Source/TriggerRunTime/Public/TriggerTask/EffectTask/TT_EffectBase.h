@@ -73,7 +73,7 @@ public:
 	*
 	* @param MatchSupportDataTypes False means it will output all data not matter weather it is matched for this task
 	*/
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Net")
+	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Effect")
 	void GetEffectDatas(TArray<UTriggerEffectDataBase*>& OutDatas, bool MatchSupportDataTypes = true);
 
 	/*
@@ -81,10 +81,10 @@ public:
 	*
 	* @param EffectDataIndex the specific index of effect data
 	*/
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Net")
+	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Effect")
 	UTriggerEffectDataBase* GetEffectData(int EffectDataIndex = -1);
 	
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Net")
+	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Effect")
 	int GetEffectDataIndex(UTriggerEffectDataBase* Data);
 
 	/*
@@ -92,19 +92,15 @@ public:
 	* 
 	* @param EffectDataIndex INDEX_NONE means will check all data
 	*/
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Net")
+	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Effect")
 	virtual bool IsEffectDataClosed( int EffectDataIndex = -1 );
-
-	//Try to check weather this task can open the target effect data
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Net")
-	virtual bool CanOpenTargetEffectData(int EffectDataIndex = -1);
 
 	/*
 	* close the target effect data
 	* 
 	* @param EffectDataIndex	INDEX_NONE means all data will be closed, and this task should be considered as finished
 	*/
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Net")
+	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Effect")
 	virtual void CloseEffect(const TArray<UObject*>& Causers, int EffectDataIndex = -1);
 
 	/*
@@ -112,15 +108,15 @@ public:
 	* 
 	* @param EffectDataIndex the index for effect data in this trigger effect
 	*/
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Net")
+	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Effect")
 	virtual void OpenEffect(const TArray<UObject*>& Causers, int EffectDataIndex = -1);
 
 	/*
 	* When some data is changed in the effect data the task need to do something according it.
 	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "TriggerRuntime|Net")
+	UFUNCTION(BlueprintImplementableEvent, Category = "TriggerRuntime|Effect")
 	void OnDataChanged(const UTriggerEffectDataBase* EffectData, const FName& DataName);
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Net")
+	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Effect")
 	virtual void DataChanged(const UTriggerEffectDataBase* EffectData, const FName& DataName);
 
 protected:

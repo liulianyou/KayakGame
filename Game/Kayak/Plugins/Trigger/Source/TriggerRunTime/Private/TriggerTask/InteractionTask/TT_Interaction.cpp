@@ -213,7 +213,19 @@ void UTT_Interaction::TryToSleep(UOperationInformationBase* SleepOperation /* = 
 			Causers.Add(OuterScopes[i].Causer);
 		}
 	}
-	
+
+	//Remove all the activation informations for the target causer
+	for (int i = 0; i < Causers.Num(); i++)
+	{
+		AActor* Actor = Cast<AActor>(Causers[i]);
+
+		FTaskActivationInfo& ActivationInfo = GetImmediateActivationInformation().FindActiveInfoByActor(Actor);
+
+		int Index = GetImmediateActivationInformation().FindOrAddNewActiveInfo(ActivationInfo);
+
+		GetImmediateActivationInformation().RemoveActiveInfoByIndex(Index);
+	}
+
 	EndInteraction(Causers, EInteractionEndType::EInteractionEndType_Interrupt, true);
 
 	//As the the base class will invoke Reset function I need to end interaction before it
@@ -234,6 +246,8 @@ void UTT_Interaction::TryToStop(UOperationInformationBase* StopOperationInfo)
 			Causers.Add(OuterScopes[i].Causer);
 		}
 	}
+
+	GetImmediateActivationInformation().EmptyContainer();
 
 	EndInteraction(Causers, EInteractionEndType::EInteractionEndType_Interrupt, true);
 
@@ -350,7 +364,7 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 {
 	AActor* TargetActor = Contributor;
 
-	if (TargetActor == nullptr || *GamePlayAbilityClass == nullptr)
+	if(TargetActor == nullptr || *GamePlayAbilityClass == nullptr)
 		return true;
 
 	UAbilitySystemComponent* AbilitysSystem = Cast<UAbilitySystemComponent>(TargetActor->GetComponentByClass(UAbilitySystemComponent::StaticClass()));
@@ -374,7 +388,7 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 
 	AS = AbilitysSystem->FindAbilitySpecFromHandle(*ResultHandle);
 
-	if (AS == nullptr)
+	if(AS == nullptr)
 		return true;
 
 	//Always remove the old data

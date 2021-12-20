@@ -11,6 +11,13 @@ UUIEffectDataBase::UUIEffectDataBase(const FObjectInitializer& ObjectInitializer
 
 }
 
+void UUIEffectDataBase::BeginDestroy()
+{
+	Super::BeginDestroy();
+
+	RemoveUserWidget();
+}
+
 void UUIEffectDataBase::OpenEffect(UTriggerEffectDataOperationStyleBase* OpenStyle)
 {
 	if(UIClass == nullptr)
@@ -33,6 +40,12 @@ void UUIEffectDataBase::OpenEffect(UTriggerEffectDataOperationStyleBase* OpenSty
 
 void UUIEffectDataBase::CloseEffect(UTriggerEffectDataOperationStyleBase* CloseStyle)
 {
+	//remove invalid data directly
+	if (GetUserWidget() == nullptr || !GetUserWidget()->IsValidLowLevel())
+	{
+		RemoveUserWidget();
+	}
+
 	Super::CloseEffect(CloseStyle);
 
 	if (GetTaskOwner() != nullptr && GetTaskOwner()->GetTriggerOwner() != nullptr
@@ -41,9 +54,11 @@ void UUIEffectDataBase::CloseEffect(UTriggerEffectDataOperationStyleBase* CloseS
 	{
 		Super::CloseEffect(CloseStyle);
 
-		//This data don't hold any widget
-		if(GetUserWidget() == nullptr || !GetUserWidget()->IsValidLowLevel())
+		//This data don't hold any widget, remove invalid data directly
+		if (GetUserWidget() == nullptr || !GetUserWidget()->IsValidLowLevel())
+		{
 			return;
+		}
 
 		bool CanRemove = true;
 
@@ -81,6 +96,121 @@ void UUIEffectDataBase::GetInspectedObjects(TArray<UObject*>& InpectedObjects)
 	InpectedObjects.Add(GetUserWidget());
 }
 
+bool UUIEffectDataBase::CanBeOpened(const TArray<UObject*>& Causers)
+{
+	bool Result = Super::CanBeOpened(Causers);
+
+	if(Result == false)
+		return Result;
+
+	TArray<APlayerController*> Controllers;
+
+	for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		Controllers.Add(It->Get());
+	}
+
+	Result = Causers.Num() == 0 || Controllers.Num() == 0;
+
+	bool IsAnyCauser = true;
+
+	for (int i = 0; i < Causers.Num(); i++)
+	{
+		if(Causers[i] == nullptr)
+			continue;
+
+		IsAnyCauser = false;
+
+		APlayerController* PC = Cast<APlayerController>(Causers[i]);
+
+		if (PC == nullptr)
+		{
+			APawn* Pawn = Cast<APawn>(Causers[i]);
+
+			if (Pawn != nullptr)
+			{
+				PC = Cast<APlayerController>(Pawn->GetController());
+			}
+		}
+
+		if (PC == nullptr)
+			continue;
+
+		if (Controllers.Find(PC) != INDEX_NONE)
+		{
+			Result = true;
+
+			break;
+		}
+	}
+
+	/*
+	* If all the value in the causers is null means this Data should be effect on any connection
+	*/
+	if(IsAnyCauser)
+		Result = true;
+		
+
+	return Result;
+}
+
+bool UUIEffectDataBase::CanBeClosed(const TArray<UObject*>& Causers)
+{
+	bool Result = Super::CanBeClosed(Causers);
+
+	if (Result == false)
+		return Result;
+
+	TArray<APlayerController*> Controllers;
+
+	for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		Controllers.Add(It->Get());
+	}
+
+	Result = Causers.Num() == 0 || Controllers.Num() == 0;
+
+	bool IsAnyCauser = true;
+
+	for (int i = 0; i < Causers.Num(); i++)
+	{
+		if (Causers[i] == nullptr)
+			continue;
+
+		IsAnyCauser = false;
+
+		APlayerController* PC = Cast<APlayerController>(Causers[i]);
+
+		if (PC == nullptr)
+		{
+			APawn* Pawn = Cast<APawn>(Causers[i]);
+
+			if (Pawn != nullptr)
+			{
+				PC = Cast<APlayerController>(Pawn->GetController());
+			}
+		}
+
+		if (PC == nullptr)
+			continue;
+
+		if (Controllers.Find(PC) != INDEX_NONE)
+		{
+			Result = true;
+
+			break;
+		}
+	}
+
+	/*
+	* If all the value in the causers is null means this Data should be effect on any connection
+	*/
+	if (IsAnyCauser)
+		Result = true;
+
+	return Result;
+}
+
 void UUIEffectDataBase::RemoveUserWidget()
 {
 	for (int i = 0; i < Widgets.Num(); i++)
@@ -91,7 +221,12 @@ void UUIEffectDataBase::RemoveUserWidget()
 		}
 	}
 
-	UserWidget->RemoveFromParent();
+	if (UserWidget != nullptr && UserWidget->IsValidLowLevel())
+	{
+		UserWidget->RemoveFromParent();
+	
+	}
+
 	UserWidget = nullptr;
 }
 
@@ -99,7 +234,7 @@ void UUIEffectDataBase::RemoveInvalidWidgetFromPool()
 {
 	for (int i = 0; i < Widgets.Num(); i++)
 	{
-		if (Widgets[i].UserWidget == nullptr || !Widgets[i].UserWidget->IsValidLowLevel() || 
+		if (Widgets[i].UserWidget == nullptr || !Widgets[i].UserWidget->IsValidLowLevel() ||
 			!Widgets[i].UserWidget->GetIsVisible())
 		{
 			Widgets.RemoveAt(i--);

@@ -58,6 +58,7 @@ public:
 	virtual void OnRegister() override;
 	virtual void OnUnregister() override;
 	virtual void Serialize(FArchive& Ar) override;
+	virtual void BeginDestroy() override;
 
 #if WITH_EDITORONLY_DATA
 

@@ -526,7 +526,7 @@ bool UTriggerTaskComponentBase::TransfereTaskToTargetTask(UTriggerTaskBase* Send
 	if(TargetComponent == nullptr)
 		return false;
 
-	return TransfereTask(TargetComponent, SenderTask, StartOperationInfo);
+	return TransfereTask(TargetComponent, SenderTask, StartOperationInfo, TargetTask);
 }
 
 bool UTriggerTaskComponentBase::RecevieTaskInformation(UTriggerTaskComponentBase* ResourceComponent, UTriggerTaskBase* Task, UOperationInformationBase* StartOperationInfo, UTriggerTaskBase* TargetTask)
@@ -960,6 +960,20 @@ void UTriggerTaskComponentBase::RemoveEventChain(UTriggerEventChainBase* OldChai
 
 void UTriggerTaskComponentBase::RegisterTaskComponent()
 {
+	//Only register the instanced trigger
+	if (!IsTemplate())
+	{
+		TScriptInterface<ITriggerInterface> Trigger = GetTriggerObjectOwner();
+
+		if (Trigger)
+		{
+			if (GetTriggerManager() != nullptr)
+			{
+				GetTriggerManager()->RegisterTrigger(Trigger);
+			}
+		}
+	}
+
 	if (!ID.IsValid())
 	{
 		ID = FGuid::NewGuid();
@@ -978,6 +992,20 @@ void UTriggerTaskComponentBase::RegisterTaskComponent()
 
 void UTriggerTaskComponentBase::UnRegisterTaskComponent()
 {
+	//Only unregister the instanced trigger
+	if (!IsTemplate())
+	{
+		TScriptInterface<ITriggerInterface> Trigger = GetTriggerObjectOwner();
+
+		if (Trigger)
+		{
+			if (GetTriggerManager() != nullptr)
+			{
+				GetTriggerManager()->UnRegisterTrigger(Trigger);
+			}
+		}
+	}
+
 	UnRegisterTasks();
 }
 
@@ -1165,7 +1193,7 @@ Trigger::ETaskRunType UTriggerTaskComponentBase::GetTaskRunTypeInternal(ERunType
 			if (GetNetMode() == ENetMode::NM_Client || GetNetMode() == ENetMode::NM_Standalone)
 				return Trigger::ETaskRunType::Local;
 			else
-				return Trigger::ETaskRunType::Server;
+				return Trigger::ETaskRunType::Client;
 		}
 		else if (TriggerTask->RunType == ERunType::ERunType_RunOnServer)
 		{
@@ -1736,6 +1764,13 @@ void UTriggerTaskComponentBase::BeginPlay()
 
 		Task->BeginPlay();
 	}
+}
+
+void UTriggerTaskComponentBase::BeginDestroy()
+{
+	Super::BeginDestroy();
+
+	UnRegisterTaskComponent();
 }
 
 void UTriggerTaskComponentBase::OnComponentCreated()

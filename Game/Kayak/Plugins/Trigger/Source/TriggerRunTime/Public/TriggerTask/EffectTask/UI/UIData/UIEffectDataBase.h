@@ -42,10 +42,15 @@ class TRIGGERRUNTIME_API UUIEffectDataBase : public UTriggerEffectDataBase
 
 public:
 
+	//Override UObject
+	virtual void BeginDestroy() override;
+	//Override UObject
 	//Override EffectDataBase
 	virtual void OpenEffect(UTriggerEffectDataOperationStyleBase* OpenStyle);
 	virtual void CloseEffect(UTriggerEffectDataOperationStyleBase* CloseStyle);
 	virtual void GetInspectedObjects( TArray<UObject*>& InpectedObjects );
+	virtual bool CanBeOpened(const TArray<UObject*>& Causers);
+	virtual bool CanBeClosed(const TArray<UObject*>& Causers);
 	//Override EffectDataBase
 
 

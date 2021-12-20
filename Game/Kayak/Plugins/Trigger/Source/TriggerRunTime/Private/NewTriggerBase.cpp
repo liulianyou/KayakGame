@@ -32,11 +32,11 @@ ANewTriggerBase::ANewTriggerBase(const FObjectInitializer& ObjectInitializer):
 	}
 
 #if WITH_EDITOR
-	if (!HasAnyFlags(RF_ClassDefaultObject))
-	{
-		FEditorDelegates::MapChange.AddUObject(this, &ANewTriggerBase::OnChangeMap);
-		FWorldDelegates::LevelAddedToWorld.AddUObject(this, &ANewTriggerBase::OnNewLevelAddToWorld);
-	}
+	//if (!HasAnyFlags(RF_ClassDefaultObject))
+	//{
+	//	FEditorDelegates::MapChange.AddUObject(this, &ANewTriggerBase::OnChangeMap);
+	//	FWorldDelegates::LevelAddedToWorld.AddUObject(this, &ANewTriggerBase::OnNewLevelAddToWorld);
+	//}
 #endif
 }
 
@@ -51,12 +51,12 @@ void ANewTriggerBase::BeginPlay()
 void ANewTriggerBase::BeginDestroy()
 { 
 	
-	UTriggerManager* TriggerManager = GetTriggerManager();
+	//UTriggerManager* TriggerManager = GetTriggerManager();
 
-	if (TriggerManager != nullptr)
-	{
-		GetTriggerManager()->UnRegisterTrigger(this);
-	}
+	//if (TriggerManager != nullptr)
+	//{
+	//	GetTriggerManager()->UnRegisterTrigger(this);
+	//}
 
 	RemoveAllChildTaskStateEvent();
 
@@ -441,15 +441,15 @@ void ANewTriggerBase::SelectedChangeInEditor(UObject* SelectedObject)
 
 }
 
-void ANewTriggerBase::OnChangeMap(uint32 Flag)
-{
-	TryToRegister();
-}
-
-void ANewTriggerBase::OnNewLevelAddToWorld(ULevel* Level, UWorld* World)
-{
-	TryToRegister();
-}
+//void ANewTriggerBase::OnChangeMap(uint32 Flag)
+//{
+//	TryToRegister();
+//}
+//
+//void ANewTriggerBase::OnNewLevelAddToWorld(ULevel* Level, UWorld* World)
+//{
+//	TryToRegister();
+//}
 
 #endif
 

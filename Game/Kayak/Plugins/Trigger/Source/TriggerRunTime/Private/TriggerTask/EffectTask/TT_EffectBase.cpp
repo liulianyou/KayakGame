@@ -133,10 +133,17 @@ void UTT_EffectBase::TryToStop(UOperationInformationBase* Causer /* = nullptr */
 {
 	TArray<UObject*> Causers;
 	Causers.Add(Causer);
-
 	CloseEffect(Causers);
-
 	Super::TryToStop(Causer);
+
+	//By Default when this task is stopped I need to close all effect
+	//TArray<UTriggerEffectDataBase*> Datas;
+	//GetEffectDatas(Datas);
+
+	//TArray<UObject*> Causers;
+	//Causers.Add(Causer);
+
+	//CloseEffect(Causers);
 }
 
 void UTT_EffectBase::InitializeTask(UTriggerTaskComponentBase* Owner, bool AsTemplate, bool IsDynamicTask)
@@ -193,9 +200,6 @@ bool UTT_EffectBase::ReplicateSubobjects(class UActorChannel* Channel, class FOu
 void UTT_EffectBase::OpenEffect(const TArray<UObject*>& Causers, int EffectDataIndex /*= INDEX_NONE*/)
 {
 	if (GetTriggerOwner() == nullptr)
-		return;
-
-	if(!CanOpenTargetEffectData(EffectDataIndex))
 		return;
 
 	Trigger::ETaskRunType TaskRunType = GetTriggerOwner()->GetTaskRunType(this);
@@ -261,6 +265,17 @@ void UTT_EffectBase::CloseEffect(const TArray<UObject*>& Causers, int EffectData
 			NetMuti_CloseEffect(Causers, EffectDataIndex);
 		}
 	}
+	else
+	{
+		//When this task is destroyed at GC state invoke the close effect in the effect data directly
+		for (int i = 0; i < EffectDatas.Num(); i++)
+		{
+			if(EffectDatas[i] == nullptr || !EffectDatas[i]->IsValidLowLevel())
+				continue;
+
+			EffectDatas[i]->CloseEffect(nullptr);
+		}
+	}
 }
 
 
@@ -288,7 +303,7 @@ void UTT_EffectBase::OpenEffectInternal(const TArray<UObject*>& Causers, int Eff
 		{
 			UTriggerEffectDataBase* EffectData = GetEffectData(i);
 
-			if (EffectData == nullptr || !EffectData->CanBeOpened())
+			if (EffectData == nullptr || !EffectData->CanBeOpened(Causers))
 				return;
 
 			UEffectDataOpenStyleBase* OpenStyle = NewObject<UEffectDataOpenStyleBase>();
@@ -296,10 +311,11 @@ void UTT_EffectBase::OpenEffectInternal(const TArray<UObject*>& Causers, int Eff
 			OpenStyle->AddCausers(Causers);
 
 			EffectData->OpenEffect(OpenStyle);
+
+			RemoveOperator(false, EffectDataIndex);
+			AddOperator(false, Causers, EffectDataIndex);
 		}
 	}
-	RemoveOperator(false, EffectDataIndex);
-	AddOperator(false, Causers, EffectDataIndex);
 }
 
 void UTT_EffectBase::CloseEffectInternal(const TArray<UObject*>& Causers, int EffectDataIndex /*= INDEX_NONE*/)
@@ -313,7 +329,7 @@ void UTT_EffectBase::CloseEffectInternal(const TArray<UObject*>& Causers, int Ef
 		{
 			UTriggerEffectDataBase* EffectData = GetEffectData(i);
 
-			if (EffectData == nullptr || EffectData->IsClosed())
+			if (EffectData == nullptr || !EffectData->CanBeClosed(Causers))
 				return;
 
 			//UEffectDataCloseStyleBase* CloseStyle = NewObject<UEffectDataCloseStyleBase>();
@@ -321,18 +337,17 @@ void UTT_EffectBase::CloseEffectInternal(const TArray<UObject*>& Causers, int Ef
 			//CloseStyle->AddCausers(Causers);
 
 			EffectData->CloseEffect(nullptr);
+
+			RemoveOperator(true, i);
+			AddOperator(true, Causers, i);
 		}
 	}
-
-	RemoveOperator(true, EffectDataIndex);
-	AddOperator(true, Causers, EffectDataIndex);
 
 	if (IsEffectDataClosed(INDEX_NONE) && CheckRunTimeType())
 	{
 		Finished();
 	}
 }
-
 
 void UTT_EffectBase::GetEffectDatas(TArray<UTriggerEffectDataBase*>& OutDatas, bool MatchSupportDataTypes /*= true*/)
 {
@@ -405,25 +420,6 @@ bool UTT_EffectBase::IsEffectDataClosed(int EffectDataIndex /* = INDEX_NONE*/)
 	}
 
 	return Result;
-}
-
-bool UTT_EffectBase::CanOpenTargetEffectData(int EffectDataIndex)
-{
-	if (EffectDataIndex == INDEX_NONE)
-	{
-		for (int i = 0; i < EffectDatas.Num(); i++)
-		{
-			if (EffectDataIndex == INDEX_NONE || EffectDataIndex == i)
-			{
-				if (EffectDatas[i]->CanBeOpened())
-				{
-					return true;
-				}
-			}
-		}
-	}
-
-	return false;
 }
 
 void UTT_EffectBase::DataChanged(const UTriggerEffectDataBase* EffectData, const FName& DataName)
