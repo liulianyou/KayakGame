@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{A81D4BAC-48A1-2199-534A-AA99C5E988D5}",
+	"EngineAssociation": "4.26",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -17,6 +17,10 @@
 		},
 		{
 			"Name": "Trigger",
+			"Enabled": true
+		},
+		{
+			"Name": "Item",
 			"Enabled": true
 		}
 	]

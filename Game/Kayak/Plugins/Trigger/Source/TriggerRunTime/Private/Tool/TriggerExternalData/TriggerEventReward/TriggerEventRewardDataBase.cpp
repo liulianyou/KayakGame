@@ -1,7 +1,7 @@
 #include "TriggerEventRewardDataBase.h"
 #include "EvaluatorOperation.h"
-#include "Engine/World.h"
-#include "TimerManager.h"
+#include "TriggerEventRewardManager.h"
+#include "TriggerBlueprintLib.h"
 
 FString UTriggerEventRewardDataBase::EmptyRewardID = TEXT("");
 FString UTriggerEventRewardDataBase::InvalidRewardID = TEXT("INVALIDREWARDID");
@@ -20,20 +20,18 @@ void UTriggerEventRewardDataBase::Initialize(UTriggerTaskBase* Owner)
 	{
 		RequestRewardCondition->NativeInitialize(this);
 
-		if (GetWorld())
+		if (!RequestRewardCondition->EvaluatorDelegate.IsAlreadyBound(this, &UTriggerEventRewardDataBase::EvaluatorRequestCondition))
 		{
-			GetWorld()->GetTimerManager().SetTimer(TimeHandle,this, &UTriggerEventRewardDataBase::EvaluatorRequestCondition, 0.033, true);
+			RequestRewardCondition->EvaluatorDelegate.AddDynamic(this, &UTriggerEventRewardDataBase::EvaluatorRequestCondition);
 		}
 	}
 }
 
-void UTriggerEventRewardDataBase::EvaluatorRequestCondition()
+void UTriggerEventRewardDataBase::EvaluatorRequestCondition(UEvaluatorBase* Evaluator, bool EvaluatorResult)
 {
-	if (RequestRewardCondition != nullptr && RequestRewardCondition->Evaluator())
+	if (EvaluatorResult)
 	{
 		RequestReward();
-
-		GetWorld()->GetTimerManager().ClearTimer(TimeHandle);
 	}
 }
 
@@ -74,7 +72,12 @@ bool UTriggerEventRewardDataBase::IsValidRewardID_Implementation(const FString& 
 
 void UTriggerEventRewardDataBase::RequestReward_Implementation()
 {
+	UTriggerEventRewardManager* RewardManager = UTriggerBlueprintLib::GetTriggerEventRewardManager();
 
+	if (RewardManager == nullptr)
+		return;
+
+	RewardManager->RequestReward(this);
 }
 
 void UTriggerEventRewardDataBase::AcceptReward_Implementation(const TArray<FRewardData>& RewardDatas)

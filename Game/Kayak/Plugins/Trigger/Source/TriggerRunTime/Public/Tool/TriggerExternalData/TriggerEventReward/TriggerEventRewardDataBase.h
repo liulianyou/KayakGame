@@ -16,6 +16,7 @@
 #define REWARDIDENTIFICATIONDELIMITOR TEXT("_")
 #define REWARDIDENTIFICATIONDELIMITOR_CHAR '_'
 
+class UEvaluatorBase;
 class UEvaluatorOperation;
 
 /*
@@ -68,7 +69,10 @@ public:
 	//Override UTriggerTaskExternalDataBase
 
 protected:
-	virtual void EvaluatorRequestCondition();
+
+	//Callback for the reward condition
+	UFUNCTION()
+	virtual void EvaluatorRequestCondition(UEvaluatorBase* Evaluator, bool EvaluatorResult);
 
 public:
 
@@ -130,8 +134,5 @@ public:
 
 	//Stands for the empty ID
 	static FString EmptyRewardID;
-
-protected:
-	FTimerHandle TimeHandle;
 };
 

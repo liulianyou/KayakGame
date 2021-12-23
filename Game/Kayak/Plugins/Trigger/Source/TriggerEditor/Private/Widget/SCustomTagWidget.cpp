@@ -34,6 +34,7 @@
 #include "Editor.h"
 #include "Framework/Commands/UIAction.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
+#include "Misc/MessageDialog.h"
 
 #define LOCTEXT_NAMESPACE "TriggerEditor"
 
@@ -1072,7 +1073,8 @@ void SCustomTagWidget::VerifyAssetTagValidity()
                 FFormatNamedArguments Arguments;
                 Arguments.Add(TEXT("Objects"), FText::FromString(InvalidTagNames));
                 FText DialogText = FText::Format(LOCTEXT("GameplayTagWidget_InvalidTags", "Invalid Tags that have been removed: \n\n{Objects}"), Arguments);
-                OpenMsgDlgInt(EAppMsgType::Ok, DialogText, LOCTEXT("GameplayTagWidget_Warning", "Warning"));
+                FText OutPutText = LOCTEXT("GameplayTagWidget_Warning", "Warning");
+                FMessageDialog::Open(EAppMsgType::Ok, DialogText, &OutPutText);
             }
         }
     }

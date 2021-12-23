@@ -495,9 +495,22 @@ class TRIGGERRUNTIME_API IGamePlayAbilitySupportInterface
 public:
 
 	//When new ability is gave to the target actor this ability will be initialized by this function
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, meta=(DisplayName="InitaizleFormTriggerTask"))
 	void BP_OnInitaizleFormTriggerTask(UTriggerTaskBase* TriggerTaskOwner);
 	virtual void InitaizleFormTriggerTask(UTriggerTaskBase* TriggerTaskOwner) { Execute_BP_OnInitaizleFormTriggerTask(_getUObject(), TriggerTaskOwner); }
+
+	//Give the Ability one chance to end trigger task
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "TryToEndTriggerTask"))
+	void BP_OnTryToEndTriggerTask(UTriggerTaskBase* TriggerTaskOwner);
+	virtual void TryToEndTriggerTask(UTriggerTaskBase* TriggerTaskOwner) { Execute_BP_OnTryToEndTriggerTask(_getUObject(), TriggerTaskOwner); }
+
+	/*
+	* The trigger task want to end the target game play ability
+	* When the ability is ended by the trigger task, it should not notify the trigger task to end task, or it will cause infinite loop.
+	*/
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "TryToEndAbility"))
+	void BP_OnTryToEndAbility(UTriggerTaskBase* TriggerTaskOwner);
+	virtual void TryToEndAbility(UTriggerTaskBase* TriggerTaskOwner) { Execute_BP_OnTryToEndTriggerTask(_getUObject(), TriggerTaskOwner); }
 
 };
 

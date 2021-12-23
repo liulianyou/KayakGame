@@ -17,7 +17,7 @@
 class UTriggerStyleBase;
 
 /*
-* Hodl the base inforamtion for the scope of this operation
+* Hold the base information for the scope of this operation
 */
 USTRUCT(Blueprintable)
 struct TRIGGERRUNTIME_API FOperationScope

@@ -9,14 +9,16 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 
-#include "ItemManager.generated.h"
+#include "ItemManager.h"
+
+#include "KayakItemManager.generated.h"
 
 
 /*
 * This class will manager all items which is used in our game.
 */
-UCLASS(Blueprintable, BlueprintType, Abstract, Category = "Kayak|Item")
-class KAYAK_API UItemManager : public UObject
+UCLASS(Blueprintable, BlueprintType, Category = "Kayak|Item")
+class KAYAK_API UKayakItemManager : public UObject
 {
 	GENERATED_UCLASS_BODY()
 

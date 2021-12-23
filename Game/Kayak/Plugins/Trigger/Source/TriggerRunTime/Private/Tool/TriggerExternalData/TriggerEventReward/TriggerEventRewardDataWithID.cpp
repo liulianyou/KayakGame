@@ -218,15 +218,10 @@ bool UTriggerEventRewardDataWithID::IsValidRewardID_Implementation(const FString
 
 void UTriggerEventRewardDataWithID::RequestReward_Implementation()
 {
-	UTriggerEventRewardManager* RewardManager = UTriggerBlueprintLib::GetTriggerEventRewardManager();
-
-	if(RewardManager == nullptr)
-		return;
-
-	
+	Super::RequestReward_Implementation();
 }
 
 void UTriggerEventRewardDataWithID::AcceptReward_Implementation(const TArray<FRewardData>& RewardDatas)
 {
-
+	Super::AcceptReward_Implementation(RewardDatas);
 }
