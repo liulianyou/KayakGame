@@ -20,5 +20,9 @@ class KAYAK_API UKayakGameInstance : public UGameInstance
 
 public:
 
+	//Override GaemInstace
+	virtual void Init() override;
+	//Override GameInstace
+
 
 };
