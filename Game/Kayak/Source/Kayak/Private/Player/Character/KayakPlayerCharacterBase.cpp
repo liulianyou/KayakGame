@@ -1,10 +1,11 @@
 #include "KayakPlayerCharacterBase.h"
 #include "KayakPlayerAbilitySystemComponent.h"
+#include "TriggerNetPlayerSupportComponent.h"
 
 AKayakPlayerCharacterBase::AKayakPlayerCharacterBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer.SetDefaultSubobjectClass<UKayakPlayerAbilitySystemComponent>(KayakCharacterSubObjectName::AbilitySystemName))
 {
-
+	TriggerNetSupport = CreateDefaultSubobject<UTriggerNetPlayerSupportComponent>(TEXT("TriggerNetSupport"));
 }
 
 void AKayakPlayerCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

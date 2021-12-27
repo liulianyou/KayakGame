@@ -6,12 +6,42 @@ UWeaponComponent::UWeaponComponent(const FObjectInitializer& ObjectInitializer)
 
 }
 
-void UWeaponComponent::OnRegister()
+void UWeaponComponent::RegisterComponent()
 {
-	Super::OnRegister();
+	Super::RegisterComponent();
 }
 
-void UWeaponComponent::OnUnregister()
+void UWeaponComponent::UnregisterComponent()
 {
-	Super::OnUnregister();
+	Super::UnregisterComponent();
+}
+
+void UWeaponComponent::ActivateItem()
+{
+	Super::ActivateItem();
+}
+
+void UWeaponComponent::DeactivateItem()
+{
+	Super::DeactivateItem();
+}
+
+void UWeaponComponent::StartUse()
+{
+	Super::StartUse();
+}
+
+void UWeaponComponent::StopUse()
+{
+	Super::StopUse();
+}
+
+void UWeaponComponent::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
+{
+	Super::Abandoned(AbandonInfo);
+}
+
+void UWeaponComponent::Gained(const FItemScopeChangeInfo& GainedInfo)
+{
+	Super::Gained(GainedInfo);
 }

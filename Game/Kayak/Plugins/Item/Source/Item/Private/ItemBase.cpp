@@ -5,3 +5,13 @@ UItemDataBase::UItemDataBase(const FObjectInitializer& ObjectInitializer)
 {
 	
 }
+
+void UItemDataBase::AddReferencedComponent(UItemComponentBase* ItemComponent)
+{
+	OnAddReferencedComponent(ItemComponent);
+}
+
+void UItemDataBase::RemoveReferencedComponent(UItemComponentBase* ItemComponent)
+{
+	OnRemoveReferencedComponent(ItemComponent);
+}

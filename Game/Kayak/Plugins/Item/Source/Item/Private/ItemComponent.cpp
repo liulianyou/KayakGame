@@ -2,6 +2,7 @@
 #include "ItemManager.h"
 #include "ItemBlueprintLib.h"
 #include "Net/UnrealNetwork.h"
+#include "ItemBase.h"
 
 UItemComponentBase::UItemComponentBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -27,61 +28,111 @@ void UItemComponentBase::OnRegister()
 {
 	Super::OnRegister();
 
-	UItemManager* ItemManager = UItemBlueprintLib::GetItemManager();
-
-	if (ItemManager != nullptr)
-	{
-		ItemManager->RegisterItem(GetItemOwner());
-	}
+	RegisterComponent();
 }
 
 void UItemComponentBase::OnUnregister()
 {
 	Super::OnUnregister();
 
+	UnregisterComponent();
+}
+
+void UItemComponentBase::RegisterComponent()
+{
+	UItemManager* ItemManager = UItemBlueprintLib::GetItemManager();
+
+	if (ItemManager != nullptr)
+	{
+		ItemManager->RegisterItem(GetItemOwner());
+	}
+
+	OnRegisterComponent();
+}
+
+void UItemComponentBase::UnregisterComponent()
+{
 	UItemManager* ItemManager = UItemBlueprintLib::GetItemManager();
 
 	if (ItemManager != nullptr)
 	{
 		ItemManager->UnregisterItem(GetItemOwner());
 	}
+
+	OnUnregisterComponent();
 }
 
-void UItemComponentBase::Actvie()
+void UItemComponentBase::ActivateItem()
 {
-	if (GetClass()->IsFunctionImplementedInScript(TEXT("OnActvie")))
+	//When this item have been activate do not activate it again
+	if(IsActivated())
+		return;
+	
+	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, OnActivateItem)))
 	{
-		OnActive();
+		OnActivateItem();
 	}
 }
 
-void UItemComponentBase::Deactive()
+void UItemComponentBase::DeactivateItem()
 {
-	if (GetClass()->IsFunctionImplementedInScript(TEXT("OnDeactive")))
+	//When deactive this item make sure this item is not using.
+	if (IsUsing())
 	{
-		OnDeactive();
+		StopUse();
+	}
+
+	//When this item have never been activated then do not need to deactivate it
+	if(!IsActivated())
+		return;
+
+	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, OnDeactivateItem)))
+	{
+		OnDeactivateItem();
 	}
 }
 
 void UItemComponentBase::StartUse()
 {
-	if (GetClass()->IsFunctionImplementedInScript(TEXT("OnStartUse")))
+	//Make sure this item have been activated when this item start to be use
+	if (!IsActivated())
+	{
+		Activate();
+	}
+
+	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, OnStartUse)))
 	{
 		OnStartUse();
 	}
+
+	bIsUsing = true;
 }
 
 void UItemComponentBase::StopUse()
 {
-	if (GetClass()->IsFunctionImplementedInScript(TEXT("OnStopUse")))
+	//This item have not been used, so do not stop it
+	if(IsUsing() == false)
+		return;
+
+	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, StopUse)))
 	{
 		OnStopUse();
 	}
+
+	bIsUsing = false;
 }
 
 void UItemComponentBase::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
 {
-	if (GetClass()->IsFunctionImplementedInScript(TEXT("OnAbandoned")))
+	//If the scope have changed I need to deactive it first
+	if (AbandonInfo.ScopeChangeType != EItemScopeChangeType::NoChange && 
+		//When duplicate item the source item will not change, so do not need to deactive
+		AbandonInfo.ScopeChangeType != EItemScopeChangeType::Duplicate)
+	{
+		Deactivate();
+	}
+
+	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, OnAbandoned)))
 	{
 		Abandoned(AbandonInfo);
 	}
@@ -89,7 +140,7 @@ void UItemComponentBase::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
 
 void UItemComponentBase::Gained(const FItemScopeChangeInfo& GainedInfo)
 {
-	if (GetClass()->IsFunctionImplementedInScript(TEXT("OnGained")))
+	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, OnGained)))
 	{
 		OnGained(GainedInfo);
 	}
@@ -169,11 +220,43 @@ void UItemComponentBase::SetAvatarOwner(UObject* NewAvatar)
 		return;
 
 	OwnerAvatar = NewAvatar;
+}
 
+void UItemComponentBase::SetNewItemData_Implementation(UItemDataBase* NewData)
+{
+	//Nothing changed
+	if(ItemData == NewData)
+		return;
+
+	bool NeedActiveAfterDataChanged = false;
+	bool NeedStartUseAfterDataChanged = false;
+
+	if (IsActivated())
+		NeedActiveAfterDataChanged = true;
 	
+	if (IsUsing())
+		NeedStartUseAfterDataChanged = true;
+
+	DeactivateItem();
+	StopUse();
+
+	if (ItemData)
+		ItemData->RemoveReferencedComponent(this);
+
+	ItemData = NewData;
+
+	if (ItemData)
+		ItemData->AddReferencedComponent(this);
+
+	if (NeedStartUseAfterDataChanged)
+		ActivateItem();
+
+	if (NeedStartUseAfterDataChanged)
+		StartUse();
 }
 
 void UItemComponentBase::OnRep_OwnerAvatar(UObject* OldAvatar)
 {
 	
 }
+

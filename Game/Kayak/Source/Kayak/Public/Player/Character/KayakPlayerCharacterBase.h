@@ -10,14 +10,17 @@
 #include "UObject/ObjectMacros.h"
 
 #include "KayakCharacterBase.h"
+#include "TriggerDefinition.h"
 
 #include "KayakPlayerCharacterBase.generated.h"
+
+class UTriggerNetPlayerSupportComponent;
 
 /*
 * The base character of player
 */
 UCLASS(Blueprintable, BlueprintType, Abstract, Category = "Kayak|Player")
-class KAYAK_API AKayakPlayerCharacterBase : public AKayakCharacterBase
+class KAYAK_API AKayakPlayerCharacterBase : public AKayakCharacterBase, public IDeadSupportInterface
 {
 	GENERATED_UCLASS_BODY()
 
@@ -35,6 +38,12 @@ public:
 	virtual void LookUpAtRate(float Rate);
 	//Override AKayakCharacterBase
 
+private:
 
+	/*
+	* Used for trigger event system, so that the trigger event system can use the RPC(Client/Server).
+	*/
+	UPROPERTY()
+	UTriggerNetPlayerSupportComponent* TriggerNetSupport;
 };
 

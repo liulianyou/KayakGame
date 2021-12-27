@@ -11,6 +11,7 @@
 
 #include "ItemBase.generated.h"
 
+class UItemComponentBase;
 
 /*
 * The base class for all items used in our game
@@ -24,6 +25,13 @@ class ITEM_API UItemDataBase : public UObject
 
 public:
 
-	
+	//Remove the component which will use this data as its initial value
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemData")
+	void OnRemoveReferencedComponent(UItemComponentBase* ItemComponent);
+	virtual void RemoveReferencedComponent( UItemComponentBase* ItemComponent );
 
+	//Add the component which will use this data as its initial value
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemData")
+	void OnAddReferencedComponent(UItemComponentBase* ItemComponent);
+	virtual void AddReferencedComponent( UItemComponentBase* ItemComponent );
 };

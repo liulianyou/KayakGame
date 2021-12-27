@@ -23,9 +23,11 @@ class ITEM_API UWeaponComponent : public UItemComponentBase
 
 public:
 
+	ItemComponentFramework();
+
 	//Override ActorComponent
-	virtual void OnRegister() override;
-	virtual void OnUnregister() override;
+	virtual void RegisterComponent() override;
+	virtual void UnregisterComponent() override;
 	//Override ActorComponent
 
 public:

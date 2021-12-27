@@ -24,7 +24,7 @@ class ITEM_API AWeaponBase : public AActor, public IItemInterface
 public:
 	
 	//Override ItemInterface
-	ItemFramework();
+	ItemInterfaceFramework();
 	//Override ItemInterface
 
 protected:

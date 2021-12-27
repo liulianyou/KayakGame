@@ -32,13 +32,12 @@ public:
 	//Override Object
 
 	//Override ActorComponent
-	virtual void OnRegister() override;
-	virtual void OnUnregister() override;
+	virtual void OnRegister() final;
+	virtual void OnUnregister() final;
 	//Override ActorComponent
 
 public:
 	
-
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
 	void OnInitialize(UObject* NewItemOnwer);
 	
@@ -49,26 +48,27 @@ public:
 	* Give the BP one chance to define how to active this item
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
-	void OnActive();
+	void OnActivateItem();
 
 	/*
 	* Active the item so that the outer can use this item 
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void Actvie();
+	virtual void ActivateItem();
 
 	/*
 	* Give the BP one chance to define how to Deactive this item
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
-	void OnDeactive();
+	void OnDeactivateItem();
 
 	/*
 	* Deactive this item so that the outer can not use this item.
 	* If the outer want to use this item it should active it first and then use it
+	* If one item deactivated all things related to this item should be cleared
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void Deactive();
+	virtual void DeactivateItem();
 
 
 	/*
@@ -119,6 +119,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
 	virtual void Gained(const FItemScopeChangeInfo& GainedInfo);
 
+	//Check weather this item has been activated
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	bool IsActivated() { return bHasActivated; }
+
+	//Check weather this item is using
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	bool IsUsing() { return bIsUsing; }
+
 public:
 
 	/*
@@ -131,7 +139,13 @@ public:
 	UObject* GetAvatarOwner() const { return OwnerAvatar; }
 
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	void SetAvatarOwner( UObject* NewAvatar );
+	virtual void SetAvatarOwner( UObject* NewAvatar );
+
+	UFUNCTION(BlueprintNativeEvent, Category = "ItemComponent")
+	void SetNewItemData(UItemDataBase* NewData);
+
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	UItemDataBase* GetItemData() const { return ItemData; }
 
 public:
 
@@ -139,13 +153,39 @@ public:
 	UFUNCTION()
 	void OnRep_OwnerAvatar( UObject* OldAvatar );
 
+protected:
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
+	void OnRegisterComponent();
+
+	//Register this component
+	virtual void RegisterComponent();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
+	void OnUnregisterComponent();
+
+	//Unregister this component
+	virtual void UnregisterComponent();
+
 public:
 	
 	//The data which will be used in this item
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ItemComponent")
-	TSubclassOf<UItemDataBase> ItemData;
+	TSubclassOf<UItemDataBase> ItemDataClass;
 
 private:
+	
+	//Flag to check weather this item has been activated
+	uint8 bHasActivated : 1;
+
+	//Flag to check weather this item is using
+	uint8 bIsUsing	: 1;
+
+private:
+
+	//The instance data which will be used by this component
+	UPROPERTY()
+	UItemDataBase* ItemData;
 
 	/*
 	* where this component should exist
@@ -160,3 +200,51 @@ private:
 	UObject* OwnerAvatar = nullptr;
 
 };
+	
+#define  ItemComponentFramework()\
+	virtual void ActivateItem() override;\
+	virtual void DeactivateItem() override; \
+	virtual void StartUse() override; \
+	virtual void StopUse() override; \
+	virtual void Abandoned(const FItemScopeChangeInfo& AbandonInfo) override; \
+	virtual void Gained(const FItemScopeChangeInfo& GainedInfo) override;
+
+/*
+* Just make implement the item frame work more easy, Ctrl + C, Ctrl + V, and change the NEWItemClass to the target component class
+*/
+#if 0
+UItemComponentBase* NEWItemClass::GetItemComponent() const
+{
+	return Super::GetItemComponent();
+}
+
+void NEWItemClass::ActivateItem()
+{
+	Super::ActivateItem();
+}
+
+void NEWItemClass::DeactivateItem()
+{
+	Super::DeactivateItem();
+}
+
+void NEWItemClass::StartUse()
+{
+	Super::StartUse();
+}
+
+void NEWItemClass::StopUse()
+{
+	Super::StopUse();
+}
+
+void NEWItemClass::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
+{
+	Super::Abandoned(AbandonInfo);
+}
+
+void NEWItemClass::Gained(const FItemScopeChangeInfo& GainedInfo)
+{
+	Super::Gained(GainedInfo);
+}
+#endif

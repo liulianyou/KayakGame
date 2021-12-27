@@ -11,6 +11,7 @@
 
 #include "ItemDefinition.generated.h"
 
+
 USTRUCT(BlueprintType)
 struct FLocationInfo
 {
@@ -65,4 +66,12 @@ public:
 	//The original location before this scope changed
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FLocationInfo SourceLocationInfo;
+};
+
+/*
+* Struct stored the delegate that will be used outside for each item.
+*/
+struct FItemNativeDelegate
+{
+	
 };
