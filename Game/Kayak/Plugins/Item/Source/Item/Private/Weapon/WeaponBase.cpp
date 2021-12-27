@@ -22,25 +22,30 @@ UItemComponentBase* AWeaponBase::GetItemComponent() const
 
 void AWeaponBase::Actvie()
 {
-
+	IItemInterface::Actvie();
 }
+
 void AWeaponBase::Deactive()
 {
-
+	IItemInterface::Deactive();
 }
+
 void AWeaponBase::StartUse()
 {
-
+	IItemInterface::StartUse();
 }
+
 void AWeaponBase::StopUse()
 {
-
+	IItemInterface::StopUse();
 }
-void AWeaponBase::Abandoned()
-{
 
+void AWeaponBase::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
+{
+	IItemInterface::Abandoned(AbandonInfo);
 }
-void AWeaponBase::Gained()
-{
 
+void AWeaponBase::Gained(const FItemScopeChangeInfo& GainedInfo)
+{
+	IItemInterface::Gained(GainedInfo);
 }

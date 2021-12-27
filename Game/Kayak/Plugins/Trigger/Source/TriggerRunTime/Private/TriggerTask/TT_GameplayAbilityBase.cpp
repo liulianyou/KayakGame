@@ -40,6 +40,9 @@ void UTT_GamePlayAbilityBase::RegisterAbilityComponentToOwnerActor()
 	{
 		AActor* OwnerActor = Cast<AActor>(OuterAvaters[i]);
 
+		if(OwnerActor == nullptr)
+			continue;
+
 		bool HaveValidAbilitySystemInterface = true;
 
 		if (OuterAvaters[i]->GetClass()->ImplementsInterface(UAbilitySystemInterface::StaticClass()))

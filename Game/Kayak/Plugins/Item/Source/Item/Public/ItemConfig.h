@@ -14,6 +14,7 @@
 #include "ItemConfig.generated.h"
 
 class UItemManager;
+class UItemGlobal;
 
 /*
 * All global config of item system should be set here
@@ -29,5 +30,12 @@ public:
 	* The class of item manager that the outer game used
 	*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, config)
-	TSubclassOf<UItemManager> ItemManagerClass;
+	TSoftClassPtr<UItemManager> ItemManagerClass;
+
+	/*
+	* The class which will be used to spawn new global instance for Item system
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, config)
+	TSoftClassPtr<UItemGlobal> ItemGlobalClass;
+
 };

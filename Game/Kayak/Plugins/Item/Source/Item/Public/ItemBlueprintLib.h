@@ -28,6 +28,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	static UItemManager* GetItemManager();
 
-
-
+	/*
+	* Get the global set of function used in the item system
+	*/
+	UFUNCTION(BlueprintCallable)
+	static UItemGlobal* GetItemGlobal();
 };

@@ -7,6 +7,11 @@ UItemManager::UItemManager(const FObjectInitializer& ObjectInitialzier)
 	
 }
 
+void UItemManager::Initialize()
+{
+	OnInitialize();
+}
+
 UItemDataBase* UItemManager::CreateNewItemData(TSubclassOf<UItemDataBase> ItemDataClass)
 {
 	return nullptr;

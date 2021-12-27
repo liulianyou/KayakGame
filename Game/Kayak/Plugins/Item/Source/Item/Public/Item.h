@@ -5,11 +5,24 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FItemModule : public IModuleInterface
-{
-public:
+class UItemGlobal;
 
-	/** IModuleInterface implementation */
-	virtual void StartupModule() override;
-	virtual void ShutdownModule() override;
+
+class IItemModuleInterface : public IModuleInterface
+{
+
+public:
+	
+	/*
+	* Singleton access to item module
+	*/
+	static inline IItemModuleInterface& Get()
+	{
+		QUICK_SCOPE_CYCLE_COUNTER(STAT_IGameplayAbilitiesModule_Get);
+		static IItemModuleInterface& Singleton = FModuleManager::LoadModuleChecked< IItemModuleInterface >("Item");
+		return Singleton;
+	}
+
+	virtual UItemGlobal* GetItemGlobal() const = 0;
+
 };

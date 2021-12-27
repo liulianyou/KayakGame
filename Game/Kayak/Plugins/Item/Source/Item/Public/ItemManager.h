@@ -27,6 +27,12 @@ class ITEM_API UItemManager : public UObject
 
 public:
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
+	void OnInitialize();
+
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	void Initialize();
+
 	/*
 	* Create new data used for item system
 	*/

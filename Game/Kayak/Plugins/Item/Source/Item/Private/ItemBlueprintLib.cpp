@@ -1,4 +1,7 @@
 #include "ItemBlueprintLib.h"
+#include "ItemManager.h"
+#include "ItemGlobal.h"
+#include "Item.h"
 
 UItemBlueprintLib::UItemBlueprintLib(const FObjectInitializer& ObjectInitialzier)
 	:Super(ObjectInitialzier)
@@ -8,5 +11,10 @@ UItemBlueprintLib::UItemBlueprintLib(const FObjectInitializer& ObjectInitialzier
 
 UItemManager* UItemBlueprintLib::GetItemManager()
 {
-	return nullptr;
+	return GetItemGlobal()->GetItemManage();
+}
+
+UItemGlobal* UItemBlueprintLib::GetItemGlobal()
+{
+	return IItemModuleInterface::Get().GetItemGlobal();
 }

@@ -1,11 +1,19 @@
 #include "ItemComponent.h"
 #include "ItemManager.h"
 #include "ItemBlueprintLib.h"
+#include "Net/UnrealNetwork.h"
 
 UItemComponentBase::UItemComponentBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
 
+}
+
+void UItemComponentBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UItemComponentBase, OwnerAvatar);
 }
 
 void UItemComponentBase::Initialzie(UObject* NewItemOnwer)
@@ -71,19 +79,19 @@ void UItemComponentBase::StopUse()
 	}
 }
 
-void UItemComponentBase::Abandoned()
+void UItemComponentBase::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
 {
 	if (GetClass()->IsFunctionImplementedInScript(TEXT("OnAbandoned")))
 	{
-		Abandoned();
+		Abandoned(AbandonInfo);
 	}
 }
 
-void UItemComponentBase::Gained()
+void UItemComponentBase::Gained(const FItemScopeChangeInfo& GainedInfo)
 {
 	if (GetClass()->IsFunctionImplementedInScript(TEXT("OnGained")))
 	{
-		OnGained();
+		OnGained(GainedInfo);
 	}
 }
 
@@ -153,4 +161,19 @@ TScriptInterface<IItemInterface> UItemComponentBase::GetItemOwner() const
 	}
 
 	return Result;
+}
+
+void UItemComponentBase::SetAvatarOwner(UObject* NewAvatar)
+{
+	if(OwnerAvatar == NewAvatar)
+		return;
+
+	OwnerAvatar = NewAvatar;
+
+	
+}
+
+void UItemComponentBase::OnRep_OwnerAvatar(UObject* OldAvatar)
+{
+	
 }

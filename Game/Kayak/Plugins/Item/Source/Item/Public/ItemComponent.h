@@ -9,7 +9,7 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 #include "Templates/SubclassOf.h"
-
+#include "ItemDefinition.h"
 #include "ItemInterface.h"
 
 #include "ItemComponent.generated.h"
@@ -27,6 +27,10 @@ class ITEM_API UItemComponentBase : public UActorComponent
 
 public:
 	
+	//Override Object
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	//Override Object
+
 	//Override ActorComponent
 	virtual void OnRegister() override;
 	virtual void OnUnregister() override;
@@ -95,25 +99,25 @@ public:
 	* Give the BP one change to define how to  abandon this item
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
-	void OnAbandoned();
+	void OnAbandoned(const FItemScopeChangeInfo& AbandonInfo);
 
 	/*
 	* Abandon this item.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void Abandoned();
+	virtual void Abandoned(const FItemScopeChangeInfo& AbandonInfo);
 
 	/*
 	* Give the BP one change to define how to gain this item
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
-	void OnGained();
+	void OnGained(const FItemScopeChangeInfo& GainedInfo);
 
 	/*
 	* Defines how to gain this item
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void Gained();
+	virtual void Gained(const FItemScopeChangeInfo& GainedInfo);
 
 public:
 
@@ -123,6 +127,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
 	TScriptInterface<IItemInterface> GetItemOwner() const;
 	
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	UObject* GetAvatarOwner() const { return OwnerAvatar; }
+
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	void SetAvatarOwner( UObject* NewAvatar );
+
+public:
+
+	//Callback when the avatar have been changed 
+	UFUNCTION()
+	void OnRep_OwnerAvatar( UObject* OldAvatar );
 
 public:
 	
@@ -132,6 +147,16 @@ public:
 
 private:
 
+	/*
+	* where this component should exist
+	*/
 	UObject* ItemOwner = nullptr;
+
+	/*
+	* Which avatar own this component, this value can be null, such as the player abandon this item on the ground.
+	* Mostly this value is different from the ItemOwner.
+	*/
+	UPROPERTY(ReplicatedUsing=OnRep_OwnerAvatar)
+	UObject* OwnerAvatar = nullptr;
 
 };

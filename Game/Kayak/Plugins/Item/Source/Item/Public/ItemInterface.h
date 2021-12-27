@@ -9,6 +9,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "UObject/ScriptInterface.h"
+#include "ItemDefinition.h"
 #include "ItemInterface.generated.h"
 
 class UItemComponentBase;
@@ -71,15 +72,15 @@ public:
 	* When this item is abandoned by the outer how this item respond to it
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
-	void OnAbandoned();
-	virtual void Abandoned() PURE_VIRTUAL(&UItemComponentBase::Abandoned, OnAbandoned();)
+	void OnAbandoned(const FItemScopeChangeInfo& AbandonInfo);
+	virtual void Abandoned(const FItemScopeChangeInfo& AbandonInfo) PURE_VIRTUAL(&UItemComponentBase::Abandoned, OnAbandoned(AbandonInfo);)
 
 	/*
 	* When the outer gain the item what effect should be applied to the outer
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
-	void OnGained();
-	virtual void Gained() PURE_VIRTUAL(&UItemComponentBase::Gained, OnGained();)
+	void OnGained(const FItemScopeChangeInfo& GainedInfo);
+	virtual void Gained(const FItemScopeChangeInfo& GainedInfo) PURE_VIRTUAL(&UItemComponentBase::Gained, OnGained(GainedInfo);)
 };
 
 #define  ItemFramework()\
@@ -88,43 +89,43 @@ public:
 	virtual void Deactive() override; \
 	virtual void StartUse() override; \
 	virtual void StopUse() override; \
-	virtual void Abandoned() override; \
-	virtual void Gained() override;
+	virtual void Abandoned(const FItemScopeChangeInfo& AbandonInfo) override; \
+	virtual void Gained(const FItemScopeChangeInfo& GainedInfo) override;
 
-//Just make implement the item frame work more easy, Ctrl+C,Ctrl+V
+//Just make implement the item frame work more easy, Ctrl+C,Ctrl+V, and change the NEWItemClass to the target component
 #if 0
-UItemComponentBase* UItemComponentBase::GetItemComponent() const
+UItemComponentBase* NEWItemClass::GetItemComponent() const
 {
-
+	return IItemInterface::GetItemComponent();
 }
 
-void UItemComponentBase::Actvie()
+void NEWItemClass::Actvie()
 {
-
+	IItemInterface::Active();
 }
 
-void UItemComponentBase::Deactive()
+void NEWItemClass::Deactive()
 {
-
+	IItemInterface::Deactive();
 }
 
-void UItemComponentBase::StartUse()
+void NEWItemClass::StartUse()
 {
-
+	IItemInterface::StartUse();
 }
 
-void UItemComponentBase::StopUse()
+void NEWItemClass::StopUse()
 {
-
+	IItemInterface::StopUse();
 }
 
-void UItemComponentBase::Abandoned()
+void NEWItemClass::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
 {
-
+	IItemInterface::Abandoned(AbandonInfo);
 }
 
-void UItemComponentBase::Gained()
+void NEWItemClass::Gained(const FItemScopeChangeInfo& GainedInfo)
 {
-
-}
+	IItemInterface::Gained(GainedInfo);
+}	
 #endif

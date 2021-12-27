@@ -261,7 +261,7 @@ void UTriggerTaskBase::UnRegister()
 void UTriggerTaskBase::BeginPlay()
 {
 	if (!HasAnyFlags(RF_ClassDefaultObject))
-	{
+	{		
 		InitializeCondition(StartConditions, FinishConditions, StopConditions, SleepConditions, ResetConditions, SkipConditions, PauseConditions, ResumeConditions, RepeatConditions);
 
 		OnBeginPlay();
@@ -641,25 +641,20 @@ UTriggerTaskComponentBase* UTriggerTaskBase::GetTriggerOwner() const
 	if (TTC == nullptr)
 	{
 		UObject* CurrentOuter = GetOuter();
-		ANewTriggerBase* NTB = nullptr;
+
 		for ( ; CurrentOuter != nullptr; )
 		{
-			NTB = Cast<ANewTriggerBase>(CurrentOuter);
+			TTC = Cast<UTriggerTaskComponentBase>(CurrentOuter);
 
-			if(NTB != nullptr)
+			if(TTC != nullptr)
 				break;
 
 			CurrentOuter = CurrentOuter->GetOuter();
 		}
 
-		if (CurrentOuter != nullptr && NTB != nullptr)
+		if (TTC && !TTC->IsRegistered())
 		{
-			if (NTB->TriggerTaskComponent != nullptr)
-			{
-				NTB->TriggerTaskComponent->RegisterTaskComponent();
-
-				TTC = TriggerOwner;
-			}
+			TTC->RegisterTaskComponent();
 		}
 	}
 
@@ -974,7 +969,7 @@ bool UTriggerTaskBase::TryToCreateNewInstance(FTaskActivationInfo& ActivationInf
 {
 	bool Result = false;
 
-	UTriggerTaskBase* PendingTask = nullptr;
+	UTriggerTaskBase* PendingNewAddedTask = nullptr;
 
 	switch (InstanceType)
 	{
@@ -992,14 +987,14 @@ bool UTriggerTaskBase::TryToCreateNewInstance(FTaskActivationInfo& ActivationInf
 					TryToExecuteInstanceTask(LocalTask, ActivationInfo);
 				}
 
-				PendingTask = LocalTask;
+				PendingNewAddedTask = LocalTask;
 				Result = true;
 			}
 		}
 		else
 		{
 			//If this task is not template and want to create new instance, just use it self
-			PendingTask = this;
+			PendingNewAddedTask = this;
 		}
 		break;
 	}
@@ -1010,7 +1005,7 @@ bool UTriggerTaskBase::TryToCreateNewInstance(FTaskActivationInfo& ActivationInf
 			UTriggerTaskBase* LoalTask = Cast<UTriggerTaskBase>(GetClass()->GetDefaultObject());
 			//TaskActiveInfo.RepliactedRunningTask.Add(LoalTask);
 			LoalTask->ReceiveNotifyFromOthersComponent(ActivationInfo.OtherTaskComponent, ActivationInfo.OtherTask, ActivationInfo.ProcessedExternalData);
-			PendingTask = LoalTask;
+			PendingNewAddedTask = LoalTask;
 			Result = true;
 		}
 		else
@@ -1023,7 +1018,7 @@ bool UTriggerTaskBase::TryToCreateNewInstance(FTaskActivationInfo& ActivationInf
 	default:
 	{
 		ActivationInfo.OwnerTask = this;
-		PendingTask = this;
+		PendingNewAddedTask = nullptr;
 		//Default I will use this task directly
 		break;
 	}
@@ -1032,7 +1027,7 @@ bool UTriggerTaskBase::TryToCreateNewInstance(FTaskActivationInfo& ActivationInf
 	if (GetTriggerOwner() == nullptr)
 		return Result;
 
-	GetTriggerOwner()->AddTask(PendingTask);
+	GetTriggerOwner()->AddTask(PendingNewAddedTask);
 	
 	return Result;
 }

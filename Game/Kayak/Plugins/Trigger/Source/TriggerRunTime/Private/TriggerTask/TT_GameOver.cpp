@@ -92,6 +92,20 @@ void UTT_GameOver::Active(bool ForceActive )
 		GetStartConditions()->GetPassedCondition(GameOverInfo.GameOverCondtions);
 	}
 	
+	FString GameOverReason;
+
+	for (int i = 0; i < GameOverInfo.GameOverCondtions.Num(); i++)
+	{
+		GameOverReason += GameOverInfo.GameOverCondtions[i]->GetClass()->GetName();
+
+		if (i != GameOverInfo.GameOverCondtions.Num() - 1)
+		{
+			GameOverReason += TEXT("||");
+		}
+	}
+
+	UE_LOG(LogTrigger, Warning, TEXT("GameOver: %s"), *GameOverReason);
+
 	if (TryToGetOwnerActor() != nullptr && TryToGetOwnerActor()->HasAuthority())
 	{
 		FTriggerDelegate::GameOverNativeDelegate.Broadcast(this, GameOverInfo);
