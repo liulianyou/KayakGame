@@ -36,6 +36,14 @@ enum EItemState
 
 ENUM_CLASS_FLAGS(EItemState);
 
+/*
+* The delegate event used to inspect the state changed for the target Item
+*
+* @param Item	The item which state is changed
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FItemStateChange, const UItemComponentBase*, Item);
+
+
 USTRUCT(BlueprintType)
 struct FLocationInfo
 {

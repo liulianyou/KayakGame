@@ -3,9 +3,13 @@
 #include "ItemBlueprintLib.h"
 #include "Net/UnrealNetwork.h"
 #include "ItemBase.h"
+#include "ItemBlueprintLib.h"
+#include "ItemGlobal.h"
 
 UItemComponentBase::UItemComponentBase(const FObjectInitializer& ObjectInitializer)
-	:Super(ObjectInitializer)
+	:Super(ObjectInitializer),
+	ItemState(EItemState::Constructed),
+	ItemData(nullptr)
 {
 
 }
@@ -253,7 +257,15 @@ void UItemComponentBase::SetAvatarOwner(UObject* NewAvatar)
 	OwnerAvatar = NewAvatar;
 }
 
-void UItemComponentBase::SetNewItemData_Implementation(UItemDataBase* NewData)
+void UItemComponentBase::InitializeFromNewDataInternal(UItemDataBase* NewData)
+{
+	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, OnInitializeDataFromNewDataInternal)))
+	{
+		OnInitializeDataFromNewDataInternal(NewData);
+	}
+}
+
+void UItemComponentBase::SetNewItemData(UItemDataBase* NewData)
 {
 	//Nothing changed
 	if(ItemData == NewData)
@@ -268,20 +280,28 @@ void UItemComponentBase::SetNewItemData_Implementation(UItemDataBase* NewData)
 	if (IsUsing())
 		NeedStartUseAfterDataChanged = true;
 
-	DeactivateItem();
+	//Stop use it
 	StopUse();
+
+	//Deativate it
+	DeactivateItem();
+
+	InitializeFromNewDataInternal(NewData);
 
 	if (ItemData)
 		ItemData->RemoveReferencedComponent(this);
 
+	//Add new data
 	ItemData = NewData;
 
 	if (ItemData)
 		ItemData->AddReferencedComponent(this);
 
+	// Activate it again
 	if (NeedStartUseAfterDataChanged)
 		ActivateItem();
 
+	//Start to use it again
 	if (NeedStartUseAfterDataChanged)
 		StartUse();
 }
@@ -290,7 +310,12 @@ void UItemComponentBase::ToggleItemStateChanged(EItemState NewItemState)
 {
 	ItemState = NewItemState;
 
+	ItemStateChanged.Broadcast(this);
 
+	if (UItemBlueprintLib::GetItemGlobal())
+	{
+		UItemBlueprintLib::GetItemGlobal()->ItemStateChanged.Broadcast(this);
+	}
 }
 
 void UItemComponentBase::OnRep_OwnerAvatar(UObject* OldAvatar)

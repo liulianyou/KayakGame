@@ -146,11 +146,23 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
 	virtual void SetAvatarOwner( UObject* NewAvatar );
 
-	UFUNCTION(BlueprintNativeEvent, Category = "ItemComponent")
-	void SetNewItemData(UItemDataBase* NewData);
+	/*
+	* Set new data to this component
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	virtual void SetNewItemData(UItemDataBase* NewData) final;
 
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	UItemDataBase* GetItemData() const { return ItemData; }
+	UItemDataBase* GetItemData_Mutable() const { return ItemData; }
+
+protected:
+
+	/*
+	* This is only used to initialize the data when the data is changed
+	*/
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
+	void OnInitializeDataFromNewDataInternal(UItemDataBase* NewData);
+	virtual void InitializeFromNewDataInternal(UItemDataBase* NewData);
 
 public:
 
@@ -185,6 +197,12 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ItemComponent")
 	TSubclassOf<UItemDataBase> ItemDataClass;
 
+	/*
+	* Give the outer one access to inspect when the state have been changed in this item
+	*/
+	UPROPERTY(BlueprintAssignable)
+	FItemStateChange ItemStateChanged;
+
 private:
 	
 	//The state of this item
@@ -192,9 +210,9 @@ private:
 
 private:
 
-
-
-	//The instance data which will be used by this component
+	/*
+	* The instance data which will be used by this component
+	*/
 	UPROPERTY()
 	UItemDataBase* ItemData;
 

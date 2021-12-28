@@ -3,17 +3,9 @@
 
 void IItemInterface::Initialize(UItemDataBase* NewData)
 {
-	TArray<UItemComponentBase*> Components;
+	UItemComponentBase* Component = GetItemComponent();
 
-	GetItemComponent(Components);
-
-	for (int i = 0; i < Components.Num(); i++)
-	{
-		if (Components[i] != nullptr)
-		{
-			Components[i]->SetNewItemData(NewData);
-		}
-	}
+	Component->SetNewItemData(NewData);
 
 	OnInitialize(NewData);
 }

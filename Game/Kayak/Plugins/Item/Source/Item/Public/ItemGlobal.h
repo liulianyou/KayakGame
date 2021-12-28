@@ -18,27 +18,6 @@
 
 class UItemManager;
 
-/*
-* The delegate event used to inspect when one item start to be used or stop to be used
-* 
-* @param SratToUse	true means start to use the target Item, false means stop use
-*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FItemUsedDelegate, const UItemComponentBase*, Item, bool, StartToUse);
-
-
-/*
-* The delegate event used to inspect when one item has been activated or deactivate
-* 
-* @param Activate	True means activate the item, false means deactive item
-*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FItemActivateDelegate, const UItemComponentBase*, Item, bool, Activate);
-
-/*
-* The delegate event used to inspect when the item have been abandoned.
-* 
-* @param Abandon true means the target item is abandoned, true means gain the item
-*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FItemScopeChangeDelegate, const UItemComponentBase*, Item, bool, Abandon, const FItemScopeChangeInfo&, ScopeChangeInfo);
 
 UCLASS(BlueprintType, config = Game)
 class ITEM_API UItemGlobal : public UObject
@@ -59,22 +38,10 @@ public:
 public:
 
 	/*
-	* The item delegate which is used to inspect when one item is start to used or stop using
-	*/
-	UPROPERTY(BlueprintAssignable)
-	FItemUsedDelegate ItemUsedDelegate;
-
-	/*
-	* Delegate used to inspect when the target item is activate or deactivated
-	*/
-	UPROPERTY(BlueprintAssignable)
-	FItemActivateDelegate ItemActivateDelegate;
-
-	/*
 	* Delegate used to inspect when the target item have been abandoned or gained by the target avatar
 	*/
 	UPROPERTY(BlueprintAssignable)
-	FItemScopeChangeDelegate ItemScopeChangeDelegate;
+	FItemStateChange ItemStateChanged;
 
 protected:
 
