@@ -122,11 +122,15 @@ public:
 
 	//Check weather this item has been activated
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	bool IsActivated() { return bHasActivated; }
+	bool IsActivated() const;
 
 	//Check weather this item is using
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	bool IsUsing() { return bIsUsing; }
+	bool IsUsing() const;
+
+	//Get the state of this item
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	EItemState GetItemState() const { return ItemState; }
 
 public:
 
@@ -155,6 +159,13 @@ public:
 	void OnRep_OwnerAvatar( UObject* OldAvatar );
 
 protected:
+	
+	/*
+	* Invoked when the item state is changed
+	*/
+	void ToggleItemStateChanged( EItemState NewItemState );
+
+protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
 	void OnRegisterComponent();
@@ -176,13 +187,12 @@ public:
 
 private:
 	
-	//Flag to check weather this item has been activated
-	uint8 bHasActivated : 1;
-
-	//Flag to check weather this item is using
-	uint8 bIsUsing	: 1;
+	//The state of this item
+	EItemState ItemState;
 
 private:
+
+
 
 	//The instance data which will be used by this component
 	UPROPERTY()

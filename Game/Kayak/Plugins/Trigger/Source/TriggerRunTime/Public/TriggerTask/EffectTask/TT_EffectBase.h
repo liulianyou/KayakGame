@@ -98,10 +98,11 @@ public:
 	/*
 	* close the target effect data
 	* 
-	* @param EffectDataIndex	INDEX_NONE means all data will be closed, and this task should be considered as finished
+	* @param EffectDataIndex		INDEX_NONE means all data will be closed, and this task should be considered as finished
+	* @param ShouldTryToFinishTask	true means when all effect closed it will finish this task, false means it will not finish this task 
 	*/
 	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Effect")
-	virtual void CloseEffect(const TArray<UObject*>& Causers, int EffectDataIndex = -1);
+	virtual void CloseEffect(const TArray<UObject*>& Causers, int EffectDataIndex = -1, bool ShouldTryToFinishTask = true);
 
 	/*
 	* Try to open the target effect data in the effect task
@@ -126,9 +127,10 @@ protected:
 	* 
 	* @param Causers	The causer who want to close the effect
 	* @param EffectDataIndex	The index of effect data that this task will try to closed
+	* @param ShouldTryToFinishTask	true means when all effect closed it will finish this task, false means it will not finish this task 
 	*/
 	UFUNCTION(NetMulticast, Reliable)
-	void NetMuti_CloseEffect(const TArray<UObject*>& Causers, int EffectDataIndex = -1);
+	void NetMuti_CloseEffect(const TArray<UObject*>& Causers, int EffectDataIndex = -1, bool ShouldTryToFinishTask = true);
 
 	/*
 	* Try to open effect, by default it will broadcast all machines All Clients and Server
@@ -144,7 +146,7 @@ protected:
 	* @param EffectDataIndex	The index of effect data that this task will try to operate
 	*/
 	void OpenEffectInternal(const TArray<UObject*>& Causers, int EffectDataIndex = -1);
-	void CloseEffectInternal(const TArray<UObject*>& Causers, int EffectDataIndex = -1);
+	void CloseEffectInternal(const TArray<UObject*>& Causers, int EffectDataIndex = -1, bool ShouldTryToFinishTask = true);
 
 protected:
 	UFUNCTION()

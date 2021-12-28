@@ -79,6 +79,8 @@ void UItemComponentBase::ActivateItem()
 	{
 		OnActivateItem();
 	}
+
+	ToggleItemStateChanged(EItemState::Activate);
 }
 
 void UItemComponentBase::DeactivateItem()
@@ -90,13 +92,15 @@ void UItemComponentBase::DeactivateItem()
 	}
 
 	//When this item have never been activated then do not need to deactivate it
-	if(!IsActivated())
+	if (!IsActivated())
 		return;
 
 	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, OnDeactivateItem)))
 	{
 		OnDeactivateItem();
 	}
+
+	ToggleItemStateChanged(EItemState::Deactivated);
 }
 
 void UItemComponentBase::StartUse()
@@ -112,7 +116,7 @@ void UItemComponentBase::StartUse()
 		OnStartUse();
 	}
 
-	bIsUsing = true;
+	ToggleItemStateChanged(EItemState::Using);
 }
 
 void UItemComponentBase::StopUse()
@@ -126,7 +130,7 @@ void UItemComponentBase::StopUse()
 		OnStopUse();
 	}
 
-	bIsUsing = false;
+	ToggleItemStateChanged(EItemState::Idel);
 }
 
 void UItemComponentBase::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
@@ -141,8 +145,10 @@ void UItemComponentBase::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
 
 	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, OnAbandoned)))
 	{
-		Abandoned(AbandonInfo);
+		OnAbandoned(AbandonInfo);
 	}
+
+	ToggleItemStateChanged(EItemState::Abandoned);
 }
 
 void UItemComponentBase::Gained(const FItemScopeChangeInfo& GainedInfo)
@@ -151,6 +157,24 @@ void UItemComponentBase::Gained(const FItemScopeChangeInfo& GainedInfo)
 	{
 		OnGained(GainedInfo);
 	}
+
+	ToggleItemStateChanged(EItemState::Gained);
+}
+
+bool UItemComponentBase::IsActivated() const
+{
+	/*
+	* When the item is be using means this item have been activated
+	*/
+	if(IsUsing())
+		return true;
+
+	return EnumHasAnyFlags( ItemState, EItemState::Activate );
+}
+
+bool UItemComponentBase::IsUsing() const
+{
+	return EnumHasAnyFlags(ItemState, EItemState::Using);
 }
 
 TScriptInterface<IItemInterface> UItemComponentBase::GetItemOwner() const
@@ -260,6 +284,13 @@ void UItemComponentBase::SetNewItemData_Implementation(UItemDataBase* NewData)
 
 	if (NeedStartUseAfterDataChanged)
 		StartUse();
+}
+
+void UItemComponentBase::ToggleItemStateChanged(EItemState NewItemState)
+{
+	ItemState = NewItemState;
+
+
 }
 
 void UItemComponentBase::OnRep_OwnerAvatar(UObject* OldAvatar)

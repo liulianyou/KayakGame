@@ -170,7 +170,7 @@ void UTriggerNetPlayerSupportComponent::HandleReapwnTransform()
 
 #pragma  region TriggerEffect
 
-void UTriggerNetPlayerSupportComponent::Server_CloseEffect_Implementation(UTriggerTaskBase* Task, const TArray<UObject*>& Causers, int EffectDataIndex /*= INDEX_NONE*/)
+void UTriggerNetPlayerSupportComponent::Server_CloseEffect_Implementation(UTriggerTaskBase* Task, const TArray<UObject*>& Causers, int EffectDataIndex /*= INDEX_NONE*/, bool ShouldTryToFinishTask)
 {
 	if(Task == nullptr)
 		return;
@@ -179,7 +179,7 @@ void UTriggerNetPlayerSupportComponent::Server_CloseEffect_Implementation(UTrigg
 
 	if (Effect != nullptr)
 	{
-		Effect->CloseEffect(Causers, EffectDataIndex);
+		Effect->CloseEffect(Causers, EffectDataIndex, ShouldTryToFinishTask);
 	}
 }
 

@@ -36,8 +36,8 @@ public:
 	* Get the data which this item will be used
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "Item", meta = (DisplayName="GetItemData"))
-	UItemComponentBase* OnGetItemComponent() const;
-	virtual UItemComponentBase* GetItemComponent() const PURE_VIRTUAL(&IItemInterface::OnGetItemComponent, return OnGetItemComponent();)
+	void OnGetItemComponent( TArray<UItemComponentBase*>& OuterComponents ) const;
+	virtual void GetItemComponent(TArray<UItemComponentBase*>& OuterComponents ) const PURE_VIRTUAL(&IItemInterface::OnGetItemComponent, OuterComponents.Empty(); return OnGetItemComponent(OuterComponents);)
 
 	/*
 	* Initialize this item from the external item data
@@ -50,19 +50,21 @@ public:
 
 
 #define  ItemInterfaceFramework()\
-	virtual UItemComponentBase* GetItemComponent() const override;\
+	virtual void GetItemComponent(TArray<UItemComponentBase*>& OuterComponents) const override;\
+	virtual void Initialize( UItemDataBase* NewData ) override;\
+	
 
 /*
 * Just make implement the item frame work more easy, Ctrl + C, Ctrl + V, and change the NEWItemClass to the target object class
 */
 #if 0
-UItemComponentBase* NEWItemClass::GetItemComponent() const
+void NEWItemClass::GetItemComponent(TArray<UItemComponentBase*>& OuterComponents) const
 {
-	return IItemInterface::GetItemComponent();
+	IItemInterface::GetItemComponent(OuterComponents);
 }
 
 void NEWItemClass::Initialize(UItemDataBase* NewData)
 {
-	return IItemInterface::Initialize(NewData);
+	IItemInterface::Initialize(NewData);
 }
 #endif

@@ -588,6 +588,39 @@ void UTT_Interaction::AbilityTryToEndInteraction_Implementation(const FGameplayA
 
 void UTT_Interaction::AbilityTryToStartInteraction( AActor* TargetActor, const FGameplayAbilitySpecHandle Handle)
 {
+	/*
+	* Before try to start interaction I need to check weather this interaction have hold the ability information
+	* Such as when the player leave the trigger owner of this task ,and at that point the player click the interaction button at client,
+	* The server will remove the player's ability map as the player leave the trigger,  and the ability will go through client -> server which
+	* will cause some external time, when the ability execute at this function the ability map have been removed, so I need to add it again
+	*/
+	{
+		FGameplayAbilitySpecHandle* AbilitySpaceHandlePtr = AbilityMap.Find(TargetActor);
+
+		if (AbilitySpaceHandlePtr == nullptr)
+		{
+			AbilityMap.Add(TargetActor, Handle);
+		}
+		else if (*AbilitySpaceHandlePtr != Handle)
+		{
+			if (TargetActor != nullptr)
+			{
+				UAbilitySystemComponent* AbilitysSystem = Cast<UAbilitySystemComponent>(TargetActor->GetComponentByClass(UAbilitySystemComponent::StaticClass()));
+
+				if (AbilitysSystem != nullptr)
+				{
+					FGameplayAbilitySpec* AbilitySpacePtr = AbilitysSystem->FindAbilitySpecFromHandle(*AbilitySpaceHandlePtr);
+
+					if (AbilitySpaceHandlePtr != nullptr)
+					{
+						AbilitysSystem->CallServerEndAbility(*AbilitySpaceHandlePtr, AbilitySpacePtr->GetPrimaryInstance()->GetCurrentActivationInfo(), AbilitysSystem->ScopedPredictionKey);
+					}
+				}
+
+				AbilityMap[TargetActor] = Handle;
+			}
+		}
+	}
 
 	if (LastContributor == nullptr)
 	{

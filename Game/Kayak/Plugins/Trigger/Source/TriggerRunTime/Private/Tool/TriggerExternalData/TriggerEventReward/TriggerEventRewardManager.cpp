@@ -91,7 +91,21 @@ void UTriggerEventRewardManager::OnTaskRegisterEvent(UTriggerTaskBase* TriggerTa
 
 void UTriggerEventRewardManager::OnTaskUnRegisterEvent(UTriggerTaskBase* TriggerTask)
 {
-	
+	for (int i = 0; i < RequestRewardCommand.Num(); i++)
+	{
+		if (RequestRewardCommand[i] == nullptr || !RequestRewardCommand[i]->IsValidLowLevel())
+		{
+			RequestRewardCommand.RemoveAt(i--);
+			continue;
+		}
+
+		UTriggerTaskBase* TaskOuter = RequestRewardCommand[i]->GetTypedOuter<UTriggerTaskBase>();
+
+		if (TaskOuter == TriggerTask)
+		{
+			RequestRewardCommand.RemoveAt(i--);
+		}
+	}
 }
 
 FString& UTriggerEventRewardManager::GetTheMaxRewardIDByRewardData(UTriggerEventRewardDataBase* RewardData)
@@ -215,7 +229,7 @@ void UTriggerEventRewardManager::RequestReward_Implementation(UTriggerEventRewar
 {
 	if (RewardData != nullptr)
 	{
-		RequestRewardCommand.Add(RewardData);
+		RequestRewardCommand.AddUnique(RewardData);
 
 		RequestRewardDelegate.Broadcast(RewardData->GetRewardID());
 	}
@@ -225,7 +239,7 @@ void UTriggerEventRewardManager::AcceptReward_Implementation(const FString& Rewa
 {
 	for (int i = 0; i < RequestRewardCommand.Num(); i++)
 	{
-		if(RequestRewardCommand[i] == nullptr)
+		if(RequestRewardCommand[i] == nullptr || !RequestRewardCommand[i]->IsValidLowLevel())
 			continue;
 
 		if (RequestRewardCommand[i]->GetRewardID() == RewardID)

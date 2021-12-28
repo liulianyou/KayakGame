@@ -133,17 +133,8 @@ void UTT_EffectBase::TryToStop(UOperationInformationBase* Causer /* = nullptr */
 {
 	TArray<UObject*> Causers;
 	Causers.Add(Causer);
-	CloseEffect(Causers);
+	CloseEffect(Causers, -1, false);
 	Super::TryToStop(Causer);
-
-	//By Default when this task is stopped I need to close all effect
-	//TArray<UTriggerEffectDataBase*> Datas;
-	//GetEffectDatas(Datas);
-
-	//TArray<UObject*> Causers;
-	//Causers.Add(Causer);
-
-	//CloseEffect(Causers);
 }
 
 void UTT_EffectBase::InitializeTask(UTriggerTaskComponentBase* Owner, bool AsTemplate, bool IsDynamicTask)
@@ -230,7 +221,7 @@ void UTT_EffectBase::OpenEffect(const TArray<UObject*>& Causers, int EffectDataI
 	}
 }
 
-void UTT_EffectBase::CloseEffect(const TArray<UObject*>& Causers, int EffectDataIndex /*= INDEX_NONE*/)
+void UTT_EffectBase::CloseEffect(const TArray<UObject*>& Causers, int EffectDataIndex /*= INDEX_NONE*/, bool ShouldTryToFinishTask /*= true*/)
 {
 	if (GetTriggerOwner() == nullptr)
 		return;
@@ -243,7 +234,7 @@ void UTT_EffectBase::CloseEffect(const TArray<UObject*>& Causers, int EffectData
 
 	if (EnumHasAnyFlags(TaskRunType, Trigger::ETaskRunType::Local))
 	{
-		CloseEffectInternal(Causers, EffectDataIndex);
+		CloseEffectInternal(Causers, EffectDataIndex, ShouldTryToFinishTask);
 	}
 
 	if(!IsGarbageCollecting())
@@ -255,7 +246,7 @@ void UTT_EffectBase::CloseEffect(const TArray<UObject*>& Causers, int EffectData
 
 			if (NPSC != nullptr)
 			{
-				NPSC->Server_CloseEffect(this, Causers, EffectDataIndex);
+				NPSC->Server_CloseEffect(this, Causers, EffectDataIndex, ShouldTryToFinishTask);
 			}
 		}
 
@@ -287,12 +278,12 @@ void UTT_EffectBase::NetMuti_OpenEffect_Implementation(const TArray<UObject*>& C
 	OpenEffectInternal(Causers, EffectDataIndex);
 }
 
-void UTT_EffectBase::NetMuti_CloseEffect_Implementation(const TArray<UObject*>& Causers, int EffectDataIndex /*= INDEX_NONE*/)
+void UTT_EffectBase::NetMuti_CloseEffect_Implementation(const TArray<UObject*>& Causers, int EffectDataIndex /*= INDEX_NONE*/, bool ShouldTryToFinishTask /*= true*/)
 {
 	if(GetTriggerOwner() == nullptr)
 		return;
 
-	CloseEffectInternal(Causers, EffectDataIndex);
+	CloseEffectInternal(Causers, EffectDataIndex, ShouldTryToFinishTask);
 }
 
 void UTT_EffectBase::OpenEffectInternal(const TArray<UObject*>& Causers, int EffectDataIndex /*= INDEX_NONE*/)
@@ -318,7 +309,7 @@ void UTT_EffectBase::OpenEffectInternal(const TArray<UObject*>& Causers, int Eff
 	}
 }
 
-void UTT_EffectBase::CloseEffectInternal(const TArray<UObject*>& Causers, int EffectDataIndex /*= INDEX_NONE*/)
+void UTT_EffectBase::CloseEffectInternal(const TArray<UObject*>& Causers, int EffectDataIndex /*= INDEX_NONE*/, bool ShouldTryToFinishTask/* = true*/)
 {
 	if (IsGarbageCollecting())
 		return;
@@ -343,7 +334,7 @@ void UTT_EffectBase::CloseEffectInternal(const TArray<UObject*>& Causers, int Ef
 		}
 	}
 
-	if (IsEffectDataClosed(INDEX_NONE) && CheckRunTimeType())
+	if (IsEffectDataClosed(INDEX_NONE) && CheckRunTimeType() && ShouldTryToFinishTask)
 	{
 		Finished();
 	}

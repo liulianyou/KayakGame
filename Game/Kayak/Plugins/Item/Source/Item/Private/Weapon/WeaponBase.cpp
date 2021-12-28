@@ -14,7 +14,14 @@ AWeaponBase::AWeaponBase(const FObjectInitializer& ObjectInitializer)
 	}
 }
 
-UItemComponentBase* AWeaponBase::GetItemComponent() const
+void AWeaponBase::GetItemComponent(TArray<UItemComponentBase*>& OuterComponents) const
 {
-	return ItemComponent;
+	IItemInterface::GetItemComponent(OuterComponents);
+
+	OuterComponents.Add(ItemComponent);
+}
+
+void AWeaponBase::Initialize(UItemDataBase* NewData)
+{
+	IItemInterface::Initialize(NewData);
 }

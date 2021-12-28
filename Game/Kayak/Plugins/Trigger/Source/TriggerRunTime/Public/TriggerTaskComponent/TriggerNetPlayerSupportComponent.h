@@ -140,9 +140,10 @@ public:
 	* @param Task which task need to open effect
 	* @param Causers who rise up this command
 	* @param EffectDataIndex the index of the data in the effect task should be closed, INDEX_NONE means all data should be closed
+	* @param ShouldTryToFinishTask	false means even if all effect closed the trigger task will not finish
 	*/
 	UFUNCTION(Server, Reliable)
-	void Server_CloseEffect(UTriggerTaskBase* Task, const TArray<UObject*>& Causers, int EffectDataIndex);
+	void Server_CloseEffect(UTriggerTaskBase* Task, const TArray<UObject*>& Causers, int EffectDataIndex, bool ShouldTryToFinishTask);
 
 #pragma  endregion TriggerEffect
 
