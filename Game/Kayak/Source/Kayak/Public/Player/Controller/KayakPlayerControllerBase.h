@@ -13,12 +13,20 @@
 
 #include "KayakPlayerControllerBase.generated.h"
 
+class UTriggerNetPlayerSupportComponent;
+
 UCLASS(Blueprintable, BlueprintType, Abstract, Category = "Kayak|PlayerController")
 class KAYAK_API AKayakPlayerControllerBase : public APlayerController
 {
 	GENERATED_UCLASS_BODY()
 
 public:
+private:
 
+	/*
+	* Used for trigger event system, so that the trigger event system can use the RPC(Client/Server).
+	*/
+	UPROPERTY()
+	UTriggerNetPlayerSupportComponent* TriggerNetSupport;
 
 };

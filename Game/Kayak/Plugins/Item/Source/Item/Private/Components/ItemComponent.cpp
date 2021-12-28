@@ -17,6 +17,13 @@ void UItemComponentBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME(UItemComponentBase, OwnerAvatar);
 }
 
+void UItemComponentBase::BeginDestroy()
+{
+	Super::BeginDestroy();
+
+	UnregisterComponent();
+}
+
 void UItemComponentBase::Initialzie(UObject* NewItemOnwer)
 {
 	ItemOwner = NewItemOnwer;

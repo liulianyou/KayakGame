@@ -27,6 +27,10 @@ public:
 	ItemInterfaceFramework();
 	//Override ItemInterface
 
+public:
+	
+
+
 protected:
 
 	//the name of item component

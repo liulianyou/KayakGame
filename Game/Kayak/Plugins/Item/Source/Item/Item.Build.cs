@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class Item : ModuleRules
 {
@@ -8,11 +9,7 @@ public class Item : ModuleRules
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
-		PublicIncludePaths.AddRange(
-			new string[] {
-				// ... add public include paths required here ...
-			}
-			);
+		PublicIncludePaths.AddRange(GetPublicIncludePaths());
 				
 		
 		PrivateIncludePaths.AddRange(
@@ -50,4 +47,9 @@ public class Item : ModuleRules
 			}
 			);
 	}
+
+    public virtual string[] GetPublicIncludePaths()
+    {
+        return Directory.GetDirectories(ModuleDirectory + "/Public", "*", SearchOption.AllDirectories);
+    }
 }

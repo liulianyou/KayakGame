@@ -45,3 +45,38 @@ void UWeaponComponent::Gained(const FItemScopeChangeInfo& GainedInfo)
 {
 	Super::Gained(GainedInfo);
 }
+
+void UWeaponComponent::Reload_Implementation()
+{
+	
+}
+
+void UWeaponComponent::StartFire_Implementation()
+{
+	
+}
+
+void UWeaponComponent::StopFire_Implementation()
+{
+	
+}
+
+void UWeaponComponent::StartAim_Implementation()
+{
+	
+}
+
+void UWeaponComponent::EndAim_Implementation()
+{
+
+}
+
+bool UWeaponComponent::TryToEquip_Implementation()
+{
+	return Super::TryToEquip_Implementation();
+}
+
+bool UWeaponComponent::TryToUnequip_Implementation()
+{
+	return Super::TryToUnequip_Implementation();
+}

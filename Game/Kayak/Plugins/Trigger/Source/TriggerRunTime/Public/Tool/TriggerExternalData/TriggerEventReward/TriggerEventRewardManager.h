@@ -130,5 +130,4 @@ private:
 	* All the commands to request the rewards
 	*/
 	TArray<UTriggerEventRewardDataBase*> RequestRewardCommand;
-
 };

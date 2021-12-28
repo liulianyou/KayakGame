@@ -14,8 +14,6 @@
 
 #include "KayakPlayerCharacterBase.generated.h"
 
-class UTriggerNetPlayerSupportComponent;
-
 /*
 * The base character of player
 */
@@ -38,12 +36,6 @@ public:
 	virtual void LookUpAtRate(float Rate);
 	//Override AKayakCharacterBase
 
-private:
 
-	/*
-	* Used for trigger event system, so that the trigger event system can use the RPC(Client/Server).
-	*/
-	UPROPERTY()
-	UTriggerNetPlayerSupportComponent* TriggerNetSupport;
 };
 

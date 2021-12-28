@@ -29,6 +29,7 @@ public:
 	
 	//Override Object
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void BeginDestroy() override;
 	//Override Object
 
 	//Override ActorComponent
@@ -213,11 +214,6 @@ private:
 * Just make implement the item frame work more easy, Ctrl + C, Ctrl + V, and change the NEWItemClass to the target component class
 */
 #if 0
-UItemComponentBase* NEWItemClass::GetItemComponent() const
-{
-	return Super::GetItemComponent();
-}
-
 void NEWItemClass::ActivateItem()
 {
 	Super::ActivateItem();

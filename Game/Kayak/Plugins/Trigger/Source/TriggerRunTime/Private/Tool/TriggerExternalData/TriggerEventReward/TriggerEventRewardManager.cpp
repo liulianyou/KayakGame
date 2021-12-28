@@ -116,7 +116,7 @@ FString& UTriggerEventRewardManager::GetTheMaxRewardIDByRewardData(UTriggerEvent
 	UClass* DataType = RewardData->GetClass();
 
 	FMaxRewardID* RewardIDPtr = RewardIDPoolPtr->FindByPredicate([&](const FMaxRewardID& Data){
-		if(Data.DataType == DataType)
+		if(Data.DataType->IsChildOf(DataType) || DataType->IsChildOf(Data.DataType) )
 			return true;
 		else
 			return false;
@@ -152,7 +152,7 @@ void UTriggerEventRewardManager::AddNewMaxRewardID(UTriggerEventRewardDataBase* 
 	UClass* DataType = RewardData->GetClass();
 
 	FMaxRewardID* RewardIDPtr = RewardIDPoolPtr->FindByPredicate([&](const FMaxRewardID& Data) {
-		if (Data.DataType == DataType)
+		if (Data.DataType->IsChildOf(DataType) || DataType->IsChildOf(Data.DataType))
 			return true;
 		else
 			return false;
