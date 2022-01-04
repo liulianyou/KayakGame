@@ -15,11 +15,12 @@
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
 
+#include "TriggerEditorConfig.h"
+
 #include "TriggerDefinition.h"
 #include "FTriggerTask.h"
 #include "TriggerTaskBase.h"
 #include "NewTriggerBase.h"
-#include "TriggerConfig.h"
 #include "TriggerManager.h"
 #include "TriggerOctreeControllerBase.h"
 #include "TriggerBlueprintLib.h"
@@ -779,13 +780,13 @@ TSharedRef<SWidget> FTriggerTaskDetailCustomize::CrateTriggerTaskDetailsPanel(TS
 {
 	UClass* WidgetClass = UFTriggerTaskDetailPanelWidget::StaticClass();
 
-	const UTriggerConfig* const TriggerConfig = Cast<UTriggerConfig>(UTriggerConfig::StaticClass()->GetDefaultObject());
+	const UTriggerEditorConfig* const TriggerEditorConfig = GetDefault<UTriggerEditorConfig>();
 
-	if (TriggerConfig)
+	if (TriggerEditorConfig)
 	{
-		if (TriggerConfig->TriggerTaskDetailsPanelWidget != nullptr)
+		if (TriggerEditorConfig->TriggerTaskDetailsPanelWidget != nullptr)
 		{
-			WidgetClass = TriggerConfig->TriggerTaskDetailsPanelWidget.LoadSynchronous();
+			WidgetClass = TriggerEditorConfig->TriggerTaskDetailsPanelWidget.LoadSynchronous();
 		}
 	}
 

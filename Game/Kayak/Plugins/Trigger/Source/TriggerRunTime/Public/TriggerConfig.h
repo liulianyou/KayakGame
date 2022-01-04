@@ -72,16 +72,12 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Config, Category = "Editor|AI")
 	FSoftObjectPath PreviewCharacterPath;
 
-
 	/*
 	* The start categories applied to the trigger system when we play at the editor.
 	* It is default category which can be changed by any other ways
 	*/
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Config, Category = "Editor|Category")
 	FGameplayTagContainer EditorDefaultStartTriggerCategories;
-
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Config, Category = "Editor|DetailsPanel")
-	TSoftClassPtr<UUserWidget> TriggerTaskDetailsPanelWidget;
 
 #endif
 
