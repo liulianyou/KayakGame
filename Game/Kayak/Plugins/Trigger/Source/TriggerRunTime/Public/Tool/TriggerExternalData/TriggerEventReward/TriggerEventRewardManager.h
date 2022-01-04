@@ -14,6 +14,8 @@
 
 #include "TriggerEventRewardManager.generated.h"
 
+class UWorld;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRequestRewardDelegate, const FString&, RewardID);
 
 
@@ -64,10 +66,16 @@ public:
 	FString& GetTheMaxRewardIDByRewardData( UTriggerEventRewardDataBase* RewardData );
 
 	/*
-	* Add new max reward ID to the pool
+	* Register the reward data this this manager
 	*/
 	UFUNCTION(BlueprintCallable)
-	void AddNewMaxRewardID(UTriggerEventRewardDataBase* RewardData, const FString& NewMaxRewardID);
+	void RegisterRewardData(UTriggerEventRewardDataBase* RewardData);
+
+	/*
+	* Register the reward data this this manager
+	*/
+	UFUNCTION(BlueprintCallable)
+	void UnregisterRewardData(UTriggerEventRewardDataBase* RewardData);
 
 	/*
 	* Try to request the actual rewards for the target reward data
@@ -81,6 +89,23 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void AcceptReward( const FString& RewardID, const TArray<FRewardData>& RewardDatas );
 
+	/*
+	* Refresh all RewardID.
+	* If some reward data have the the same ID then I will regenerate id to them.
+	* And at this point it will generate the max reward ID
+	*/
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContent"))
+	void RefreshRewradID( UObject* WorldContent = nullptr);
+
+	FRequestRewardDelegate& GetRequestRewardDelegate();
+
+	/*
+	* Used to check weather the target object is valid.
+	* the object with flag RF_TextExportTransient | RF_NonPIEDuplicateTransient | RF_Transient is invalid
+	*/
+	UFUNCTION(BlueprintCallable)
+	bool IsObjectValid( UObject* Object );
+
 protected:
 
 	UFUNCTION()
@@ -88,6 +113,15 @@ protected:
 
 	UFUNCTION()
 	void OnTaskUnRegisterEvent(UTriggerTaskBase* TriggerTask);
+
+private:
+
+	/*
+	* Try to add the reward ID in the target reward ID as the max reward ID
+	*/
+	void TryToAddMaxRewardID(UTriggerEventRewardDataBase* RewardData);
+
+	bool CheckObjectValidInternal(UObject* Object);
 
 private:
 
@@ -130,4 +164,12 @@ private:
 	* All the commands to request the rewards
 	*/
 	TArray<UTriggerEventRewardDataBase*> RequestRewardCommand;
+
+	/*
+	* Try to use it to fix the RewardID.
+	* 
+	* @key	the RewardID
+	* @key	the array of all rewards which have the same RewardID
+	*/
+	TMap<FString, TArray<UTriggerEventRewardDataBase*>> RewardIDPool;
 };

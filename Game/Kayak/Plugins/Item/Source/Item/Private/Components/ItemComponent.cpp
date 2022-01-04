@@ -2,13 +2,12 @@
 #include "ItemManager.h"
 #include "ItemBlueprintLib.h"
 #include "Net/UnrealNetwork.h"
-#include "ItemBase.h"
+#include "ItemDataBase.h"
 #include "ItemBlueprintLib.h"
 #include "ItemGlobal.h"
 
 UItemComponentBase::UItemComponentBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer),
-	ItemState(EItemState::Constructed),
 	ItemData(nullptr)
 {
 
@@ -30,9 +29,27 @@ void UItemComponentBase::BeginDestroy()
 
 void UItemComponentBase::Initialzie(UObject* NewItemOnwer)
 {
-	ItemOwner = NewItemOnwer;
+	if(NewItemOnwer == nullptr || NewItemOnwer->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
+		return;
 
 	OnInitialize(NewItemOnwer);
+
+	IItemInterface* Item = Cast<IItemInterface>(NewItemOnwer);
+
+	if (Item == nullptr)
+	{
+		ComponentOwner.SetInterface(NewItemOnwer->GetInterfaceAddress(UItemInterface::StaticClass()));
+		ComponentOwner.SetObject(NewItemOnwer);
+	}
+	else
+	{
+		ComponentOwner = NewItemOnwer;
+	}
+}
+
+void UItemComponentBase::Initialzie(TScriptInterface<IItemInterface> NewItemOwner)
+{
+	Initialzie(NewItemOwner.GetObject());
 }
 
 void UItemComponentBase::OnRegister()
@@ -58,6 +75,11 @@ void UItemComponentBase::RegisterComponent()
 		ItemManager->RegisterItem(GetItemOwner());
 	}
 
+	if (ItemData)
+	{
+		ItemData->AddReferencedComponent(this);
+	}
+
 	OnRegisterComponent();
 }
 
@@ -70,115 +92,54 @@ void UItemComponentBase::UnregisterComponent()
 		ItemManager->UnregisterItem(GetItemOwner());
 	}
 
+	if (ItemData)
+	{
+		ItemData->RemoveReferencedComponent(this);
+	}
+
 	OnUnregisterComponent();
 }
 
 void UItemComponentBase::ActivateItem()
 {
-	//When this item have been activate do not activate it again
-	if(IsActivated())
-		return;
-	
-	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, OnActivateItem)))
-	{
-		OnActivateItem();
-	}
+	check(RuntimeData);
 
-	ToggleItemStateChanged(EItemState::Activate);
+	RuntimeData->ActivateItem();
 }
 
 void UItemComponentBase::DeactivateItem()
 {
-	//When deactive this item make sure this item is not using.
-	if (IsUsing())
-	{
-		StopUse();
-	}
+	check(RuntimeData);
 
-	//When this item have never been activated then do not need to deactivate it
-	if (!IsActivated())
-		return;
-
-	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, OnDeactivateItem)))
-	{
-		OnDeactivateItem();
-	}
-
-	ToggleItemStateChanged(EItemState::Deactivated);
+	RuntimeData->DeactivateItem();
 }
 
 void UItemComponentBase::StartUse()
 {
-	//Make sure this item have been activated when this item start to be use
-	if (!IsActivated())
-	{
-		Activate();
-	}
+	check(RuntimeData);
 
-	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, OnStartUse)))
-	{
-		OnStartUse();
-	}
-
-	ToggleItemStateChanged(EItemState::Using);
+	RuntimeData->StartUse();
 }
 
 void UItemComponentBase::StopUse()
 {
-	//This item have not been used, so do not stop it
-	if(IsUsing() == false)
-		return;
+	check(RuntimeData);
 
-	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, StopUse)))
-	{
-		OnStopUse();
-	}
-
-	ToggleItemStateChanged(EItemState::Idel);
+	RuntimeData->StopUse();
 }
 
 void UItemComponentBase::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
 {
-	//If the scope have changed I need to deactive it first
-	if (AbandonInfo.ScopeChangeType != EItemScopeChangeType::NoChange && 
-		//When duplicate item the source item will not change, so do not need to deactive
-		AbandonInfo.ScopeChangeType != EItemScopeChangeType::Duplicate)
-	{
-		Deactivate();
-	}
+	check(RuntimeData);
 
-	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, OnAbandoned)))
-	{
-		OnAbandoned(AbandonInfo);
-	}
-
-	ToggleItemStateChanged(EItemState::Abandoned);
+	RuntimeData->Abandoned(AbandonInfo);
 }
 
 void UItemComponentBase::Gained(const FItemScopeChangeInfo& GainedInfo)
 {
-	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, OnGained)))
-	{
-		OnGained(GainedInfo);
-	}
+	check(RuntimeData);
 
-	ToggleItemStateChanged(EItemState::Gained);
-}
-
-bool UItemComponentBase::IsActivated() const
-{
-	/*
-	* When the item is be using means this item have been activated
-	*/
-	if(IsUsing())
-		return true;
-
-	return EnumHasAnyFlags( ItemState, EItemState::Activate );
-}
-
-bool UItemComponentBase::IsUsing() const
-{
-	return EnumHasAnyFlags(ItemState, EItemState::Using);
+	RuntimeData->Gained(GainedInfo);
 }
 
 TScriptInterface<IItemInterface> UItemComponentBase::GetItemOwner() const
@@ -186,24 +147,9 @@ TScriptInterface<IItemInterface> UItemComponentBase::GetItemOwner() const
 	TScriptInterface<IItemInterface> Result;
 
 	//First I check my own owner
-	if (ItemOwner != nullptr)
+	if (ComponentOwner)
 	{
-		Result = ItemOwner;
-
-		if (Result)
-		{
-			return Result;
-		}
-		else
-		{
-			if (ItemOwner->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
-			{
-				Result.SetInterface(ItemOwner->GetClass()->GetInterfaceAddress(UItemInterface::StaticClass()));
-				Result.SetObject(ItemOwner);
-
-				return Result;
-			}
-		}
+		return ComponentOwner;
 	}
 
 	AActor* Actor = GetOwner();
@@ -246,6 +192,8 @@ TScriptInterface<IItemInterface> UItemComponentBase::GetItemOwner() const
 		}
 	}
 
+	ComponentOwner = Result;
+
 	return Result;
 }
 
@@ -257,45 +205,48 @@ void UItemComponentBase::SetAvatarOwner(UObject* NewAvatar)
 	OwnerAvatar = NewAvatar;
 }
 
-void UItemComponentBase::InitializeFromNewDataInternal(UItemDataBase* NewData)
-{
-	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemComponentBase, OnInitializeDataFromNewDataInternal)))
-	{
-		OnInitializeDataFromNewDataInternal(NewData);
-	}
-}
-
 void UItemComponentBase::SetNewItemData(UItemDataBase* NewData)
 {
 	//Nothing changed
 	if(ItemData == NewData)
 		return;
 
+	auto AssignNewData = [&](){
+		UItemDataBase* OldData = ItemData;
+
+		if (ItemData)
+			ItemData->RemoveReferencedComponent(this);
+
+		//Add new data
+		ItemData = NewData;
+
+		if (ItemData)
+			ItemData->AddReferencedComponent(this);
+
+		ItemDataChanged(OldData, NewData);
+	};
+
+	//When this component's runtime data have not been prepared then just assign the new data
+	if (RuntimeData == nullptr)
+	{
+		AssignNewData();
+
+		return;
+	}
+
 	bool NeedActiveAfterDataChanged = false;
 	bool NeedStartUseAfterDataChanged = false;
 
-	if (IsActivated())
+	if (RuntimeData->IsActivated())
 		NeedActiveAfterDataChanged = true;
 	
-	if (IsUsing())
+	if (RuntimeData->IsUsing())
 		NeedStartUseAfterDataChanged = true;
 
-	//Stop use it
-	StopUse();
-
-	//Deativate it
+	//Deactivate it
 	DeactivateItem();
 
-	InitializeFromNewDataInternal(NewData);
-
-	if (ItemData)
-		ItemData->RemoveReferencedComponent(this);
-
-	//Add new data
-	ItemData = NewData;
-
-	if (ItemData)
-		ItemData->AddReferencedComponent(this);
+	AssignNewData();
 
 	// Activate it again
 	if (NeedStartUseAfterDataChanged)
@@ -306,20 +257,36 @@ void UItemComponentBase::SetNewItemData(UItemDataBase* NewData)
 		StartUse();
 }
 
-void UItemComponentBase::ToggleItemStateChanged(EItemState NewItemState)
-{
-	ItemState = NewItemState;
-
-	ItemStateChanged.Broadcast(this);
-
-	if (UItemBlueprintLib::GetItemGlobal())
-	{
-		UItemBlueprintLib::GetItemGlobal()->ItemStateChanged.Broadcast(this);
-	}
-}
-
 void UItemComponentBase::OnRep_OwnerAvatar(UObject* OldAvatar)
 {
 	
 }
 
+void UItemComponentBase::ItemDataChanged(UItemDataBase* RemovedData/* = nullptr*/, UItemDataBase* NewData /*= nullptr*/)
+{
+	OnItemDataChanged(RemovedData, NewData);
+
+	ItemDataChangedDelegate.Broadcast(this, RemovedData, NewData);
+
+	UItemGlobal* ItemGlobal = UItemBlueprintLib::GetItemGlobal();
+
+	if (ItemGlobal)
+	{
+		ItemGlobal->ItemDataChangedDelegate.Broadcast(this, RemovedData, NewData);
+	}
+}
+
+void UItemComponentBase::SetRuntimeData(UItemRuntimeDataBase* NewRuntimeData)
+{
+	if(RuntimeData == NewRuntimeData)
+		return;
+
+	ItemDataChangedDelegate.RemoveDynamic(RuntimeData, &UItemRuntimeDataBase::ItemDataChangedInItemOwner);
+
+	RuntimeData = NewRuntimeData;
+
+	if (!ItemDataChangedDelegate.IsAlreadyBound(RuntimeData, &UItemRuntimeDataBase::ItemDataChangedInItemOwner))
+	{
+		ItemDataChangedDelegate.AddDynamic(RuntimeData, &UItemRuntimeDataBase::ItemDataChangedInItemOwner);
+	}
+}

@@ -12,6 +12,8 @@
 
 #include "ItemDefinition.generated.h"
 
+class UItemRuntimeDataBase;
+
 /*
 * The state for one item
 */
@@ -41,7 +43,14 @@ ENUM_CLASS_FLAGS(EItemState);
 *
 * @param Item	The item which state is changed
 */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FItemStateChange, const UItemComponentBase*, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FItemStateChange, const UItemRuntimeDataBase*, Item);
+
+/*
+* The delegate event used to inspect the state changed for the target Item
+*
+* @param Item	The item which state is changed
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FItemDataChanged, UItemComponentBase*, TargetItem, UItemDataBase*, OldData, UItemDataBase*, NewData);
 
 
 USTRUCT(BlueprintType)

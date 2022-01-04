@@ -18,7 +18,7 @@ void UTriggerTaskExternalDataBase::Finialize()
 	OnFinialize();
 }
 
-UTriggerTaskBase* UTriggerTaskExternalDataBase::GetTriggerTaskOwner()
+UTriggerTaskBase* UTriggerTaskExternalDataBase::GetTriggerTaskOwner() const
 {
 	return TaskOwner;
 }

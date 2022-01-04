@@ -41,7 +41,13 @@ public:
 	* Delegate used to inspect when the target item have been abandoned or gained by the target avatar
 	*/
 	UPROPERTY(BlueprintAssignable)
-	FItemStateChange ItemStateChanged;
+	FItemStateChange ItemStateChangedDelegate;
+
+	/*
+	* When the item data is changed in the target component then this event should be broadcast.
+	*/
+	UPROPERTY(BlueprintAssignable)
+	FItemDataChanged ItemDataChangedDelegate;
 
 protected:
 

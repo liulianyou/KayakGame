@@ -2,6 +2,7 @@
 #include "TriggerTaskManager.h"
 #include "TriggerEvaluator_OR.h"
 #include "CheckTaskState.h"
+#include "GameFramework/Actor.h"
 
 #if WITH_EDITOR
 #include "Editor.h"
@@ -27,9 +28,37 @@ void UTriggerEventRewardManager::Initialize(UTriggerTaskManager* OwnerManager)
 	}
 }
 
+bool UTriggerEventRewardManager::IsObjectValid(UObject* Object)
+{
+	if(Object == nullptr || Object->IsPendingKill() || !Object->IsValidLowLevel() ||
+		//This object is created for BP initialization
+		Object->GetName().StartsWith(TEXT("TRASH_"), ESearchCase::IgnoreCase))
+		return false;
+
+	if(!CheckObjectValidInternal( Object ))
+		return false;
+
+	return true;
+}
+
+bool UTriggerEventRewardManager::CheckObjectValidInternal(UObject* Object)
+{
+	if (Object == nullptr)
+		return true;
+
+	if (Object->HasAnyFlags(RF_TextExportTransient | RF_NonPIEDuplicateTransient | RF_Transient) ||
+		//This object is created for BP initialization
+		Object->GetName().StartsWith(TEXT("TRASH_"), ESearchCase::IgnoreCase))
+	{
+		return false;
+	}
+	else
+		return CheckObjectValidInternal(Object->GetOuter());
+}
+
 void UTriggerEventRewardManager::OnTaskRegisterEvent(UTriggerTaskBase* TriggerTask)
 {
-	if(TriggerTask == nullptr)
+	if(!IsObjectValid(TriggerTask))
 		return;
 
 	UTriggerTaskExternalDataBase* RewardData = TriggerTask->GetTargetUserData(UTriggerEventRewardDataBase::StaticClass());
@@ -86,6 +115,7 @@ void UTriggerEventRewardManager::OnTaskRegisterEvent(UTriggerTaskBase* TriggerTa
 			}
 		}
 
+		TriggerTask->MarkPackageDirty();
 	}
 }
 
@@ -125,27 +155,238 @@ FString& UTriggerEventRewardManager::GetTheMaxRewardIDByRewardData(UTriggerEvent
 
 	//When there is no correspond pool for the target data type
 	if(RewardIDPoolPtr == nullptr)
-		return UTriggerEventRewardDataBase::InvalidRewardID;
+		return UTriggerEventRewardDataBase::EmptyRewardID;
 
 	UClass* DataType = RewardData->GetClass();
 
 	FMaxRewardID* RewardIDPtr = RewardIDPoolPtr->FindByPredicate([&](const FMaxRewardID& Data){
-		if(Data.DataType->IsChildOf(DataType) || DataType->IsChildOf(Data.DataType) )
+		if(Data.DataType == DataType)
 			return true;
 		else
 			return false;
 	});
 
 	if(RewardIDPtr == nullptr)
-		return UTriggerEventRewardDataBase::InvalidRewardID;
+		return UTriggerEventRewardDataBase::EmptyRewardID;
 
 	return RewardIDPtr->MaxRewarDID;
 }
 
-void UTriggerEventRewardManager::AddNewMaxRewardID(UTriggerEventRewardDataBase* RewardData, const FString& NewMaxRewardID)
+void UTriggerEventRewardManager::RegisterRewardData(UTriggerEventRewardDataBase* RewardData)
 {
-	if(RewardData == nullptr)
-		return ;
+	if(!IsObjectValid(RewardData))
+		return;
+
+	TryToAddMaxRewardID( RewardData );
+
+	TArray<UTriggerEventRewardDataBase*>* DatasPtr = RewardIDPool.Find(RewardData->GetRewardID());
+
+	if (DatasPtr == nullptr)
+	{
+		TArray<UTriggerEventRewardDataBase*> NewRewardDataPool;
+
+		NewRewardDataPool.Add(RewardData);
+
+		RewardIDPool.Add(RewardData->GetRewardID(), NewRewardDataPool);
+	}
+	else
+	{
+		UTriggerTaskBase* Task = RewardData->GetTriggerTaskOwner();
+
+		bool NeedAddToPool = true;
+
+		/*
+		* First try to check weather this data is duplicated from original trigger task
+		*/
+		if (Task != nullptr)
+		{
+			UTriggerEventRewardDataBase** DataPtr = DatasPtr->FindByPredicate([&](const UTriggerEventRewardDataBase* Data){
+				UTriggerTaskBase* LocalTask = Data->GetTriggerTaskOwner();
+
+				if(LocalTask == nullptr)
+					return false;
+
+				if (LocalTask->GetID() == Task->GetID())
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			});
+
+			if (DataPtr != nullptr)
+			{
+				NeedAddToPool = false;
+			}
+		}
+
+		if (NeedAddToPool)
+		{
+			if (DatasPtr->Find(RewardData) == INDEX_NONE)
+			{
+				DatasPtr->Add(RewardData);
+
+				UE_LOG(LogTrigger, Warning, TEXT("RewardID in the target data %s is not right, you should refreh the ID Mannually"), *RewardData->GetTypedOuter<AActor>()->GetName());
+			}
+		}
+	}
+}
+
+void UTriggerEventRewardManager::UnregisterRewardData(UTriggerEventRewardDataBase* RewardData)
+{
+	for (auto IT = RewardIDPool.CreateIterator(); IT; ++IT)
+	{
+		int Index = IT.Value().Find(RewardData);
+
+		if (Index != INDEX_NONE)
+		{
+			IT.Value().RemoveAt(Index);
+		}
+
+		if (IT.Value().Num() == 0)
+		{
+			IT.RemoveCurrent();
+		}
+	}
+
+	RewardIDPool.Compact();
+}
+
+bool UTriggerEventRewardManager::TryToGenerateRewardID_Implementation(UTriggerEventRewardDataBase* TargetData, FString& ID)
+{
+	ID = TEXT("");
+
+	if(TargetData == nullptr)
+		return false;
+
+	ULevel* Level = TargetData->GetTypedOuter<ULevel>();
+
+	FString LevelName = Level->GetOuter()->GetName();
+
+	FString MaxRewardID = GetTheMaxRewardIDByRewardData( TargetData );
+
+	bool Result = false;
+
+	if (!TargetData->IsValidRewardID(TargetData->GetRewardID()))
+	{
+		ID = TargetData->GenerateNextID(MaxRewardID);
+
+		TargetData->SetRewardID(ID);
+
+		//As the next ID is a numeric so I need to convert it with map name
+		ID = TargetData->GetRewardID();
+
+		TargetData->MarkPackageDirty();
+
+		Result = true;
+	}
+
+	return Result;
+}
+
+void UTriggerEventRewardManager::RequestReward_Implementation(UTriggerEventRewardDataBase* RewardData)
+{
+	if (RewardData != nullptr)
+	{
+		RequestRewardCommand.AddUnique(RewardData);
+
+		RequestRewardDelegate.Broadcast(RewardData->GetRewardID());
+
+		AActor* Actor = RewardData->GetTypedOuter<AActor>();
+
+		FString ActorName;
+
+		if (Actor != nullptr)
+		{
+			ActorName = Actor->GetName();
+		}
+
+		UE_LOG(LogTrigger, Display, TEXT("Try to request rewar with ID: %s. int task: %s"), *RewardData->GetRewardID(), *ActorName);
+	}
+}
+
+void UTriggerEventRewardManager::AcceptReward_Implementation(const FString& RewardID, const TArray<FRewardData>& RewardDatas)
+{
+	for (int i = 0; i < RequestRewardCommand.Num(); i++)
+	{
+		if(RequestRewardCommand[i] == nullptr || !RequestRewardCommand[i]->IsValidLowLevel())
+			continue;
+
+		if (RequestRewardCommand[i]->GetRewardID() == RewardID)
+		{
+			RequestRewardCommand[i]->AcceptReward(RewardDatas);
+
+			RequestRewardCommand.RemoveAt(i--);
+		}
+	}
+}
+
+void UTriggerEventRewardManager::RefreshRewradID( UObject* WorldContent )
+{
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContent, EGetWorldErrorMode::LogAndReturnNull);
+
+	for (auto IT = RewardIDPool.CreateIterator(); IT; ++IT)
+	{
+
+		for (int i = 0; i < IT.Value().Num(); i++)
+		{
+			UTriggerEventRewardDataBase* Reward = IT.Value()[i];
+			if (!IsObjectValid(Reward))
+			{
+				IT.Value().RemoveAt(i--);
+			}
+		}
+
+		/*
+		* If there are several reward ID have the same reward ID, then means I need to regenerate reward ID for them
+		* So the first index is from 1 not 0
+		*/
+		for (int i = 1; i < IT.Value().Num(); i++)
+		{
+			UTriggerEventRewardDataBase* Reward = IT.Value()[i];
+
+			if (Reward == nullptr || Reward->IsPendingKill())
+			{
+				continue;
+			}
+
+			if (Reward->GetWorld() != World && World != nullptr)
+			{
+				continue;
+			}
+
+			FString MaxRewardID = GetTheMaxRewardIDByRewardData(Reward);
+
+			Reward->SetRewardID(Reward->GenerateNextID(MaxRewardID));
+
+			if (Reward->IsLarger(MaxRewardID))
+			{
+				TryToAddMaxRewardID(Reward);
+			}
+
+			IT.Value().RemoveAt( i-- );
+
+			Reward->MarkPackageDirty();
+		}
+
+		if (IT.Value().Num() <= 1)
+		{
+			IT.RemoveCurrent();
+		}
+	}
+
+	RewardIDPool.Compact();
+
+	//check(RewardIDPool.Num() == 0);
+
+}
+
+void UTriggerEventRewardManager::TryToAddMaxRewardID(UTriggerEventRewardDataBase* RewardData)
+{
+	if (RewardData == nullptr)
+		return;
 
 	ULevel* Level = RewardData->GetTypedOuter<ULevel>();
 
@@ -166,87 +407,25 @@ void UTriggerEventRewardManager::AddNewMaxRewardID(UTriggerEventRewardDataBase* 
 	UClass* DataType = RewardData->GetClass();
 
 	FMaxRewardID* RewardIDPtr = RewardIDPoolPtr->FindByPredicate([&](const FMaxRewardID& Data) {
-		if (Data.DataType->IsChildOf(DataType) || DataType->IsChildOf(Data.DataType))
+		if (Data.DataType == DataType)
 			return true;
 		else
 			return false;
-	});
+		});
 
 	if (RewardIDPtr == nullptr)
 	{
 		FMaxRewardID MaxRewardID;
 		MaxRewardID.DataType = DataType;
-		MaxRewardID.MaxRewarDID = NewMaxRewardID;
+		MaxRewardID.MaxRewarDID = RewardData->GetRewardID();
 
 		RewardIDPoolPtr->Add(MaxRewardID);
 	}
 	else
 	{
-		RewardIDPtr->MaxRewarDID = NewMaxRewardID;
-	}
-}
-
-bool UTriggerEventRewardManager::TryToGenerateRewardID_Implementation(UTriggerEventRewardDataBase* TargetData, FString& ID)
-{
-	ID = TEXT("");
-
-	if(TargetData == nullptr)
-		return false;
-
-	ULevel* Level = TargetData->GetTypedOuter<ULevel>();
-
-	FString LevelName = Level->GetOuter()->GetName();
-
-	FString MaxRewardID = GetTheMaxRewardIDByRewardData( TargetData );
-
-	if (MaxRewardID == UTriggerEventRewardDataBase::InvalidRewardID)
-	{
-		AddNewMaxRewardID(TargetData, UTriggerEventRewardDataBase::EmptyRewardID);
-
-		MaxRewardID = GetTheMaxRewardIDByRewardData(TargetData);
-	}
-
-	bool Result = false;
-
-	if (TargetData->GetRewardID().IsEmpty())
-	{
-		ID = TargetData->GenerateNextID(MaxRewardID);
-
-		TargetData->SetRewardID(ID);
-
-		Result = true;
-	}
-
-	if (TargetData->IsLarger(MaxRewardID))
-	{
-		AddNewMaxRewardID(TargetData, TargetData->GetRewardID());
-	}
-
-	return Result;
-}
-
-void UTriggerEventRewardManager::RequestReward_Implementation(UTriggerEventRewardDataBase* RewardData)
-{
-	if (RewardData != nullptr)
-	{
-		RequestRewardCommand.AddUnique(RewardData);
-
-		RequestRewardDelegate.Broadcast(RewardData->GetRewardID());
-	}
-}
-
-void UTriggerEventRewardManager::AcceptReward_Implementation(const FString& RewardID, const TArray<FRewardData>& RewardDatas)
-{
-	for (int i = 0; i < RequestRewardCommand.Num(); i++)
-	{
-		if(RequestRewardCommand[i] == nullptr || !RequestRewardCommand[i]->IsValidLowLevel())
-			continue;
-
-		if (RequestRewardCommand[i]->GetRewardID() == RewardID)
+		if (RewardData->IsLarger(RewardIDPtr->MaxRewarDID))
 		{
-			RequestRewardCommand[i]->AcceptReward(RewardDatas);
-
-			RequestRewardCommand.RemoveAt(i--);
+			RewardIDPtr->MaxRewarDID = RewardData->GetRewardID();
 		}
 	}
 }

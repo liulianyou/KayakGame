@@ -391,6 +391,10 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 	if(AS == nullptr)
 		return true;
 
+	//If this ability is still active then do nothing else as the target actor is interacting with this trigger task
+	if(AS->GetPrimaryInstance()->IsActive())
+		return false;
+
 	//Always remove the old data
 	AbilityMap.Remove(TargetActor);
 
@@ -611,7 +615,7 @@ void UTT_Interaction::AbilityTryToStartInteraction( AActor* TargetActor, const F
 				{
 					FGameplayAbilitySpec* AbilitySpacePtr = AbilitysSystem->FindAbilitySpecFromHandle(*AbilitySpaceHandlePtr);
 
-					if (AbilitySpaceHandlePtr != nullptr)
+					if (AbilitySpacePtr != nullptr)
 					{
 						AbilitysSystem->CallServerEndAbility(*AbilitySpaceHandlePtr, AbilitySpacePtr->GetPrimaryInstance()->GetCurrentActivationInfo(), AbilitysSystem->ScopedPredictionKey);
 					}

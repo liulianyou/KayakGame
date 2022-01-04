@@ -60,6 +60,9 @@ private:
 	void CreateVisualizationButton(class FMenuBuilder&);
 	void CreateVisualizationSubMen(class FMenuBuilder& MenuBuilder);
 
+	//Create one sub menu to refresh some data in the package
+	void CreateTriggerRefreshButton(class FMenuBuilder& MenuBuilder);
+	void CreateTriggerRefresSubMen(class FMenuBuilder& MenuBuilder);
 
 	//All actual triggers should below here
 	void CreateSubSections(class FMenuBuilder& MenuBuilder);

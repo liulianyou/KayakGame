@@ -316,7 +316,7 @@ void ANewTriggerBase::TryToRegister()
 
 			for (auto Component : Components)
 			{
-				if(Component == nullptr)
+				if(Component == nullptr || Component->GetName().StartsWith(TEXT("TRASH_"), ESearchCase::IgnoreCase))
 					continue;
 
 				Component->RegisterTaskComponent();

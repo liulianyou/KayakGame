@@ -6,12 +6,17 @@
 #include "LevelEditor.h"
 #include "TriggerEditorEngine.h"
 
-#include "Editor/Blutility/Classes/EditorUtilityWidgetBlueprint.h"
-#include "Editor/Blutility/Public/EditorUtilitySubsystem.h"
-#include "Editor/Blutility/Classes/EditorUtilityWidget.h"
+#include "EditorUtilityWidgetBlueprint.h"
+#include "EditorUtilitySubsystem.h"
+#include "EditorUtilityWidget.h"
 
 #include "TriggerEditorUI/SpawnPointActorPicker.h"
 #include "Widget/STriggerPointIndexPanel.h"
+
+#include "TriggerEditorConfig.h"
+
+#include "TriggerBlueprintLib.h"
+#include "TriggerEventRewardManager.h"
 
 FTriggerEditorUI::FTriggerEditorUI()
 {
@@ -142,6 +147,36 @@ void FTriggerEditorUI::CreateVisualizationSubMen(class FMenuBuilder& MenuBuilder
 
 }
 
+void FTriggerEditorUI::CreateTriggerRefreshButton(class FMenuBuilder& MenuBuilder)
+{
+	MenuBuilder.AddSubMenu(
+		FText::FromString(TEXT("Trigger Refresh Data")),
+		FText::FromString(TEXT("Refresh some data in the trigger event system")),
+		FNewMenuDelegate::CreateSP(this, &FTriggerEditorUI::CreateTriggerRefresSubMen));
+}
+
+void FTriggerEditorUI::CreateTriggerRefresSubMen(class FMenuBuilder& MenuBuilder)
+{
+	const UTriggerEditorConfig* TriggerEditorConfig = GetDefault<UTriggerEditorConfig>();
+
+	if(TriggerEditorConfig == nullptr)
+		return;
+
+	UClass* UserWidgetClass = TriggerEditorConfig->TriggerDataRefreshWidget.Get();
+
+	if (UserWidgetClass == nullptr)
+	{
+		UserWidgetClass = TriggerEditorConfig->TriggerDataRefreshWidget.LoadSynchronous();
+	}
+
+	if(UserWidgetClass == nullptr)
+		return;
+
+	UUserWidget* UserWidget = NewObject<UUserWidget>(GetTransientPackage(), UserWidgetClass);
+
+	MenuBuilder.AddWidget(UserWidget->TakeWidget(), FText::FromString(TEXT("Refresh all data in the trigger event system")));
+}
+
 void FTriggerEditorUI::CreateSerializeSubMenu(class FMenuBuilder& MenuBuilder)
 {
 
@@ -178,6 +213,8 @@ void FTriggerEditorUI::CreateSubSections(class FMenuBuilder& MenuBuilder)
 	CreateEditPanelButton(MenuBuilder);
 
     CreateTogglePointPickModeButton(MenuBuilder);
+
+	CreateTriggerRefreshButton(MenuBuilder);
 }
 
 void FTriggerEditorUI::CreateEditPanelButton(FMenuBuilder& MenuBuilder)
@@ -201,6 +238,9 @@ void FTriggerEditorUI::CreateTogglePointPickModeButton(FMenuBuilder& MenuBuilder
 void FTriggerEditorUI::ShowAllTasksAndTheirRelationships()
 {
     //STriggerPointIndexPanel::TogglePanelVisible();//for test.
+
+	UTriggerBlueprintLib::GetTriggerEventRewardManager()->RefreshRewradID(nullptr);
+
 }
 
 void FTriggerEditorUI::ExportNewTriggerMap()

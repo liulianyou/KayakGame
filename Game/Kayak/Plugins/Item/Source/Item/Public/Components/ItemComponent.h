@@ -9,13 +9,16 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 #include "Templates/SubclassOf.h"
+#include "Templates/SharedPointer.h"
 #include "ItemDefinition.h"
 #include "ItemInterface.h"
 
 #include "ItemComponent.generated.h"
 
 class UItemDataBase;
-class UItemOperationInfoBase;
+class UItemRuntimeDataBase;
+
+
 
 /*
 * The component which is used for item.
@@ -45,23 +48,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
 	virtual void Initialzie( UObject* NewItemOnwer );
 
-	/*
-	* Give the BP one chance to define how to active this item
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
-	void OnActivateItem();
+	//Initialize this component by the item owner
+	virtual void Initialzie( TScriptInterface<IItemInterface> NewItemOwner );
 
 	/*
 	* Active the item so that the outer can use this item 
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
 	virtual void ActivateItem();
-
-	/*
-	* Give the BP one chance to define how to Deactive this item
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
-	void OnDeactivateItem();
 
 	/*
 	* Deactive this item so that the outer can not use this item.
@@ -71,24 +65,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
 	virtual void DeactivateItem();
 
-
-	/*
-	* Give the BP one chance to do define how to start use this item
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
-	void OnStartUse();
-
 	/*
 	* Start to use this item, before use this item you need to active it again
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
 	virtual void StartUse();
-
-	/*
-	* Give the BP one change to define how to stop to use this item
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
-	void OnStopUse();
 
 	/*
 	* stop to use this item.
@@ -97,22 +78,10 @@ public:
 	virtual void StopUse();
 
 	/*
-	* Give the BP one change to define how to  abandon this item
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
-	void OnAbandoned(const FItemScopeChangeInfo& AbandonInfo);
-
-	/*
 	* Abandon this item.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
 	virtual void Abandoned(const FItemScopeChangeInfo& AbandonInfo);
-
-	/*
-	* Give the BP one change to define how to gain this item
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
-	void OnGained(const FItemScopeChangeInfo& GainedInfo);
 
 	/*
 	* Defines how to gain this item
@@ -120,31 +89,31 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
 	virtual void Gained(const FItemScopeChangeInfo& GainedInfo);
 
-	//Check weather this item has been activated
+	/*
+	* Get the avatar who own this item component, as one item should only have one item component, the avater also own this item
+	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	bool IsActivated() const;
+	UObject* GetAvatarOwner() const { return OwnerAvatar; }
 
-	//Check weather this item is using
+	/*
+	* Set new avatar owner for this item component
+	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	bool IsUsing() const;
-
-	//Get the state of this item
-	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	EItemState GetItemState() const { return ItemState; }
+	virtual void SetAvatarOwner(UObject* NewAvatar);
 
 public:
 
 	/*
-	* Get the owner of this component
+	* When the item data is changed in the component this function will be invoked
+	* 
+	* @param RemovedData	the original data this component hold
+	* @param NewData		The new data the component will hold
 	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	TScriptInterface<IItemInterface> GetItemOwner() const;
-	
-	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	UObject* GetAvatarOwner() const { return OwnerAvatar; }
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
+	void OnItemDataChanged(UItemDataBase* RemovedData = nullptr, UItemDataBase* NewData = nullptr);
 
-	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void SetAvatarOwner( UObject* NewAvatar );
+	UFUNCTION(BlueprintCallable)
+	virtual void ItemDataChanged( UItemDataBase* RemovedData = nullptr, UItemDataBase* NewData = nullptr );
 
 	/*
 	* Set new data to this component
@@ -155,27 +124,23 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
 	UItemDataBase* GetItemData_Mutable() const { return ItemData; }
 
-protected:
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	const UItemDataBase* GetItemData() const { return ItemData; }
 
 	/*
-	* This is only used to initialize the data when the data is changed
+	* Get the owner of the Item
 	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
-	void OnInitializeDataFromNewDataInternal(UItemDataBase* NewData);
-	virtual void InitializeFromNewDataInternal(UItemDataBase* NewData);
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	TScriptInterface<IItemInterface> GetItemOwner() const;
 
-public:
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	void SetRuntimeData( UItemRuntimeDataBase* NewRuntimeData );
 
-	//Callback when the avatar have been changed 
-	UFUNCTION()
-	void OnRep_OwnerAvatar( UObject* OldAvatar );
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	UItemRuntimeDataBase* GetRuntimeData_Mutable() const { return RuntimeData; };
 
-protected:
-	
-	/*
-	* Invoked when the item state is changed
-	*/
-	void ToggleItemStateChanged( EItemState NewItemState );
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	const UItemRuntimeDataBase* GetRuntimeData() const { return RuntimeData; };
 
 protected:
 
@@ -193,41 +158,65 @@ protected:
 
 public:
 	
-	//The data which will be used in this item
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ItemComponent")
-	TSubclassOf<UItemDataBase> ItemDataClass;
+	//Callback when the avatar have been changed 
+	UFUNCTION()
+	void OnRep_OwnerAvatar(UObject* OldAvatar);
+
+public:
+	
+	/*
+	* The difference between runtime data and item data is item data is the base data for the runtime data.
+	* If one value is changed in the item data then all runtime data will changed synchronize.
+	* by default the component will only operate the runtime data.
+	*/
 
 	/*
-	* Give the outer one access to inspect when the state have been changed in this item
+	* The data which will be used in this item
 	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ItemData")
+	TSubclassOf<UItemDataBase> DefaultItemDataClass;
+
+	//The class of runtime data will be used by this item
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ItemData")
+	TSubclassOf<UItemDataBase> DefaultItemRuntimeDataClass;
+
+public:
+	
+	//Invoked when the item data have been changed
 	UPROPERTY(BlueprintAssignable)
-	FItemStateChange ItemStateChanged;
+	FItemDataChanged ItemDataChangedDelegate;
+
+private:
+	/*
+	* The runtime data which is used for this item
+	*/
+	UPROPERTY(Transient)
+	UItemRuntimeDataBase* RuntimeData;
+
+	/*
+	* The instance data which will be used by this component.
+	* This data is the base data of runtime data.
+	* If some value is changed all component referenced by this data will change synchronize
+	*/
+	UPROPERTY(Transient)
+	UItemDataBase* ItemData;
 
 private:
 	
-	//The state of this item
-	EItemState ItemState;
-
-private:
-
-	/*
-	* The instance data which will be used by this component
-	*/
-	UPROPERTY()
-	UItemDataBase* ItemData;
-
-	/*
-	* where this component should exist
-	*/
-	UObject* ItemOwner = nullptr;
-
 	/*
 	* Which avatar own this component, this value can be null, such as the player abandon this item on the ground.
 	* Mostly this value is different from the ItemOwner.
 	*/
-	UPROPERTY(ReplicatedUsing=OnRep_OwnerAvatar)
+	UPROPERTY(ReplicatedUsing = OnRep_OwnerAvatar)
 	UObject* OwnerAvatar = nullptr;
 
+	/*
+	* As this component maybe treated as one item operation set in other object,
+	* The default owner of actor component is one Actor, so I need to get the actual who own this component.
+	* The component owner should be inherited from IItemInterface
+	*/
+	UPROPERTY()
+	mutable TScriptInterface<IItemInterface> ComponentOwner;
 };
 	
 #define  ItemComponentFramework()\

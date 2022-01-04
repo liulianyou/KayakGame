@@ -34,6 +34,12 @@ UCheckGameOverFailedBase::UCheckGameOverFailedBase(const FObjectInitializer& Obj
 
 }
 
+UCheckGameOverFailed_ForwardCondition::UCheckGameOverFailed_ForwardCondition(const FObjectInitializer& ObjectInitializer)
+	:Super(ObjectInitializer)
+{
+	
+}
+
 
 //Override Evaluator Base
 
@@ -144,4 +150,64 @@ void UCheckGameOverBase::GameOverConditionPassCallback(UCheckGameOverBase* Other
 	{
 		RemoveGameOverPlayer(Controllers[i]);
 	}
+}
+
+bool UCheckGameOverFailed_ForwardCondition::NativeEvaluator()
+{
+	if (ForwardedCondition != nullptr && ForwardedCondition->Evaluator())
+	{
+		//By default it will make all players game over
+		for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+		{
+			AddGameOverPlayer(It->Get());
+		}
+		
+		return true;
+	}
+
+	//By default it should never passed
+	return false;
+}
+
+void UCheckGameOverFailed_ForwardCondition::NativeInitialize(UObject* OwnerObject)
+{
+	Super::NativeInitialize(OwnerObject);
+
+	if (ForwardedCondition != nullptr)
+	{
+		ForwardedCondition->NativeInitialize(OwnerObject);
+
+		if (!ForwardedCondition->EvaluatorDelegate.IsAlreadyBound(this, &UCheckGameOverFailed_ForwardCondition::OnForwardConditionCallback))
+		{
+			ForwardedCondition->EvaluatorDelegate.AddDynamic(this, &UCheckGameOverFailed_ForwardCondition::OnForwardConditionCallback);
+		}
+	}
+}
+
+void UCheckGameOverFailed_ForwardCondition::NativeReset()
+{
+	Super::NativeReset();
+
+	if (ForwardedCondition != nullptr)
+	{
+		ForwardedCondition->BP_Reset();
+	}
+}
+
+void UCheckGameOverFailed_ForwardCondition::OnForwardConditionCallback(UEvaluatorBase* Evaluator, bool EvaluatorResult)
+{
+	if (Evaluator == ForwardedCondition && EvaluatorResult)
+	{
+		NotifyToEvaluate();
+	}
+}
+
+void UCheckGameOverFailed_ForwardCondition::BeginDestroy()
+{
+	if (ForwardedCondition != nullptr && ForwardedCondition->IsValidLowLevel())
+	{
+		ForwardedCondition->EvaluatorDelegate.RemoveDynamic(this, &UCheckGameOverFailed_ForwardCondition::OnForwardConditionCallback);
+	}
+
+	Super::BeginDestroy();
 }

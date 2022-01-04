@@ -51,7 +51,7 @@ public:
 	* Get the owner trigger task
 	*/
 	UFUNCTION(BlueprintCallable, Category = "TriggerTask|Descriptor")
-	UTriggerTaskBase* GetTriggerTaskOwner();
+	UTriggerTaskBase* GetTriggerTaskOwner() const;
 
 private:
 

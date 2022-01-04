@@ -25,15 +25,20 @@ public:
 	//Override UTriggerTaskExternalDataBase
 
 	//Override UTriggerEventRewardDataBase
-	FString GetRewardID_Implementation() const override;
-	void SetRewardID_Implementation(const FString& NewID) override;
-	FString GenerateNextID_Implementation(const FString& ID) const override;
-	bool IsLarger_Implementation( const FString& ID ) const  override;
-	FString GetRewardIDFromStrings_Implementation(const TArray<FString>& Strings) const override;
-	bool IsValidRewardID_Implementation(const FString& ID) const override;
-	void RequestReward_Implementation() override;
-	void AcceptReward_Implementation(const TArray<FRewardData>& RewardDatas) override;
+	virtual FString GetRewardID_Implementation() const override;
+	virtual void SetRewardID_Implementation(const FString& NewID) override;
+	virtual FString GenerateNextID_Implementation(const FString& ID) const override;
+	virtual bool IsLarger_Implementation( const FString& ID ) const  override;
+	virtual FString GetRewardIDFromStrings_Implementation(const TArray<FString>& Strings) const override;
+	virtual bool IsValidRewardID_Implementation(const FString& ID) const override;
+	virtual void RequestReward_Implementation() override;
+	virtual void AcceptReward_Implementation(const TArray<FRewardData>& RewardDatas) override;
+	virtual void ClearRewardID_Implementation() override;
 	//Override UTriggerEventRewardDataBase
+
+	//Override UObject
+	virtual void Serialize(FArchive& Ar) override;
+	//Override UObject
 
 public:
 	
@@ -49,6 +54,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Transient, Category = "ExternalData")
 	mutable FString RewardID;
 
+	//The internal index for this reward data
 	UPROPERTY()
 	int ID;
 

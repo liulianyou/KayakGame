@@ -652,7 +652,7 @@ UTriggerTaskComponentBase* UTriggerTaskBase::GetTriggerOwner() const
 			CurrentOuter = CurrentOuter->GetOuter();
 		}
 
-		if (TTC && !TTC->IsRegistered())
+		if (TTC && !TTC->GetName().StartsWith(TEXT("TRASH_"), ESearchCase::IgnoreCase) && !TTC->IsRegistered())
 		{
 			TTC->RegisterTaskComponent();
 		}

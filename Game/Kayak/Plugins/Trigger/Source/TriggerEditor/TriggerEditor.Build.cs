@@ -1,6 +1,7 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class TriggerEditor : ModuleRules
 {
@@ -14,18 +15,7 @@ public class TriggerEditor : ModuleRules
 			}
 			);
 				
-		
-		PrivateIncludePaths.AddRange(
-			new string[] {
-				"TriggerEditor/Public/Module/",
-				"TriggerEditor/Public/Module/TriggerLevelModule/",
-				"TriggerEditor/Public/DetailsPanelCustomize/",
-				"TriggerEditor/Public/TriggerEditorUI/",
-				"TriggerEditor/Public/Input/"
-				// ... add other private include paths required here ...
-			}
-			);
-			
+		PrivateIncludePaths.AddRange(GetPublicIncludePaths());
 		
 		PublicDependencyModuleNames.AddRange(
 			new string[]
@@ -58,7 +48,8 @@ public class TriggerEditor : ModuleRules
 				"AssetRegistry",
 				"SourceControl",
 				"GameplayTags",
-                "GameplayTagsEditor"
+                "GameplayTagsEditor",
+				"DeveloperSettings"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
@@ -71,4 +62,9 @@ public class TriggerEditor : ModuleRules
 			}
 			);
 	}
+
+    public virtual string[] GetPublicIncludePaths()
+    {
+        return Directory.GetDirectories(ModuleDirectory + "/Public", "*", SearchOption.AllDirectories);
+    }
 }

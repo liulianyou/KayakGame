@@ -12,9 +12,9 @@ UTriggerEventRewardDataWithID::UTriggerEventRewardDataWithID(const FObjectInitia
 
 void UTriggerEventRewardDataWithID::Initialize(UTriggerTaskBase* Owner)
 {
-	Super::Initialize(Owner);
-
 	RewardID = GeneratedRewardID();
+
+	Super::Initialize(Owner);
 }
 
 FString UTriggerEventRewardDataWithID::GeneratedRewardID_Implementation()
@@ -40,6 +40,8 @@ FString UTriggerEventRewardDataWithID::GeneratedRewardID_Implementation()
 		if (RewardManager == nullptr || !RewardManager->TryToGenerateRewardID(this, Result))
 			return TEXT("");
 	}
+
+
 
 	return Result;
 }
@@ -86,20 +88,19 @@ bool UTriggerEventRewardDataWithID::IsLarger_Implementation(const FString& Targe
 	}
 	else
 	{
-		TArray<FString> Sprites;
-		TargetID.ParseIntoArray(Sprites, REWARDIDENTIFICATIONDELIMITOR);
 
-		for (int i = 0; i < Sprites.Num(); i++)
+		int Index = INDEX_NONE;
+		if (TargetID.FindLastChar(REWARDIDENTIFICATIONDELIMITOR_CHAR, Index))
 		{
-			if (Sprites[i].IsNumeric())
-			{
-				int LocalID = FCString::Atoi(*Sprites[i]);
+			FString MapName = TargetID.Left(Index);
+			FString NumericString = TargetID.RightChop(Index + 1);
 
-				if (LocalID <= ID)
-					return true;
-				else
-					return false;
-			}
+			int LocalID = FCString::Atoi(*NumericString);
+
+			if (LocalID <= ID)
+				return true;
+			else
+				return false;
 		}
 	}
 
@@ -224,4 +225,15 @@ void UTriggerEventRewardDataWithID::RequestReward_Implementation()
 void UTriggerEventRewardDataWithID::AcceptReward_Implementation(const TArray<FRewardData>& RewardDatas)
 {
 	Super::AcceptReward_Implementation(RewardDatas);
+}
+
+void UTriggerEventRewardDataWithID::ClearRewardID_Implementation()
+{
+	ID = INDEX_NONE;
+	RewardID.Empty();
+}
+
+void UTriggerEventRewardDataWithID::Serialize(FArchive& Ar)
+{
+	Super::Serialize(Ar);
 }

@@ -63,6 +63,10 @@ class TRIGGERRUNTIME_API UTriggerEventRewardDataBase : public UTriggerTaskExtern
 
 public:
 
+	//Override UObject
+	virtual void BeginDestroy();
+	//Override UObject
+
 	//Override UTriggerTaskExternalDataBase
 	virtual void Initialize(UTriggerTaskBase* Owner) override;
 	virtual void Reset(UOperationInformationBase* ResetOperationInfo) override;
@@ -93,6 +97,12 @@ public:
 	*/
 	UFUNCTION(BlueprintNativeEvent)
 	void SetRewardID( const FString& NewID );
+
+	/*
+	* Clear the reward id.
+	*/
+	UFUNCTION(BlueprintNativeEvent)
+	void ClearRewardID();
 
 	/*
 	* Help function to define weather the ID int this data is larger then target ID

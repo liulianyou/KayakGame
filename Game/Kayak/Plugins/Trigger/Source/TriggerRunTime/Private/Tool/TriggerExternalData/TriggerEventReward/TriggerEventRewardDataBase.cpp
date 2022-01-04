@@ -9,7 +9,19 @@ FString UTriggerEventRewardDataBase::InvalidRewardID = TEXT("INVALIDREWARDID");
 UTriggerEventRewardDataBase::UTriggerEventRewardDataBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
-	
+	ClearRewardID();
+}
+
+void UTriggerEventRewardDataBase::BeginDestroy()
+{
+	UTriggerEventRewardManager* RewardManager = UTriggerBlueprintLib::GetTriggerEventRewardManager();
+
+	if (RewardManager != nullptr)
+	{
+		RewardManager->UnregisterRewardData(this);
+	}
+
+	Super::BeginDestroy();
 }
 
 void UTriggerEventRewardDataBase::Initialize(UTriggerTaskBase* Owner)
@@ -24,6 +36,14 @@ void UTriggerEventRewardDataBase::Initialize(UTriggerTaskBase* Owner)
 		{
 			RequestRewardCondition->EvaluatorDelegate.AddDynamic(this, &UTriggerEventRewardDataBase::EvaluatorRequestCondition);
 		}
+	}
+
+
+	UTriggerEventRewardManager* RewardManager = UTriggerBlueprintLib::GetTriggerEventRewardManager();
+
+	if (RewardManager != nullptr)
+	{
+		RewardManager->RegisterRewardData(this);
 	}
 }
 
@@ -49,6 +69,12 @@ void UTriggerEventRewardDataBase::SetRewardID_Implementation(const FString& NewI
 {
 	
 }
+
+void UTriggerEventRewardDataBase::ClearRewardID_Implementation()
+{
+	
+}
+
 
 bool UTriggerEventRewardDataBase::IsLarger_Implementation(const FString& ID) const
 {

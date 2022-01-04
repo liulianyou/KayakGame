@@ -90,8 +90,9 @@ void UEvaluatorBase::NativeInitialize(UObject* OwnerObject)
 
 void UEvaluatorBase::BeginDestroy()
 {
-	Super::BeginDestroy();
+	EvaluatorDelegate.Clear();
 
+	Super::BeginDestroy();
 }
 
 UEvaluatorDataBase* UEvaluatorBase::CreateNewExternalData(TSubclassOf<UEvaluatorDataBase> EvaluatorClass)
