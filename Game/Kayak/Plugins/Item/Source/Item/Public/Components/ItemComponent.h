@@ -22,6 +22,17 @@ class UItemRuntimeDataBase;
 
 /*
 * The component which is used for item.
+* 
+* The component is used to expand the behavior the item runtime data.
+* So the component must have the basic function:
+*	ActiveItem		==> ItemRuntimeData::Active
+*	DeactiveItem	==> ItemRuntimeData::Deactive
+*	StartUse		==> ItemRuntimeData::StartUse
+*	StopUse			==>	ItemRuntimeData::StopUse
+*	Abandon			==>	ItemRuntimeData::Abandon
+*	Gain			==>	ItemRuntimeData::Gain
+* The component can determine weather to use the intrinsic behavior or not.
+* 
 */
 UCLASS(BlueprintType, Blueprintable, Abstract, Category = "Item|Component")
 class ITEM_API UItemComponentBase : public UActorComponent
@@ -206,6 +217,7 @@ private:
 	/*
 	* Which avatar own this component, this value can be null, such as the player abandon this item on the ground.
 	* Mostly this value is different from the ItemOwner.
+	* If this item is spawned at the world then the owner avatar is the world
 	*/
 	UPROPERTY(ReplicatedUsing = OnRep_OwnerAvatar)
 	UObject* OwnerAvatar = nullptr;

@@ -14,7 +14,7 @@
 #include "WeaponComponent.generated.h"
 
 /*
-* The component which is used for item.
+* The component which is used for weapon.
 */
 UCLASS(BlueprintType, Blueprintable, Category = "Item|Component")
 class ITEM_API UWeaponComponent : public UEquipmentComponent

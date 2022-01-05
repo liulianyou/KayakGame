@@ -11,10 +11,8 @@
 *			The runtime data defines what the item is
 *			
 *			I split the data of item into two parts. part of them will have the same attributes.
-*			one item can have different behavior is because they have different attribute.
-*			such as there are two cups, they are created at the same factory at the same time, the have the same attributes so they have the same behavior.
-*			if they are created by two different factory and at the same time then they maybe have the same appearance but the quality is different. 
-* 
+*			The item runtime data only respect for the behavior which is bind to the data attribute
+*			The component is used to expand the behavior for the item runtime, but it can only use the intrinsic attribute		
 */
 
 #include "CoreMinimal.h"
@@ -30,8 +28,9 @@ class UItemComponentBase;
 * The base class for all items used in our game
 * You can treat it as the data scope of the target item. 
 * It is only used to initialize the item and get some informations from item
+* One game instance should have one instance of this data
 */
-UCLASS(Blueprintable, BlueprintType, Abstract, Within="ItemManager", Category = "Item")
+UCLASS(Blueprintable, BlueprintType, Abstract, Within="ItemManager", Category = "Item|ItemData")
 class ITEM_API UItemDataBase : public UObject
 {
 	GENERATED_UCLASS_BODY()
@@ -57,23 +56,42 @@ public:
 	/*
 	* Get all components which use this data as its initialize data
 	*/
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "ItemData")
 	const TArray<UItemComponentBase*>& GetReferencedItemComponents() const { return ReferencedItemComponents;}
 
 	TArray<UItemComponentBase*>& GetReferencedItemComponents_Mutable() { return ReferencedItemComponents; }
+
+protected:
+
+	/*
+	* This function should be invoked by any other initialization to populate the default members
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemData")
+	void InitializeInternal();
+
+public:
+
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	const FGuid& GetID() const { return ID; }
 
 private:
 
 	//All the runtime data which will use this data as its original initial data
 	UPROPERTY()
 	TArray<UItemComponentBase*> ReferencedItemComponents;
+
+	/*
+	* The unique identification for this data
+	*/
+	UPROPERTY(VisibleInstanceOnly)
+	FGuid ID;
 };
 
 /*
 * The runtime data which is used by the item.
 * Runtime data is only used at runtime state, it will cashed some temporary value, and define some operations around this data
 */
-UCLASS(Blueprintable, BlueprintType, Abstract, Within="ItemComponentBase", Category = "Item")
+UCLASS(Blueprintable, BlueprintType, Abstract, Within="ItemComponentBase", Category = "ItemData")
 class ITEM_API UItemRuntimeDataBase : public UObject
 {
 	GENERATED_UCLASS_BODY()
@@ -221,7 +239,7 @@ public:
 	UItemComponentBase* GetItemOwner() const { return ItemOwner; }
 
 	//Get the state of this item
-	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
 	EItemState GetItemState() const { return ItemState; }
 
 public:
@@ -231,6 +249,7 @@ public:
 	*/
 	UPROPERTY(BlueprintAssignable)
 	FItemStateChange ItemStateChangedDelegate;
+
 
 private:
 

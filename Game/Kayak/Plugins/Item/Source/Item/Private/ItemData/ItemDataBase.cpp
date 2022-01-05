@@ -10,6 +10,14 @@ UItemDataBase::UItemDataBase(const FObjectInitializer& ObjectInitializer)
 	
 }
 
+void UItemDataBase::InitializeInternal()
+{
+	if (!ID.IsValid())
+	{
+		ID = FGuid::NewGuid();
+	}
+}
+
 void UItemDataBase::BeginDestroy()
 {
 	Super::BeginDestroy();

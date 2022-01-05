@@ -25,8 +25,7 @@
 		LayerRootWidgets.Add(RootLayerWidget);\
 	}
 
-
-UCLASS(Blueprintable, Blueprintable, Abstract, Config = UI, Category = "Kayak|UI")
+UCLASS(BlueprintType, Blueprintable, Abstract, Config = UI, Category = "Kayak|UI")
 class KAYAK_API UKayakRootWidgetBase : public UKayakUserWidget
 {
 	GENERATED_UCLASS_BODY()

@@ -18,22 +18,28 @@ class UItemRuntimeDataBase;
 * The state for one item
 */
 UENUM( BlueprintType )
-enum EItemState
+enum class EItemState : uint8
 {
-	//This item have not been operated by any other operations after it is created
-	Constructed = 0	UMETA(Hidden),
-	//Active means the item is ready for the avatar to use
-	Activate	= 1 << 0,
+	Default		= 0		UMETA(Hidden),
+	//The owner avatar only own this item. and this item have not effect to the avatar
+	Constructed = 1 << 0,
+	/*
+	* Active means the item is ready for the avatar to use
+	*/
+	Activate	= 1 << 1,
 	//Deactivated means the item will not affect the avatar any more. the Avatar only own it, but it will do nothing for the avatar 
-	Deactivated	= 1 << 1,
-	//The avatar is using this item
-	Using		= 1 << 2,
+	Deactivated	= 1 << 2,
+	/*
+	* The avatar is using this item
+	* 
+	*/
+	Using		= 1 << 3,
 	//This item is free for using
-	Idel		= 1 << 3,
+	Idel		= 1 << 4,
 	//This item is abandoned by the avatar
-	Abandoned	= 1 << 4,
+	Abandoned	= 1 << 5,
 	//This item is gained by the other avatar
-	Gained		= 1 << 5,
+	Gained		= 1 << 6,
 };
 
 ENUM_CLASS_FLAGS(EItemState);
