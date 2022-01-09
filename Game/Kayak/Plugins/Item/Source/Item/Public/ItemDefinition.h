@@ -4,6 +4,9 @@
 * Author:	Liulianyou
 * Time:		2021/12/24
 * Purpose:	All global definitions should be defined here.
+*			The difference between ItemGloble and ItemDefinition is ItemGloble used to manipulate globe configuration and global manipulation.
+*			The ItemDefinition is used to export some global definition which will be used by outer module.
+*			If one delegate defined in ItemDefinition it only can by used by native class, but the ItemGlobal can be used in BP
 */
 
 #include "CoreMinimal.h"
@@ -14,28 +17,27 @@
 
 class UItemRuntimeDataBase;
 
+DECLARE_LOG_CATEGORY_EXTERN(LogTrigger, Log, All);
+DECLARE_STATS_GROUP(TEXT("Tickables"), STATGROUP_Item, STATCAT_Advanced);
+
 /*
 * The state for one item
 */
 UENUM( BlueprintType )
 enum class EItemState : uint8
 {
-	Default		= 0		UMETA(Hidden),
 	//The owner avatar only own this item. and this item have not effect to the avatar
-	Constructed = 1 << 0,
-	/*
-	* Active means the item is ready for the avatar to use
-	*/
-	Activate	= 1 << 1,
-	//Deactivated means the item will not affect the avatar any more. the Avatar only own it, but it will do nothing for the avatar 
-	Deactivated	= 1 << 2,
-	/*
-	* The avatar is using this item
-	* 
-	*/
-	Using		= 1 << 3,
-	//This item is free for using
-	Idel		= 1 << 4,
+	Constructed = 0		UMETA(Hidden),
+	//Active means the avatar have own this item and can use it
+	Activate	= 1 << 0,
+	//This item data have been owned by the avatar but it have not been used
+	Idel		= 1 << 1,
+	//The avatar is using this item, the item have some effects to the world
+	Using		= 1 << 2,
+	//The avatar just hold this item and this item have no effect to the world
+	Holding		= 1 << 3,
+	//Deactivated means will not own this item, This item now belongs to the world(If it exist)
+	Deactivated = 1 << 4,
 	//This item is abandoned by the avatar
 	Abandoned	= 1 << 5,
 	//This item is gained by the other avatar
@@ -43,6 +45,19 @@ enum class EItemState : uint8
 };
 
 ENUM_CLASS_FLAGS(EItemState);
+
+/*
+* Get the property value in the target object
+*/
+template<class ClassType, class VlaueType>
+void Get( ClassType* Object, ValueType& PropertyName)
+{
+	FProperty* Prop = FindFieldChecked<FProperty>(ClassType::StaticClass(), GET_MEMBER_NAME_CHECKED(ClassType, PropertyName));
+	if (Prop != nullptr)
+	{
+		PropertyName = Prop->ContainerPtrToValuePtr<ValueType>(Object);
+	}
+}
 
 /*
 * The delegate event used to inspect the state changed for the target Item
@@ -58,6 +73,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FItemStateChange, const UItemRuntime
 */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FItemDataChanged, UItemComponentBase*, TargetItem, UItemDataBase*, OldData, UItemDataBase*, NewData);
 
+/*
+* This delegate will broadcast when the avatar owner have been changed in target item.
+* 
+* @param OldAvatarOwner		the old avatar owner of the target item
+* @param NewAvatarOwner		the new avatar owner of the target item
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FAvatarOwnerChanged, UItemComponentBase*, Item, UItemInventoryComponent*, OldAvatarOwner, UItemInventoryComponent* ，NewAvatarOwner);
+
 
 USTRUCT(BlueprintType)
 struct FLocationInfo
@@ -65,14 +88,15 @@ struct FLocationInfo
 	GENERATED_BODY()
 
 public:
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FVector Location;
 
 	/*
-	* The object that the target 
+	* The avatar owner for the item
 	*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	UObject* TargetObject;
+	UItemInventoryComponent* AvatarOnwer;
 
 };
 
@@ -93,7 +117,7 @@ enum class EItemScopeChangeType : uint8
 };
 
 /*
-* 
+* struct to define how the item
 */
 USTRUCT(BlueprintType)
 struct FItemScopeChangeInfo
@@ -120,5 +144,6 @@ public:
 */
 struct FItemNativeDelegate
 {
-	
+	//Boradcast when the avatar owner has been changed in the target item.
+	FAvatarOwnerChanged AvatarOwnerChanged;
 };

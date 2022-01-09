@@ -10,6 +10,11 @@ UItemDataBase::UItemDataBase(const FObjectInitializer& ObjectInitializer)
 	
 }
 
+bool UItemDataBase::IsValidItemData()
+{
+	return !(IsPendingKill() || RuntimdDataClass == nullptr);
+}
+
 void UItemDataBase::InitializeInternal()
 {
 	if (!ID.IsValid())
@@ -33,14 +38,18 @@ void UItemDataBase::AddReferencedComponent(UItemComponentBase* ItemComponent)
 	if (ItemComponent == nullptr)
 		return;
 
-	if (ReferencedItemComponents.Find(ItemComponent) == INDEX_NONE)
+	if (RuntimdDataClass != nullptr)
 	{
-		//Should add first to break the potential infinite loop
-		ReferencedItemComponents.AddUnique(ItemComponent);
+		UItemRuntimeDataBase* NewItemRunttmeData = NewObject<UItemRuntimeDataBase>(ItemComponent, RuntimdDataClass);
 
-		OnAddReferencedComponent(ItemComponent);
+		if (NewItemRunttmeData)
+		{
+			ItemComponent->AddNewRuntimeData(NewItemRunttmeData);
 
-		ItemComponent->ItemDataChanged(nullptr, this);
+			GetReferencedItemComponents_Mutable().Add(ItemComponent, NewItemRunttmeData);
+
+			OnAddReferencedComponent(ItemComponent);
+		}
 	}
 }
 
@@ -49,14 +58,16 @@ void UItemDataBase::RemoveReferencedComponent(UItemComponentBase* ItemComponent)
 	if(ItemComponent == nullptr)
 		return;
 
-	if (ReferencedItemComponents.Find(ItemComponent) != INDEX_NONE)
+	for (auto IT = GetReferencedItemComponents_Mutable().CreateIterator(); IT; ++IT)
 	{
-		//Should remove first to break the potential infinite loop
-		ReferencedItemComponents.Remove(ItemComponent);
+		if (IT.Key() == ItemComponent)
+		{
+			IT.Key()->RemoveItemRuntimeData(IT.Value());
 
-		OnRemoveReferencedComponent(ItemComponent);
+			OnRemoveReferencedComponent(ItemComponent);
 
-		ItemComponent->ItemDataChanged(this, nullptr);
+			IT.RemoveCurrent();
+		}
 	}
 }
 
@@ -64,6 +75,98 @@ UItemRuntimeDataBase::UItemRuntimeDataBase(const FObjectInitializer& ObjectIniti
 	:Super(ObjectInitializer)
 {
 
+}
+
+void UItemRuntimeDataBase::BeginPlay()
+{
+	OnBeginPlay();
+}
+
+void UItemRuntimeDataBase::BeginDestroy()
+{
+	Super::BeginDestroy();
+}
+
+bool UItemRuntimeDataBase::IsNameStableForNetworking() const
+{
+	return bNetAddressable :: Super::IsNameStableForNetworking();
+}
+
+bool UItemRuntimeDataBase::IsSupportedForNetworking() const
+{
+	return true;
+}
+
+int32 UItemRuntimeDataBase::GetFunctionCallspace(UFunction* Function, FFrame* Stack)
+{
+	if (GetItemOwner() == nullptr)
+	{
+		return FunctionCallspace::Local;
+	}
+
+	AActor* MyOwner = GetItemOwner()->GetOwner();
+	return (MyOwner ? MyOwner->GetFunctionCallspace(Function, Stack) : FunctionCallspace::Local);
+}
+
+bool UItemRuntimeDataBase::CallRemoteFunction(UFunction* Function, void* Parms, struct FOutParmRec* OutParms, FFrame* Stack)
+{
+	bool bProcessed = false;
+
+	if (AActor* MyOwner = GetItemOwner()->GetOwner())
+	{
+		FWorldContext* const Context = GEngine->GetWorldContextFromWorld(GetWorld());
+		if (Context != nullptr)
+		{
+			for (FNamedNetDriver& Driver : Context->ActiveNetDrivers)
+			{
+				if (Driver.NetDriver != nullptr && Driver.NetDriver->ShouldReplicateFunction(MyOwner, Function))
+				{
+					Driver.NetDriver->ProcessRemoteFunction(MyOwner, Function, Parms, OutParms, Stack, this);
+					bProcessed = true;
+				}
+			}
+		}
+	}
+
+	return bProcessed;
+}
+
+bool UItemRuntimeDataBase::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags);
+{
+	//To replicate sub objects in this data
+	/*
+	bool WroteSomething = false;
+
+	if (SubObject->IsSupportedForNetworking())
+	{
+		SubObject->ReplicateSubobjects(Channel, Bunch, RepFlags);
+
+		WroteSomething |= Channel->ReplicateSubobject(const_cast<SubObjectClass*>(SubObject), *Bunch, *RepFlags);
+	}
+
+	return WroteSomething;
+	*/
+	return false;
+}
+
+//Make sure the BP can use the global functions
+UWorld* UItemRuntimeDataBase::GetWorld() const
+{
+	if (HasAnyFlags(RF_ClassDefaultObject))
+	{
+		//When we open the defaulat object of this class then just return null to fool the UObject::ImplementsGetWorld by make the bGetWorldOverridden to be
+		return nullptr;
+	}
+	else if (GetItemOwner() != nullptr)
+	{
+		return GetItemOwner()->GetWorld();
+	}
+	else
+	{
+		return GetOuter()->GetWorld();
+	}
+
+	return nullptr;
 }
 
 void UItemRuntimeDataBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -75,9 +178,16 @@ void UItemRuntimeDataBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProp
 
 void UItemRuntimeDataBase::Initialize(UItemComponentBase* ItemComponent)
 {
-	OnInitialzie();
+	OnInitialzie(ItemComponent);
 
 	ItemOwner = ItemComponent;
+}
+
+void UItemRuntimeDataBase::Finialize()
+{
+	OnFinialize();
+
+	ItemOwner = nullptr;
 }
 
 bool UItemRuntimeDataBase::IsActivated() const
@@ -157,7 +267,7 @@ void UItemRuntimeDataBase::StopUse()
 		OnStopUse();
 	}
 
-	ToggleItemStateChanged(EItemState::Idel);
+	ToggleItemStateChanged(EItemState::Holding);
 }
 
 void UItemRuntimeDataBase::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
@@ -197,6 +307,14 @@ void UItemRuntimeDataBase::InitializeFromNewDataInternal(UItemDataBase* NewData)
 	}
 }
 
+void UItemRuntimeDataBase::AvatarOwnerChanged(UItemInventoryComponent* NewAvatarOwner)
+{
+	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemRuntimeDataBase, OnAvatarOwnerChanged)))
+	{
+		OnAvatarOwnerChanged(NewAvatarOwner);
+	}
+}
+
 void UItemRuntimeDataBase::OnRep_ItemOwner(UItemComponentBase* OldItemOnwer)
 {
 	
@@ -228,3 +346,11 @@ void UItemRuntimeDataBase::ItemDataChangedInItemOwner(UItemComponentBase* Item, 
 {
 	OnItemDataChangedInItemOwner(Item, OldData, NewData);
 }
+
+void UItemRuntimeDataBase::MarkDataPrepared()
+{
+	bDataPrepared = true;
+
+	DataPreparedEvent.Broadcast(this);
+}
+

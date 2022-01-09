@@ -25,6 +25,7 @@ class UItemInterface : public UInterface
 /**
  * The actual item which is used in game.
  * All object which inherited from the this interface should be treated as new item
+ * This interface should be used for object which want to be item.
  */
 class ITEM_API IItemInterface
 {
@@ -46,6 +47,13 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
 	void OnInitialize(UItemDataBase* NewData);
 	virtual void Initialize( UItemDataBase* NewData );
+
+	/*
+	*	Set new owner for this item
+	*/
+	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
+	void OnSetItemOwner(UItemInventoryComponent* NewOwner);
+	virtual void SetItemOwner(UItemInventoryComponent* NewOwner);
 };
 
 

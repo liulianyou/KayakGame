@@ -17,8 +17,9 @@
 
 class UItemDataBase;
 class UItemRuntimeDataBase;
+class UItemInventoryComponent;
 
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAvatarOwnerChanged, UItemInventoryComponent*, OldAvatarOwner, UItemInventoryComponent*，NewAvatarOwner );
 
 /*
 * The component which is used for item.
@@ -33,11 +34,16 @@ class UItemRuntimeDataBase;
 *	Gain			==>	ItemRuntimeData::Gain
 * The component can determine weather to use the intrinsic behavior or not.
 * 
+* One item component may have several item data and runtime ItemData.
+* such as French baguette we can eat it but also we can use it one weapon.
+* 
 */
 UCLASS(BlueprintType, Blueprintable, Abstract, Category = "Item|Component")
 class ITEM_API UItemComponentBase : public UActorComponent
 {
 	GENERATED_UCLASS_BODY()
+
+	friend UItemDataBase;
 
 public:
 	
@@ -101,42 +107,13 @@ public:
 	virtual void Gained(const FItemScopeChangeInfo& GainedInfo);
 
 	/*
-	* Get the avatar who own this item component, as one item should only have one item component, the avater also own this item
+	* Try to check weather this item is owned by the world.
+	* If this item is owned by the world means every one can get it. it can be used by every one.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	UObject* GetAvatarOwner() const { return OwnerAvatar; }
-
-	/*
-	* Set new avatar owner for this item component
-	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void SetAvatarOwner(UObject* NewAvatar);
+	bool IsWorldOwned() const;
 
 public:
-
-	/*
-	* When the item data is changed in the component this function will be invoked
-	* 
-	* @param RemovedData	the original data this component hold
-	* @param NewData		The new data the component will hold
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
-	void OnItemDataChanged(UItemDataBase* RemovedData = nullptr, UItemDataBase* NewData = nullptr);
-
-	UFUNCTION(BlueprintCallable)
-	virtual void ItemDataChanged( UItemDataBase* RemovedData = nullptr, UItemDataBase* NewData = nullptr );
-
-	/*
-	* Set new data to this component
-	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void SetNewItemData(UItemDataBase* NewData) final;
-
-	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	UItemDataBase* GetItemData_Mutable() const { return ItemData; }
-
-	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	const UItemDataBase* GetItemData() const { return ItemData; }
 
 	/*
 	* Get the owner of the Item
@@ -144,14 +121,35 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
 	TScriptInterface<IItemInterface> GetItemOwner() const;
 
+	/*
+	* Get the avatar who own this item component, as one item should only have one item component, the avatar also own this item
+	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	void SetRuntimeData( UItemRuntimeDataBase* NewRuntimeData );
+	UItemInventoryComponent* GetAvatarOwner() const { return OwnerAvatar; }
+
+	/*
+	* Set new avatar owner for this item component
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	virtual void SetAvatarOwner(UItemInventoryComponent* NewAvatar);
+
+	/*
+	* Add new data to this component
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	void AddNewItemData(UItemDataBase* NewData);
+
+	/*
+	* Remove item data to this component
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	void RemoveItemData(UItemDataBase* ItemData);
 
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	UItemRuntimeDataBase* GetRuntimeData_Mutable() const { return RuntimeData; };
+	const TArray<UItemDataBase*>& GetItemDatas() const { return ItemDatas; }
 
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	const UItemRuntimeDataBase* GetRuntimeData() const { return RuntimeData; };
+	const TArray<UItemRuntimeDataBase>& GetItemRuntimeDatas() const { return RuntimeDatas; };
 
 protected:
 
@@ -167,29 +165,30 @@ protected:
 	//Unregister this component
 	virtual void UnregisterComponent();
 
+private:
+
+	void AddNewRuntimeData(UItemRuntimeDataBase* NewRuntimeData);
+
+	/*
+	* Remove the runtime data from this component
+	*
+	* @param RuntimeData the item runtime data that will be removed
+	*/
+	void RemoveItemRuntimeData(UItemRuntimeDataBase* RuntimeDataClass);
+
 public:
 	
 	//Callback when the avatar have been changed 
 	UFUNCTION()
-	void OnRep_OwnerAvatar(UObject* OldAvatar);
+	void OnRep_OwnerAvatar(UItemInventoryComponent* OldAvatar);
 
 public:
-	
-	/*
-	* The difference between runtime data and item data is item data is the base data for the runtime data.
-	* If one value is changed in the item data then all runtime data will changed synchronize.
-	* by default the component will only operate the runtime data.
-	*/
 
 	/*
-	* The data which will be used in this item
+	* The data which will be used in this item to initialize the runtime data
 	*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ItemData")
-	TSubclassOf<UItemDataBase> DefaultItemDataClass;
-
-	//The class of runtime data will be used by this item
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ItemData")
-	TSubclassOf<UItemDataBase> DefaultItemRuntimeDataClass;
+	TArray<TSubclassOf<UItemDataBase>> DefaultItemDataClass;
 
 public:
 	
@@ -197,38 +196,44 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FItemDataChanged ItemDataChangedDelegate;
 
+	//Broadcast when the avatar owner has been changed
+	UPROPERTY(BlueprintAssignable)
+	FAvatarOwnerChanged AvatarOwnerChanged;
+
 private:
+
 	/*
 	* The runtime data which is used for this item
 	*/
 	UPROPERTY(Transient)
-	UItemRuntimeDataBase* RuntimeData;
+	TArray<UItemRuntimeDataBase*> RuntimeDatas;
+	
+	/*
+	* Which avatar own this component, this value can be null, such as the player abandon this item on the ground.
+	* Mostly this value is different from the ItemOwner.
+	* If this item is spawned at the world then the owner avatar is null
+	*/
+	UPROPERTY(ReplicatedUsing = OnRep_OwnerAvatar)
+	UItemInventoryComponent* OwnerAvatar = nullptr;
+
+	/*
+	* As this component maybe treated as one item operation set in other object,
+	* The default owner of actor component is one Actor, 
+	* some times this component maybe used in one UObject just as one data container and operations definitions,
+	* so I need to get the actual who own this component.
+	* The component owner should be inherited from IItemInterface
+	*/
+	UPROPERTY()
+	TScriptInterface<IItemInterface> ComponentOwner;
+
+private:
 
 	/*
 	* The instance data which will be used by this component.
 	* This data is the base data of runtime data.
 	* If some value is changed all component referenced by this data will change synchronize
 	*/
-	UPROPERTY(Transient)
-	UItemDataBase* ItemData;
-
-private:
-	
-	/*
-	* Which avatar own this component, this value can be null, such as the player abandon this item on the ground.
-	* Mostly this value is different from the ItemOwner.
-	* If this item is spawned at the world then the owner avatar is the world
-	*/
-	UPROPERTY(ReplicatedUsing = OnRep_OwnerAvatar)
-	UObject* OwnerAvatar = nullptr;
-
-	/*
-	* As this component maybe treated as one item operation set in other object,
-	* The default owner of actor component is one Actor, so I need to get the actual who own this component.
-	* The component owner should be inherited from IItemInterface
-	*/
-	UPROPERTY()
-	mutable TScriptInterface<IItemInterface> ComponentOwner;
+	TArray<UItemDataBase*> ItemDatas;
 };
 	
 #define  ItemComponentFramework()\

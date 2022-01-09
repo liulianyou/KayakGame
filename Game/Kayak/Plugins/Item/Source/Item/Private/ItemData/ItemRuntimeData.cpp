@@ -5,3 +5,4 @@ UItemRuntimeData::UItemRuntimeData(const FObjectInitializer& ObjectInitializer)
 {
 
 }
+

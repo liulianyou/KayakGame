@@ -75,9 +75,12 @@ void UItemComponentBase::RegisterComponent()
 		ItemManager->RegisterItem(GetItemOwner());
 	}
 
-	if (ItemData)
+	for (int i = 0; i < ItemDatas.Num(); i++)
 	{
-		ItemData->AddReferencedComponent(this);
+		if (ItemDatas[i] == nullptr)
+			continue;
+
+		ItemDatas[i]->AddReferencedComponent(this);
 	}
 
 	OnRegisterComponent();
@@ -92,9 +95,12 @@ void UItemComponentBase::UnregisterComponent()
 		ItemManager->UnregisterItem(GetItemOwner());
 	}
 
-	if (ItemData)
+	for (int i = 0; i < ItemDatas.Num(); i++)
 	{
-		ItemData->RemoveReferencedComponent(this);
+		if(ItemDatas[i] == nullptr)
+			continue;
+
+		ItemDatas[i]->RemoveReferencedComponent(this);
 	}
 
 	OnUnregisterComponent();
@@ -102,43 +108,37 @@ void UItemComponentBase::UnregisterComponent()
 
 void UItemComponentBase::ActivateItem()
 {
-	check(RuntimeData);
 
 	RuntimeData->ActivateItem();
 }
 
 void UItemComponentBase::DeactivateItem()
 {
-	check(RuntimeData);
 
 	RuntimeData->DeactivateItem();
 }
 
 void UItemComponentBase::StartUse()
 {
-	check(RuntimeData);
 
 	RuntimeData->StartUse();
 }
 
 void UItemComponentBase::StopUse()
 {
-	check(RuntimeData);
 
 	RuntimeData->StopUse();
 }
 
 void UItemComponentBase::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
 {
-	check(RuntimeData);
 
 	RuntimeData->Abandoned(AbandonInfo);
 }
 
 void UItemComponentBase::Gained(const FItemScopeChangeInfo& GainedInfo)
 {
-	check(RuntimeData);
-
+	
 	RuntimeData->Gained(GainedInfo);
 }
 
@@ -197,69 +197,57 @@ TScriptInterface<IItemInterface> UItemComponentBase::GetItemOwner() const
 	return Result;
 }
 
-void UItemComponentBase::SetAvatarOwner(UObject* NewAvatar)
+bool UItemComponentBase::IsWorldOwned() const
 {
-	if(OwnerAvatar == NewAvatar)
-		return;
+	//If this item is pending to be destroyed nobody can own it
+	if(IsPendingKill())
+		return false;
+
+	return OwnerAvatar == nullptr;
+}
+
+void UItemComponentBase::SetAvatarOwner(UItemInventoryComponent* NewAvatar)
+{
+	UItemInventoryComponent* OldAvatarOnwer =OwnerAvatar;
 
 	OwnerAvatar = NewAvatar;
-}
 
-void UItemComponentBase::SetNewItemData(UItemDataBase* NewData)
-{
-	//Nothing changed
-	if(ItemData == NewData)
-		return;
-
-	auto AssignNewData = [&](){
-		UItemDataBase* OldData = ItemData;
-
-		if (ItemData)
-			ItemData->RemoveReferencedComponent(this);
-
-		//Add new data
-		ItemData = NewData;
-
-		if (ItemData)
-			ItemData->AddReferencedComponent(this);
-
-		ItemDataChanged(OldData, NewData);
-	};
-
-	//When this component's runtime data have not been prepared then just assign the new data
-	if (RuntimeData == nullptr)
+	for (int i = 0; i < RuntimeDatas.Num(); i++)
 	{
-		AssignNewData();
+		if (RuntimeDatas[i] == nullptr)
+			continue;
 
-		return;
+		RuntimeDatas[i]->AvatarOwnerChanged(OldAvatarOnwer, NewAvatar);
 	}
 
-	bool NeedActiveAfterDataChanged = false;
-	bool NeedStartUseAfterDataChanged = false;
+	AvatarOwnerChanged.Broadcast(OldAvatarOnwer, NewAvatar);
 
-	if (RuntimeData->IsActivated())
-		NeedActiveAfterDataChanged = true;
-	
-	if (RuntimeData->IsUsing())
-		NeedStartUseAfterDataChanged = true;
+	FItemNativeDelegate::AvatarOwnerChanged.Broadcast(this, OldAvatarOnwer, NewAvatar);
 
-	//Deactivate it
-	DeactivateItem();
+	UItemGlobal* ItemGlobal = UItemBlueprintLib::GetItemGlobal();
 
-	AssignNewData();
-
-	// Activate it again
-	if (NeedStartUseAfterDataChanged)
-		ActivateItem();
-
-	//Start to use it again
-	if (NeedStartUseAfterDataChanged)
-		StartUse();
+	if (ItemGlobal)
+	{
+		ItemGlobal->AvatarOwnerChanged.Broadcast(this, OldAvatarOnwer, NewAvatar);
+	}
 }
 
-void UItemComponentBase::OnRep_OwnerAvatar(UObject* OldAvatar)
+void UItemComponentBase::AddNewItemData(UItemDataBase* NewData)
 {
-	
+	if(NewData == nullptr || !NewData->IsValidItemData() ||  GetItemDatas().Find(NewData) != INDEX_NONE)
+		return;
+
+	NewData->AddReferencedComponent(this);
+}
+
+void UItemComponentBase::OnRep_OwnerAvatar(UItemInventoryComponent* OldAvatar)
+{
+	//At this point the the owner avatar have been changed
+	{
+		UItemInventoryComponent* NewAvatarOwner = OwnerAvatar;
+		TGuardValue< UItemInventoryComponent* > GuardValue(OwnerAvatar, OldAvatar);
+		SetAvatarOwner(NewAvatarOwner);
+	}
 }
 
 void UItemComponentBase::ItemDataChanged(UItemDataBase* RemovedData/* = nullptr*/, UItemDataBase* NewData /*= nullptr*/)
@@ -276,17 +264,26 @@ void UItemComponentBase::ItemDataChanged(UItemDataBase* RemovedData/* = nullptr*
 	}
 }
 
-void UItemComponentBase::SetRuntimeData(UItemRuntimeDataBase* NewRuntimeData)
+void UItemComponentBase::AddNewRuntimeData(UItemRuntimeDataBase* NewRuntimeData)
 {
-	if(RuntimeData == NewRuntimeData)
+	//This runtime data have been added
+	if( GetItemRuntimeDatas().Find(NewRuntimeData) != INDEX_NONE)
 		return;
 
-	ItemDataChangedDelegate.RemoveDynamic(RuntimeData, &UItemRuntimeDataBase::ItemDataChangedInItemOwner);
+	ItemDatas.Add(NewRuntimeData);
 
-	RuntimeData = NewRuntimeData;
+	NewRuntimeData->Initialize(this);
+}
 
-	if (!ItemDataChangedDelegate.IsAlreadyBound(RuntimeData, &UItemRuntimeDataBase::ItemDataChangedInItemOwner))
+void UItemComponentBase::RemoveItemRuntimeData(UItemRuntimeDataBase* RuntimeDataClass)
+{
+	for (auto IT = RuntimeDatas.CreateIterator(); IT; ++IT)
 	{
-		ItemDataChangedDelegate.AddDynamic(RuntimeData, &UItemRuntimeDataBase::ItemDataChangedInItemOwner);
+		if (IT == nullptr || IT == RuntimeDataClass)
+		{
+			IT->Finialize();
+			IT.RemoveCurrent();
+			continue;
+		}
 	}
 }

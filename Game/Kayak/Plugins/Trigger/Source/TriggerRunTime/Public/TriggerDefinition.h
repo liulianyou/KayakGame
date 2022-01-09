@@ -28,7 +28,7 @@ class UTriggerNetPlayerSupport;
 /*
 * Used to log all information related to the Trigger
 */
-DECLARE_LOG_CATEGORY_EXTERN(LogTrigger, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogItem, Log, All);
 DECLARE_STATS_GROUP(TEXT("Tickables"), STATGROUP_Trigger, STATCAT_Advanced);
 
 /*

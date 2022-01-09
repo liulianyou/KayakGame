@@ -4,31 +4,37 @@
 * Author:	Liulianyou
 * Time		2021/12/30
 * Purpose:	The base data which is used for the item.
-*			There is two kind of data used for item, One confined data, one runtime data.
-*			Confined data is used to initialize the item, and generate some informations of items.
-*			Confined data is singleton and when you change this data all item it referenced to it will changed.
+*			There is two kind of data used for item, One confined data(ItemData), one runtime data.
+*			Confined data is used to initialize the runtime data, and generate some informations of items.
+*			Confined data is singleton and when you change this data all runtime data it referenced to it will changed.
+*			The runtime data should be created or removed when item data is added or removed from the target item.
 *			RuntimeData is used to define the data which is used at runtime, it defined some operations of the data.
 *			The runtime data defines what the item is
 *			
 *			I split the data of item into two parts. part of them will have the same attributes.
 *			The item runtime data only respect for the behavior which is bind to the data attribute
-*			The component is used to expand the behavior for the item runtime, but it can only use the intrinsic attribute		
+*			The component is used to expand the behavior for the item runtime, but it can only use the intrinsic attribute	
+*			The item data will only exist at the server, the client will use the runtime data to replicate or do some RPC function
 */
 
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 
 #include "ItemDefinition.h"
+#include "Engine/EngineTypes.h"
 
 #include "ItemDataBase.generated.h"
 
 class UItemComponentBase;
+class UItemRuntimeDataBase;
+class UItemInventoryComponent;
 
 /*
 * The base class for all items used in our game
 * You can treat it as the data scope of the target item. 
 * It is only used to initialize the item and get some informations from item
 * One game instance should have one instance of this data
+* 
 */
 UCLASS(Blueprintable, BlueprintType, Abstract, Within="ItemManager", Category = "Item|ItemData")
 class ITEM_API UItemDataBase : public UObject
@@ -53,13 +59,18 @@ public:
 	void OnAddReferencedComponent(UItemComponentBase* ItemComponent);
 	virtual void AddReferencedComponent(UItemComponentBase* ItemComponent);
 
+	//Check weather this runtime is valid
+	UFUNCTION(BlueprintCallable, Category = "ItemData")
+	virtual bool IsValidItemData() const;
+
 	/*
 	* Get all components which use this data as its initialize data
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemData")
-	const TArray<UItemComponentBase*>& GetReferencedItemComponents() const { return ReferencedItemComponents;}
+	const TMap<UItemComponentBase*, UItemRuntimeDataBase*>& GetReferencedItemComponents() const { return ReferencedItemComponents;}
 
-	TArray<UItemComponentBase*>& GetReferencedItemComponents_Mutable() { return ReferencedItemComponents; }
+	UFUNCTION(BlueprintCallable, Category = "ItemData")
+	TMap<UItemComponentBase*, UItemRuntimeDataBase*>& GetReferencedItemComponents_Mutable() { return ReferencedItemComponents; }
 
 protected:
 
@@ -72,20 +83,27 @@ protected:
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	const FGuid& GetID() const { return ID; }
+	const FString& GetID() const { return ID; }
+
+private:
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ItemData", meta = (AllowPrivateAccess = true))
+	TSoftClassPtr<UItemRuntimeDataBase> RuntimdDataClass;
+
+	/*
+	* The unique identification for this data.
+	* This ID should be equal in client and server.
+	*/
+	UPROPERTY(VisibleInstanceOnly)
+	FString ID;
 
 private:
 
 	//All the runtime data which will use this data as its original initial data
-	UPROPERTY()
-	TArray<UItemComponentBase*> ReferencedItemComponents;
-
-	/*
-	* The unique identification for this data
-	*/
-	UPROPERTY(VisibleInstanceOnly)
-	FGuid ID;
+	TMap<UItemComponentBase*, UItemRuntimeDataBase*> ReferencedItemComponents;
 };
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDataPreparedEvent, UItemRuntimeDataBase*, ItemRuntimeData);
 
 /*
 * The runtime data which is used by the item.
@@ -98,18 +116,40 @@ class ITEM_API UItemRuntimeDataBase : public UObject
 
 public:
 
+	typedef void (*RegisterFunction)();
+
 	//Override UObject
-	virtual void GetLifetimeReplicatedProps( TArray<class FLifetimeProperty> & OutLifetimeProps ) const override;
+	virtual void BeginDestroy() override;
+	/*
+	* Override the GetWorld function so that the BP can use the functions which can only used in the Actor BP
+	*/
+	virtual UWorld* GetWorld() const override;
+
+#pragma  region NetworkSupport
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const;
+	virtual bool IsNameStableForNetworking() const override;
+	virtual bool IsSupportedForNetworking() const { return true; }
+	virtual int32 GetFunctionCallspace(UFunction* Function, FFrame* Stack) override;
+	virtual bool CallRemoteFunction(UFunction* Function, void* Parms, struct FOutParmRec* OutParms, FFrame* Stack) override;
 	//Override UObject
+
+	//Replicate the sub objects in this item runtime data 
+	virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags);
+#pragma  endregion NetworkSupport
+
 public:
 	
 	/*
 	* Initialize this data by the item
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
-	void OnInitialzie();
+	void OnInitialzie(UItemComponentBase* ItemComponent);
 	virtual void Initialize( UItemComponentBase* ItemComponent );
 
+	//Invoked when this item data will not be used by the item component
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
+	void OnFinialize();
+	virtual void Finialize();
 
 	/*
 	* Give the BP one chance to define how to active this item
@@ -212,6 +252,22 @@ protected:
 	void OnInitializeDataFromNewDataInternal(UItemDataBase* NewData);
 	virtual void InitializeFromNewDataInternal(UItemDataBase* NewData);
 
+	/*
+	* Invoked when the new avatar owner of the owner item have been changed.
+	*/
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
+	void OnAvatarOwnerChanged(UItemInventoryComponent* OldOwner, UItemInventoryComponent* NewAvatarOwner);
+	virtual void AvatarOwnerChanged(UItemInventoryComponent* OldOwner, UItemInventoryComponent* NewAvatarOwner);
+
+public:
+
+	virtual void BeginPlay();
+
+protected:
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData", meta = (DisplayName = "BeginPlay"))
+	void OnBeginPlay();
+
 private:
 
 	/*
@@ -224,6 +280,8 @@ public:
 	UFUNCTION()
 	void OnRep_ItemOwner(UItemComponentBase* OldItemOnwer);
 
+
+#pragma  region GET_SET_IMPLEMATION
 public:
 
 	/*
@@ -242,6 +300,22 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
 	EItemState GetItemState() const { return ItemState; }
 
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	const FGuid& GetID() const { return ID; }
+
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	bool IsDataPrepared() const { return !!bDataPrepared; }
+
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	void MarkDataPrepared();
+
+#pragma  endregion GET_SET_IMPLEMATION
+
+public:
+
+	UFUNCTION()
+	void OnRep_ID();
+
 public:
 	
 	/*
@@ -250,6 +324,19 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FItemStateChange ItemStateChangedDelegate;
 
+	/*
+	* Delegate for the outer to know when he can use this data safely
+	*/
+	UPROPERTY(BlueprintAssignable)
+	FDataPreparedEvent DataPreparedEvent;
+
+private:
+
+	/*
+	* The unique ID for the runtime data
+	*/
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_ID, Category = "RuntimeData", meta = (AllowPrivateAccess=true))
+	FGuid ID;
 
 private:
 
@@ -263,5 +350,22 @@ private:
 
 	//The state of current item
 	EItemState ItemState;
+
+	/*
+	* Flag to inspect weather this runtime data can be used by the item owner
+	* When this data is created on the server and replicated to the client,
+	* maybe some of the properties have not been replicated due to the network limitation.
+	* I need to generated weather all the properties have been assigned valid value.
+	*/
+	uint32 bDataPrepared : 1;
+
+	/*
+	* Flag to check weather this data is net addressed
+	* As default the net addressable is only worked when the
+	*	1:)Object From package, such as map
+	*	2:)CDO or default SubObject
+	* I need use this member to add external way to set this data is addressable
+	*/
+	uint32 bNetAddressable : 1;
 
 };

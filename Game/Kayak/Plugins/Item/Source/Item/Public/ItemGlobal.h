@@ -43,11 +43,13 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FItemStateChange ItemStateChangedDelegate;
 
-	/*
-	* When the item data is changed in the target component then this event should be broadcast.
-	*/
+	//When the item data is changed in the target component then this event should be broadcast.
 	UPROPERTY(BlueprintAssignable)
 	FItemDataChanged ItemDataChangedDelegate;
+
+	//Boradcast when the avatar owner has been changed in the target item.
+	UPROPERTY(BlueprintAssignable)
+	FAvatarOwnerChanged AvatarOwnerChanged;
 
 protected:
 
