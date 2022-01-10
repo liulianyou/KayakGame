@@ -43,6 +43,9 @@ void UTS_AIStatics::OnAISpawnStateEvent(UTriggerTaskBase* Task)
 	bool InvaildTarget = false;
 	for (int i = 0; i < InspectorClasses.Num(); i++)
 	{
+		if(InspectorClasses[i] == nullptr)
+			continue;
+		
 		if (Task->IsA(InspectorClasses[i]))
 		{
 			InvaildTarget = true;

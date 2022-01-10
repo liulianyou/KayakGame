@@ -64,17 +64,11 @@ public:
 	UFUNCTION()
 	void OnActorSpawned( AActor* Actor );
 
-	/*
-	* Register event to global failed event
-	*/
-	UFUNCTION()
-	void OnGameOverFaildEvent(TArray<AActor*>& Actor );
-
 	UFUNCTION()
 	void OnCharacterDead(AActor* Actor);
 
 	UFUNCTION()
-	void OnCharacterRespawn(AActor* Actor);
+	void OnCharacterAlive(AActor* Actor);
 
 protected:
 	bool RegisterPawn(APawn* Pawn);

@@ -1095,7 +1095,7 @@ UTriggerNetPlayerSupportComponent* UTriggerTaskComponentBase::GetNetSupportCompo
 	{
 		if(SenderTask != nullptr)
 		{
-			FTaskActivationInfoContainer& Container = SenderTask->GetImmediateActivationInformation();
+			FTaskActivationInfoContainer& Container = SenderTask->GetImmediateActivationInformation_Mutable();
 			
 			for (int i = 0; i < Container.GetItems().Num(); i++)
 			{

@@ -50,7 +50,7 @@ public:
 protected:
 
 	//Invoked when the target task have reach the confined state.
-	virtual void ReachTargetTriggerState(UTriggerTaskBase* Task) {};
+	virtual void ReachTargetTriggerState(UTriggerTaskBase* Task);
 
 
 	/*

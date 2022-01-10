@@ -225,17 +225,7 @@ void UInteractionRule_Time::ProcessCancelContributor(UCancleContribution* Contri
 
 	for (int i = 0; i < Contributors.Num(); i++)
 	{
-		bool Found = false;
-		for (int j = 0; j < ContributionHistory.Num(); j++)
-		{
-			if (Contributors.Find(ContributionHistory[j]) != INDEX_NONE)
-			{
-				Found = true;
-				break;
-			}
-		}
-
-		if (!Found)
+		if (ContributionHistory.Find(Contributors[i]) == INDEX_NONE)
 		{
 			Contributors.RemoveAt(i--);
 		}

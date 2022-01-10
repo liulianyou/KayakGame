@@ -215,7 +215,7 @@ bool UCheckGameOverFailed_AllPlayerDead::RegisterPawn(APawn* Pawn)
 				FPlayerGameOverFalidInfo Info;
 				Info.Player = Pawn;
 				Info.DeadDelegateHandle = RespawnInterface->OnCharacterPreEnterDead.AddUObject(this, &UCheckGameOverFailed_AllPlayerDead::OnCharacterDead);
-				Info.RespawnHandle = RespawnInterface->OnCharacterConfirmDead.AddUObject(this, &UCheckGameOverFailed_AllPlayerDead::OnCharacterRespawn);
+				Info.RespawnHandle = RespawnInterface->OnCharacterAlive.AddUObject(this, &UCheckGameOverFailed_AllPlayerDead::OnCharacterAlive);
 				CharactersInfo.Add(Info);
 			}
 		}
@@ -280,7 +280,7 @@ void UCheckGameOverFailed_AllPlayerDead::OnCharacterDead(AActor* Actor)
 	}
 }
 
-void UCheckGameOverFailed_AllPlayerDead::OnCharacterRespawn(AActor* Actor)
+void UCheckGameOverFailed_AllPlayerDead::OnCharacterAlive(AActor* Actor)
 {
 	for (auto It = CharactersInfo.CreateIterator(); It; ++It)
 	{
@@ -330,11 +330,6 @@ void UCheckGameOverFailed_AllPlayerDead::CheckPlayerDeadTimerCallback()
 
 		RemainCheckTime = CheckTimeGranularity;
 	}
-}
-
-void UCheckGameOverFailed_AllPlayerDead::OnGameOverFaildEvent(TArray<AActor*>& Actor)
-{
-	DoesMeetCondition = true;
 }
 
 void UCheckGameOverFailed_AllPlayerDead::AddGameOverPlayer(APlayerController* PlayerController)

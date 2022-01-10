@@ -4,11 +4,11 @@
 #include "Net/UnrealNetwork.h"
 #include "ItemDataBase.h"
 #include "ItemBlueprintLib.h"
+#include "ItemDefinition.h"
 #include "ItemGlobal.h"
 
 UItemComponentBase::UItemComponentBase(const FObjectInitializer& ObjectInitializer)
-	:Super(ObjectInitializer),
-	ItemData(nullptr)
+	:Super(ObjectInitializer)
 {
 
 }
@@ -108,38 +108,32 @@ void UItemComponentBase::UnregisterComponent()
 
 void UItemComponentBase::ActivateItem()
 {
-
-	RuntimeData->ActivateItem();
+	//RuntimeData->ActivateItem();
 }
 
 void UItemComponentBase::DeactivateItem()
 {
-
-	RuntimeData->DeactivateItem();
+	//RuntimeData->DeactivateItem();
 }
 
 void UItemComponentBase::StartUse()
 {
-
-	RuntimeData->StartUse();
+	//RuntimeData->StartUse();
 }
 
 void UItemComponentBase::StopUse()
 {
-
-	RuntimeData->StopUse();
+	//RuntimeData->StopUse();
 }
 
 void UItemComponentBase::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
 {
-
-	RuntimeData->Abandoned(AbandonInfo);
+	//RuntimeData->Abandoned(AbandonInfo);
 }
 
 void UItemComponentBase::Gained(const FItemScopeChangeInfo& GainedInfo)
 {
-	
-	RuntimeData->Gained(GainedInfo);
+	//RuntimeData->Gained(GainedInfo);
 }
 
 TScriptInterface<IItemInterface> UItemComponentBase::GetItemOwner() const
@@ -220,7 +214,7 @@ void UItemComponentBase::SetAvatarOwner(UItemInventoryComponent* NewAvatar)
 		RuntimeDatas[i]->AvatarOwnerChanged(OldAvatarOnwer, NewAvatar);
 	}
 
-	AvatarOwnerChanged.Broadcast(OldAvatarOnwer, NewAvatar);
+	AvatarOwnerChanged.Broadcast(this, OldAvatarOnwer, NewAvatar);
 
 	FItemNativeDelegate::AvatarOwnerChanged.Broadcast(this, OldAvatarOnwer, NewAvatar);
 
@@ -240,6 +234,11 @@ void UItemComponentBase::AddNewItemData(UItemDataBase* NewData)
 	NewData->AddReferencedComponent(this);
 }
 
+void UItemComponentBase::RemoveItemData(UItemDataBase* ItemData)
+{
+	
+}
+
 void UItemComponentBase::OnRep_OwnerAvatar(UItemInventoryComponent* OldAvatar)
 {
 	//At this point the the owner avatar have been changed
@@ -250,27 +249,13 @@ void UItemComponentBase::OnRep_OwnerAvatar(UItemInventoryComponent* OldAvatar)
 	}
 }
 
-void UItemComponentBase::ItemDataChanged(UItemDataBase* RemovedData/* = nullptr*/, UItemDataBase* NewData /*= nullptr*/)
-{
-	OnItemDataChanged(RemovedData, NewData);
-
-	ItemDataChangedDelegate.Broadcast(this, RemovedData, NewData);
-
-	UItemGlobal* ItemGlobal = UItemBlueprintLib::GetItemGlobal();
-
-	if (ItemGlobal)
-	{
-		ItemGlobal->ItemDataChangedDelegate.Broadcast(this, RemovedData, NewData);
-	}
-}
-
 void UItemComponentBase::AddNewRuntimeData(UItemRuntimeDataBase* NewRuntimeData)
 {
 	//This runtime data have been added
 	if( GetItemRuntimeDatas().Find(NewRuntimeData) != INDEX_NONE)
 		return;
 
-	ItemDatas.Add(NewRuntimeData);
+	RuntimeDatas.Add(NewRuntimeData);
 
 	NewRuntimeData->Initialize(this);
 }
@@ -279,9 +264,9 @@ void UItemComponentBase::RemoveItemRuntimeData(UItemRuntimeDataBase* RuntimeData
 {
 	for (auto IT = RuntimeDatas.CreateIterator(); IT; ++IT)
 	{
-		if (IT == nullptr || IT == RuntimeDataClass)
+		if (*IT == nullptr || *IT == RuntimeDataClass)
 		{
-			IT->Finialize();
+			(*IT)->Finialize();
 			IT.RemoveCurrent();
 			continue;
 		}

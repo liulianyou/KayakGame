@@ -28,7 +28,7 @@ class UTriggerNetPlayerSupport;
 /*
 * Used to log all information related to the Trigger
 */
-DECLARE_LOG_CATEGORY_EXTERN(LogItem, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogTrigger, Log, All);
 DECLARE_STATS_GROUP(TEXT("Tickables"), STATGROUP_Trigger, STATCAT_Advanced);
 
 /*
@@ -178,6 +178,8 @@ struct TRIGGERRUNTIME_API FGameOverInfo
 	UPROPERTY(BlueprintReadOnly)
 	TArray<UEvaluatorBase*> GameOverCondtions;
 
+	void Clear();
+
 	/*Get the players for all conditions*/
 	void GetALLGameOverPlayers(TArray<APlayerController*>& Players);
 };
@@ -325,6 +327,13 @@ public:
 	*/
 	DECLARE_MULTICAST_DELEGATE_OneParam(FCharacterDead, AActor*);
 	FCharacterDead OnCharacterConfirmDead;
+
+	/*
+	* This delegate should be broad casted when the target actor alive out from the dead state.
+	*/
+	DECLARE_MULTICAST_DELEGATE_OneParam(FCharacterAlive, AActor*);
+	FCharacterAlive OnCharacterAlive;
+
 
 	//The task which respawn it
 	UTriggerTaskBase* RepawnTask;

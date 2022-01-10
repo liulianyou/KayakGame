@@ -161,6 +161,9 @@ public:
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	void AbilityTryToEndInteraction(const FGameplayAbilitySpecHandle Handle, const TArray<UObject*>& Causers, EInteractionEndType EndType, bool RemoveInstance);
 
+	UFUNCTION(BlueprintCallable)
+	void AbilityTryToEndInteractionByInstance( UGameplayAbility* AbilityInstance, const TArray<UObject*>& Causers, EInteractionEndType EndType, bool RemoveInstance);
+
 	/*
 	* When contains interaction ability, this action should be noticed to start by ability
 	* Only invoked by the ability to EndInteraction
@@ -184,6 +187,14 @@ public:
     UFUNCTION(BlueprintPure, Category = "TriggerRuntime|Interaction")
     const TArray<FInteractionInfo>& GetInteractionInfos() const;
 
+	/*
+	* Function used to check weather this interaction can be interacted by the causer
+	* 
+	* @param who want to be checked weather he can interact this interaction
+	*/
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "TriggerRuntime|Interaction")
+	bool CanBeInteracted( UObject* Causer );
+
 protected:
 	
 	void EndInteractionInternal(const TArray<UObject*>& Causers, EInteractionEndType EndType, bool RemoveInstance);
@@ -192,6 +203,16 @@ protected:
 	* #return If there is valid ability class bind with this task return false, or return true.
 	*/
 	bool CheckGamePlayAbility(AActor* Contributor);
+
+	/*
+	* When this trigger task need to sleep or stop, this task should end the binded ability
+	*/
+	void NotifyAbilityEnd( TArray<UObject*>& Causer );
+
+	/*
+	* Remove all invalid ability space handle while the ability may end itself without notify the trigger task to end interaction
+	*/
+	void RemoveInvalidAbilityCash();
 
 public:
 

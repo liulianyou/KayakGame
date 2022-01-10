@@ -8,11 +8,14 @@
 
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
-
+#include "Templates/SubclassOf.h"
 #include "ItemDataBase.h"
 
 #include "ItemData.generated.h"
 
+class UGameplayAbility;
+class UGameplayEffect;
+class UAttributeSet;
 
 /*
 * The definition for the effects which is used for item

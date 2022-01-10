@@ -19,8 +19,6 @@ class UItemDataBase;
 class UItemRuntimeDataBase;
 class UItemInventoryComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAvatarOwnerChanged, UItemInventoryComponent*, OldAvatarOwner, UItemInventoryComponent*，NewAvatarOwner );
-
 /*
 * The component which is used for item.
 * 
@@ -149,7 +147,7 @@ public:
 	const TArray<UItemDataBase*>& GetItemDatas() const { return ItemDatas; }
 
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	const TArray<UItemRuntimeDataBase>& GetItemRuntimeDatas() const { return RuntimeDatas; };
+	const TArray<UItemRuntimeDataBase*>& GetItemRuntimeDatas() const { return RuntimeDatas; };
 
 protected:
 
@@ -224,7 +222,7 @@ private:
 	* The component owner should be inherited from IItemInterface
 	*/
 	UPROPERTY()
-	TScriptInterface<IItemInterface> ComponentOwner;
+	mutable TScriptInterface<IItemInterface> ComponentOwner;
 
 private:
 

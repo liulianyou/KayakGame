@@ -9,7 +9,8 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 
-#include "AvatarAccessRule/AvatarAccessRuleBase.h"
+#include "AvatarAccessRuleBase.h"
+#include "FTriggerTask.h"
 
 #include "AAR_ActorAccess.generated.h"
 
@@ -130,7 +131,30 @@ public:
 #endif
 
 public:
-
+	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Accessor")
 	TArray<TSoftObjectPtr<AActor>> Actors;
+};
+
+/*
+* This will get all actors who has toggled the trigger task
+*/
+UCLASS(BlueprintType, Blueprintable, meta = (DisplayName = "ToggleTriggerTaskActors"))
+class TRIGGERRUNTIME_API UAAR_ActorsToggledTriggerTask : public UAAR_AvatarAccessWithFilter
+{
+	GENERATED_UCLASS_BODY()
+
+public:
+
+	//Override UAvatarAccessRuleBase
+	virtual void GetTargetAvatars_Implementation(TArray<UObject*>& Avatars) const override;
+	//Override UAvatarAccessRuleBase
+
+private:
+	
+	/*
+	* The task that need to check
+	*/
+	UPROPERTY(BlueprintReadOnly, Category = "ToggleTriggerTaskActors", meta = (AllowPrivateAccess = true))
+	FTriggerTask TriggerTask;
 };

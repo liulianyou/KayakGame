@@ -79,6 +79,21 @@ void FGameOverInfo::GetALLGameOverPlayers(TArray<APlayerController*>& Players)
 	}
 }
 
+void FGameOverInfo::Clear()
+{
+	URL.Empty();
+
+	for (int i = 0; i < GameOverCondtions.Num(); i++)
+	{
+		if(GameOverCondtions[i] == nullptr)
+			continue;
+
+		GameOverCondtions[i]->MarkPendingKill();
+	}
+
+	GameOverCondtions.Empty();
+}
+
 FAISpawnBehaviorCommand::FAISpawnBehaviorCommand()
 {
 	bSetAllPlayerToAIThreat = false;

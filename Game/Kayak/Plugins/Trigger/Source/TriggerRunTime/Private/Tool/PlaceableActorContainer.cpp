@@ -4,6 +4,7 @@
 #include "TriggerTaskComponentBase.h"
 #include "Category/TriggerCategory.h"
 #include "Engine/World.h"
+#include "Net/UnrealNetwork.h"
 
 bool FChildActorInfo::IsValid()
 {
@@ -26,6 +27,13 @@ APlaceableActorContainer::APlaceableActorContainer(const FObjectInitializer& Obj
 		}
 	}
 #endif
+}
+
+void APlaceableActorContainer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(APlaceableActorContainer, DestroyedActorNameHashes)
 }
 
 void APlaceableActorContainer::PostInitProperties()
@@ -192,6 +200,7 @@ UChildActorComponent* APlaceableActorContainer::GetMappedComponent(AActor* Child
 	return nullptr;	
 }
 
+
 void APlaceableActorContainer::UpdateChildActorsTransform()
 {
 	TArray<UChildActorComponent*> Components;
@@ -351,6 +360,8 @@ void APlaceableActorContainer::OnChildActorDestroyed(AActor* DestroyedActor)
 	{
 		if (ChildActorInfos[Index].Actor == DestroyedActor)
 		{
+			DestroyedActorNameHashes.AddUnique(GetTypeHash(ChildActorInfos[Index].Actor->GetName()));
+
 			ChildActorInfos.RemoveAt(Index--);
 		}
 	}
@@ -414,6 +425,26 @@ void APlaceableActorContainer::TryToPopulateAttributeToTriggerTask()
 #endif
 	}
 }
+
+void APlaceableActorContainer::OnRep_ActorRemoved()
+{
+	for (int i = 0; i < ChildActorInfos.Num(); i++)
+	{
+		uint32* HashPtr = DestroyedActorNameHashes.FindByPredicate([&]( const uint32& Data){
+			if(GetTypeHash(ChildActorInfos[i].Actor->GetName()) == DestroyedActorNameHashes[i])
+				return true;
+			else
+				return false;
+		});
+
+		if (HashPtr != nullptr)
+		{
+			ChildActorInfos[i].Actor->Destroy();
+			ChildActorInfos.RemoveAt(i--);
+		}
+	}
+}
+
 
 #if WITH_EDITORONLY_DATA
 

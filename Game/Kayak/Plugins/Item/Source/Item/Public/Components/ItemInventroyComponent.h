@@ -11,13 +11,128 @@
 #include "UObject/ObjectMacros.h"
 #include "UObject/ScriptInterface.h"
 #include "Components/ActorComponent.h"
-
+#include "Engine/NetSerialization.h"
 
 #include "ItemInterface.h"
 
 #include "ItemInventroyComponent.generated.h"
 
 class UItemRuntimeData;
+
+//The activation information for this task
+USTRUCT(BlueprintType)
+struct ITEM_API FItemInfo : public FFastArraySerializerItem
+{
+	GENERATED_BODY()
+
+public:
+	
+	bool IsValid() const;
+
+
+public:
+	
+	//The item which contain item component
+	UPROPERTY()
+	TScriptInterface<IItemInterface> Item;
+
+	friend bool operator==(const FItemInfo& LeftInfo, const FItemInfo& RightInfo)
+	{
+		return LeftInfo.Item == RightInfo.Item;
+	}
+	friend bool operator!=(const FItemInfo& LeftInfo, const FItemInfo& RightInfo)
+	{
+		return !(LeftInfo == RightInfo);
+	}
+};
+
+
+template< typename ElementType, typename ContainerType >
+class FItemContainerIterator
+{
+public:
+
+	FItemContainerIterator(const ContainerType& InContainer, int32 StartIdx = 0)
+		: index(StartIdx)
+		, Current(nullptr)
+		, Container(const_cast<ContainerType&>(InContainer))
+	{
+		if (index >= 0)
+		{
+			UpdateCurrent();
+		}
+	}
+
+	~FItemContainerIterator()
+	{
+	}
+
+
+	void operator++()
+	{
+		Next();
+	}
+
+	ElementType& operator*() const
+	{
+		check(Current);
+		return *Current;
+	}
+
+	ElementType& operator->() const
+	{
+		check(Current);
+		return *Current;
+	}
+
+	explicit operator bool() const
+	{
+		return (Current != nullptr);
+	}
+
+	friend bool operator==(const FItemContainerIterator& Lhs, const FItemContainerIterator& Rhs)
+	{
+		return Lhs.Current == Rhs.Current;
+	}
+
+	friend bool operator!=(const FItemContainerIterator& Lhs, const FItemContainerIterator& Rhs)
+	{
+		return Lhs.Current != Rhs.Current;
+	}
+
+	typename TEnableIf<!TIsConst<ContainerType>::Value, void >::Type RemoveCurrent()
+	{
+		Container.Items.RemoveAt(index);
+		index--;
+		Next();
+	}
+
+private:
+
+	void Next()
+	{
+		index++;
+
+		UpdateCurrent();
+	}
+
+	void UpdateCurrent()
+	{
+		Current = &Container.Items[index];
+
+		// If the current element is pending remove, go to the next one.
+		if (!Current)
+		{
+			Next();
+		}
+	}
+
+private:
+	int32	index;
+	ElementType* Current;
+	ContainerType& Container;
+};
+
 
 /*
 * As this container is used for net work, the order of elements is not fixed.
@@ -34,16 +149,27 @@ public:
 	int RemoveItem(TScriptInterface<IItemInterface>);
 	int GetItemNum() { return Items.Num(); }
 
+public:
+
+	//Used to serialize this container for net replication
+	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
+	{
+		return FFastArraySerializer::FastArrayDeltaSerialize<FItemInfo, FItemContainer>(Items, DeltaParms, *this);
+	}
 
 private:
 	
 	UPROPERTY()
-	TArray<TScriptInterface<IItemInterface>> Items;
+	TArray<FItemInfo> Items;
 
 
 public:
 
-	TScriptInterface<IItemInterface>& operator[](int index);
+	friend class FItemContainerIterator<const FItemInfo, FItemContainer>;
+	friend class FItemContainerIterator<FItemInfo, FItemContainer>;
+
+	typedef FItemContainerIterator<const FItemInfo, FItemContainer> ConstIterator;
+	typedef FItemContainerIterator<FItemInfo, FItemContainer> Iterator;
 
 	FORCEINLINE ConstIterator CreateConstIterator() const { return ConstIterator(*this); }
 	FORCEINLINE Iterator CreateIterator() { return Iterator(*this); }
@@ -51,11 +177,11 @@ public:
 	/*
 	* Make the outer can use for(auto IT : FItemContainer)
 	*/
-	FORCEINLINE friend Iterator begin(FItemContainer* Container) { return Items->CreateIterator(); }
-	FORCEINLINE friend Iterator end(FItemContainer* Container) { return Iterator(*Items, -1); }
+	FORCEINLINE friend Iterator begin(FItemContainer* Container) { return Container->CreateIterator(); }
+	FORCEINLINE friend Iterator end(FItemContainer* Container) { return Iterator(*Container, -1); }
 
-	FORCEINLINE friend ConstIterator begin(const FItemContainer* Container) { return Items->CreateConstIterator(); }
-	FORCEINLINE friend ConstIterator end(const FItemContainer* Container) { return ConstIterator(*Items, -1); }
+	FORCEINLINE friend ConstIterator begin(const FItemContainer* Container) { return Container->CreateConstIterator(); }
+	FORCEINLINE friend ConstIterator end(const FItemContainer* Container) { return ConstIterator(*Container, -1); }
 };
 
 template<>
@@ -148,12 +274,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemInventory")
 	int RemoveItemWithItemClass(TSubclassOf<UObject> ItemType, bool CheckExactClass = false, bool DestroyItem = false);
 
-private
+private:
 	
 	/*
 	* Hold all items in this inventory
 	*/
-	UPROPERTY(BlueprintReadWrite, Replicated, meta=(AllowPrivateAccess=true))
+	UPROPERTY(Replicated)
 	FItemContainer ItemContainer;
 
 };

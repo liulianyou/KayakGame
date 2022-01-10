@@ -29,8 +29,8 @@ void URS_RepeatTaskAfterStateDelay::ReachTargetTriggerState(UTriggerTaskBase* Ta
     }
     if (!DelayTimeHandle.IsValid())
     {
-        FTaskActivationInfo& ActivationInfo = Task->GetImmediateActivationInformation().FindActiveInfoByTriggerTask(Task);
-        if (!ActivationInfo.IsVaild())
+        FTaskActivationInfo& ActivationInfo = Task->GetImmediateActivationInformation_Mutable().FindActiveInfoByTriggerTask(Task);
+        if (!ActivationInfo.IsValid())
         {
             return;
         }

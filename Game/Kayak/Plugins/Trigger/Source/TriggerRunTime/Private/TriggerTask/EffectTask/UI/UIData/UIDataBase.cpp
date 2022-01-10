@@ -112,7 +112,11 @@ bool UUIEffectDataBase::CanBeOpened(const TArray<UObject*>& Causers)
 
 	Result = Causers.Num() == 0 || Controllers.Num() == 0;
 
-	bool IsAnyCauser = true;
+	//if it is not active for the toggled actor means it will active for every client
+	if(!ActiveAtOnlyToggledActor)
+		return true;
+
+	bool IsAnyCauser = false;
 
 	for (int i = 0; i < Causers.Num(); i++)
 	{

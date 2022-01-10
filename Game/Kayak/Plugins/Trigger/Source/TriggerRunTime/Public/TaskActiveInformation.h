@@ -111,7 +111,7 @@ public:
 
 	void Reset();
 
-	void GetAllInstancedTask(TArray<UTriggerTaskBase*>& InstancedTasks);
+	void GetAllInstancedTask(TArray<UTriggerTaskBase*>& InstancedTasks) const;
 
 	//Find instanced task which will use the OwnerTask as template if it exist
 	UTriggerTaskBase* FindOrAddNewInstance();
@@ -122,7 +122,7 @@ public:
 	*/
 	bool ShouldReplicateActiveInfo() const;
 
-	bool IsVaild() const;
+	bool IsValid() const;
 
 	friend bool operator==(const FTaskActivationInfo& LeftInfo, const FTaskActivationInfo& RightInfo);
 	friend bool operator!=(const FTaskActivationInfo& LeftInfo, const FTaskActivationInfo& RightInfo);
@@ -130,6 +130,96 @@ public:
 
 	static FTaskActivationInfo InvaildTaskActiveInfo;
 };
+
+template< typename ElementType, typename ContainerType >
+class FTaskActivationInfoIterator
+{
+public:
+
+	FTaskActivationInfoIterator(const ContainerType& InContainer, int32 StartIdx = 0, bool OnlySuccesseInfo = false)
+		: OnlyActiveSuccessed(OnlySuccesseInfo)
+		, index(StartIdx)
+		, Current(nullptr)
+		, Container(const_cast<ContainerType&>(InContainer))
+	{
+		if (index >= 0)
+		{
+			UpdateCurrent();
+		}
+	}
+
+	~FTaskActivationInfoIterator()
+	{
+	}
+
+
+	void operator++()
+	{
+		Next();
+	}
+
+	ElementType& operator*() const
+	{
+		check(Current);
+		return *Current;
+	}
+
+	ElementType& operator->() const
+	{
+		check(Current);
+		return *Current;
+	}
+
+	explicit operator bool() const
+	{
+		return (Current != nullptr);
+	}
+
+	friend bool operator==(const FTaskActivationInfoIterator& Lhs, const FTaskActivationInfoIterator& Rhs)
+	{
+		return Lhs.Current == Rhs.Current;
+	}
+
+	friend bool operator!=(const FTaskActivationInfoIterator& Lhs, const FTaskActivationInfoIterator& Rhs)
+	{
+		return Lhs.Current != Rhs.Current;
+	}
+
+	typename TEnableIf<!TIsConst<ContainerType>::Value, void >::Type RemoveCurrent()
+	{
+		Container.Items.RemoveAt(index);
+		index--;
+		Next();
+	}
+
+private:
+
+	void Next()
+	{
+		index++;
+
+		UpdateCurrent();
+	}
+
+	void UpdateCurrent()
+	{
+		Current = &Container.Items[index];
+
+		// If the current element is pending remove, go to the next one.
+		if (!Current->IsValid() || (OnlyActiveSuccessed && !Current->ActiveSuccessed))
+		{
+			Next();
+		}
+	}
+
+private:
+	//Flag to check weather this interaction will only care about the activation info which is activate successed
+	bool OnlyActiveSuccessed;
+	int32	index;
+	ElementType* Current;
+	ContainerType& Container;
+};
+
 
 /*
 * The container of the activation information for the target trigger task.
@@ -139,6 +229,12 @@ USTRUCT(BlueprintType)
 struct TRIGGERRUNTIME_API FTaskActivationInfoContainer : public FFastArraySerializer
 {
 	GENERATED_USTRUCT_BODY()
+
+	friend class FTaskActivationInfoIterator<const FTaskActivationInfo, FTaskActivationInfoContainer>;
+	friend class FTaskActivationInfoIterator<FTaskActivationInfo, FTaskActivationInfoContainer>;
+
+	typedef FTaskActivationInfoIterator<const FTaskActivationInfo, FTaskActivationInfoContainer> ConstIterator;
+	typedef FTaskActivationInfoIterator<FTaskActivationInfo, FTaskActivationInfoContainer> Iterator;
 
 	FTaskActivationInfoContainer();
 	FTaskActivationInfoContainer( const FTaskActivationInfoContainer& OtherContainer);
@@ -159,6 +255,9 @@ public:
 	*/
 	FTaskActivationInfo& FindActiveInfoByActor(AActor* Actor);
 
+	/*
+	* As this container will be used for net work the index between different machine maybe different
+	*/
 	FTaskActivationInfo& FindActiveInfoByIndex(int Index);
 
 	/*
@@ -178,7 +277,7 @@ public:
 	void RemoveActiveInfoByIndex(int Index);
 
 	//Interface to get all items
-	TArray<FTaskActivationInfo>& GetItems(){return Items;}
+	const TArray<FTaskActivationInfo>& GetItems() const {return Items;}
 
 	//Used to serialize this container for net replication
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
@@ -203,6 +302,17 @@ public:
 
 		return true;
 	}
+public:
+	
+	//We can use it as for(auto IT = XXX.CreateIterator(); IT; ++IT)
+	FORCEINLINE ConstIterator CreateConstIterator( bool OnlySuccessedInfo = false ) const { return ConstIterator(*this, 0, OnlySuccessedInfo); }
+	FORCEINLINE Iterator CreateIterator(bool OnlySuccessedInfo = false) { return Iterator(*this, 0, OnlySuccessedInfo); }
+
+	FORCEINLINE friend Iterator begin(FTaskActivationInfoContainer* Container) { return Container->CreateIterator(); }
+	FORCEINLINE friend Iterator end(FTaskActivationInfoContainer* Container) { return Iterator(*Container, -1); }
+
+	FORCEINLINE friend ConstIterator begin(const FTaskActivationInfoContainer* Container) { return Container->CreateConstIterator(); }
+	FORCEINLINE friend ConstIterator end(const FTaskActivationInfoContainer* Container) { return ConstIterator(*Container, -1); }
 
 private:
 

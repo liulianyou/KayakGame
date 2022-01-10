@@ -17,7 +17,7 @@
 
 class UItemRuntimeDataBase;
 
-DECLARE_LOG_CATEGORY_EXTERN(LogTrigger, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogItem, Log, All);
 DECLARE_STATS_GROUP(TEXT("Tickables"), STATGROUP_Item, STATCAT_Advanced);
 
 /*
@@ -47,19 +47,6 @@ enum class EItemState : uint8
 ENUM_CLASS_FLAGS(EItemState);
 
 /*
-* Get the property value in the target object
-*/
-template<class ClassType, class VlaueType>
-void Get( ClassType* Object, ValueType& PropertyName)
-{
-	FProperty* Prop = FindFieldChecked<FProperty>(ClassType::StaticClass(), GET_MEMBER_NAME_CHECKED(ClassType, PropertyName));
-	if (Prop != nullptr)
-	{
-		PropertyName = Prop->ContainerPtrToValuePtr<ValueType>(Object);
-	}
-}
-
-/*
 * The delegate event used to inspect the state changed for the target Item
 *
 * @param Item	The item which state is changed
@@ -79,7 +66,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FItemDataChanged, UItemComponentB
 * @param OldAvatarOwner		the old avatar owner of the target item
 * @param NewAvatarOwner		the new avatar owner of the target item
 */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FAvatarOwnerChanged, UItemComponentBase*, Item, UItemInventoryComponent*, OldAvatarOwner, UItemInventoryComponent* ，NewAvatarOwner);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FAvatarOwnerChanged, UItemComponentBase*, Item, UItemInventoryComponent*, OldAvatarOwner, UItemInventoryComponent*, NewAvatarOwner);
 
 
 USTRUCT(BlueprintType)
@@ -144,6 +131,6 @@ public:
 */
 struct FItemNativeDelegate
 {
-	//Boradcast when the avatar owner has been changed in the target item.
-	FAvatarOwnerChanged AvatarOwnerChanged;
+	//Broadcast when the avatar owner has been changed in the target item.
+	static FAvatarOwnerChanged AvatarOwnerChanged;
 };

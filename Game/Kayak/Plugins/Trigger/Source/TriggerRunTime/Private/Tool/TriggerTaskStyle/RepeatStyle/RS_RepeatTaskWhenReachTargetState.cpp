@@ -84,7 +84,6 @@ void URS_RepeatTaskUntilCompleteFinished::TaskPostFinishedCallback(UTriggerTaskB
 		PendingToRepeatTasks[Index]->RemoveTriggerTaskStateListener(ETriggerTaskState::ETriggerTaskState_End, this, &URS_RepeatTaskUntilCompleteFinished::TaskPostFinishedCallback);
 
 		RepeatTask(GetRepeatedTriggerTask());
-		RepeatTask(GetRepeatedTriggerTask());
 
 		PendingToRepeatTasks.RemoveAt(Index);
 	}

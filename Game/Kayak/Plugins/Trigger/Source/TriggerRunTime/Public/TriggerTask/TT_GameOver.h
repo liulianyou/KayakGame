@@ -20,9 +20,24 @@ class TRIGGERRUNTIME_API UTT_GameOver : public UTriggerTaskBase
 	GENERATED_UCLASS_BODY()
 
 	TriggerTaskCommonFrameWorkDeclaration();
+	
+public:
+
+	/*
+	* Notify the outer that game over
+	*/
+	UFUNCTION(BlueprintCallable)
+	void NotifyGameOver();
 
 public:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GameOver")
 	FString NextMapName;
+
+private:
+	
+	/*
+	* The information for current game over
+	*/
+	FGameOverInfo GameOverInfo;
 };

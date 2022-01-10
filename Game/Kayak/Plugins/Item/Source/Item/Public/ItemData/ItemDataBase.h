@@ -152,6 +152,13 @@ public:
 	virtual void Finialize();
 
 	/*
+	* Invoked when the new avatar owner of the owner item have been changed.
+	*/
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
+	void OnAvatarOwnerChanged(UItemInventoryComponent* OldAvatarOwner, UItemInventoryComponent* NewAvatarOwner);
+	virtual void AvatarOwnerChanged(UItemInventoryComponent* OldAvatarOwner, UItemInventoryComponent* NewAvatarOwner);
+
+	/*
 	* Give the BP one chance to define how to active this item
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
@@ -251,13 +258,6 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
 	void OnInitializeDataFromNewDataInternal(UItemDataBase* NewData);
 	virtual void InitializeFromNewDataInternal(UItemDataBase* NewData);
-
-	/*
-	* Invoked when the new avatar owner of the owner item have been changed.
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
-	void OnAvatarOwnerChanged(UItemInventoryComponent* OldOwner, UItemInventoryComponent* NewAvatarOwner);
-	virtual void AvatarOwnerChanged(UItemInventoryComponent* OldOwner, UItemInventoryComponent* NewAvatarOwner);
 
 public:
 

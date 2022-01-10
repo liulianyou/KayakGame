@@ -15,6 +15,7 @@
 #include "TriggerEffectDataBase.generated.h"
 
 class UTriggerTaskBase;
+class UDataActiveRuleBase;
 class UTriggerEffectDataBase;
 class UOperationInformationBase;
 class UTriggerEffectDataOperationStyleBase;
@@ -185,12 +186,22 @@ public:
 public:
 	
 	/*
+	* Removed in the feature: This flag should be replaced with Data active Rule in the feature
+	*/
+
+	/*
 	* Flag to check weather this data only can be active on the toggled actor
 	* 
 	* false means this effect data will be active on all clients or server according to the task runtime type
 	*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "EffectData")
 	bool ActiveAtOnlyToggledActor = true;
+
+	/*
+	* This data used to define weather this data can be activated after it is be notified to be opened
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "EffectData")
+	UDataActiveRuleBase* DataActiveRule = nullptr;
 
 	/*
 	* Internal delegate which is used to notify the others that there is one data is changed

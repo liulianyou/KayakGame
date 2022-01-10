@@ -3,6 +3,7 @@
 #include "TriggerFilterBase.h"
 #include "GameFramework/PlayerController.h"
 #include "EngineUtils.h"
+#include "TriggerTaskBase.h"
 
 UAAR_AvatarAccessWithFilter::UAAR_AvatarAccessWithFilter(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -69,7 +70,7 @@ void UAAR_AllSpawnedActors::OnActorCreated(AActor* Actor)
 
 		Actors.AddUnique(Actor);
 
-		if (Actor->OnDestroyed.IsAlreadyBound(this, &UAAR_AllSpawnedActors::OnActorDestroyed))
+		if (!Actor->OnDestroyed.IsAlreadyBound(this, &UAAR_AllSpawnedActors::OnActorDestroyed))
 		{
 			Actor->OnDestroyed.AddDynamic(this, &UAAR_AllSpawnedActors::OnActorDestroyed);
 		}
@@ -173,3 +174,27 @@ void UAAR_ActorsInMap::PostEditChangeProperty(struct FPropertyChangedEvent& Prop
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 }
 #endif
+
+UAAR_ActorsToggledTriggerTask::UAAR_ActorsToggledTriggerTask(const FObjectInitializer& ObjectInitializer)
+	:Super(ObjectInitializer)
+{
+
+}
+
+void UAAR_ActorsToggledTriggerTask::GetTargetAvatars_Implementation(TArray<UObject*>& Avatars) const
+{
+	Avatars.Empty();
+
+	if (TriggerTask.GetTriggerTask() == nullptr)
+	{
+		return;
+	}
+
+	const FTaskActivationInfoContainer& ActivationInfoContainer = TriggerTask.GetTriggerTask()->GetImmediateActivationInformation();
+
+	for (auto IT = ActivationInfoContainer.CreateConstIterator(true); IT; ++IT)
+	{
+		
+	}
+
+}

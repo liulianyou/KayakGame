@@ -869,7 +869,7 @@ bool UTriggerTaskBase::ReceiveNotifyFromOthersComponent(UTriggerTaskComponentBas
 	/*
 	* When the instance type of this task is not ETaskInstanceType_NoNewInstance then I need to skip this task as the actual running content should be on the target instance
 	*/
-	if (TryToCreateNewInstance(ImmediateActivationInformation.GetItems()[Index]))
+	if (TryToCreateNewInstance(GetImmediateActivationInformation_Mutable().FindActiveInfoByIndex(Index)))
 	{
 		//New instance is crated by this template task so this template task should not run any confined content
 		Result = false;
@@ -1403,7 +1403,7 @@ void UTriggerTaskBase::RemoveStateEventListener(ETriggerTaskState StateType, FSc
 
 bool UTriggerTaskBase::ShouldReplicateActivationInfo(const FTaskActivationInfo& Info) const
 {
-	return true;
+	return Info.ActiveSuccessed;
 }
 
 bool UTriggerTaskBase::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags)
@@ -1426,11 +1426,6 @@ bool UTriggerTaskBase::ReplicateSubobjects(class UActorChannel* Channel, class F
 	return WroteSomething;
 }
 
-FTaskActivationInfoContainer& UTriggerTaskBase::GetImmediateActivationInformation()
-{
-	return ImmediateActivationInformation;
-}
-
 void UTriggerTaskBase::GetAllInstacedTask(TArray<UTriggerTaskBase*>& InstanceTasks)
 {
 	InstanceTasks.Empty();
@@ -1441,10 +1436,10 @@ void UTriggerTaskBase::GetAllInstacedTask(TArray<UTriggerTaskBase*>& InstanceTas
 	}
 	else
 	{
-		for (int i = 0; i < GetImmediateActivationInformation().GetItems().Num(); i++)
+		for (auto IT = GetImmediateActivationInformation().CreateConstIterator(false); IT; ++IT)
 		{
 			TArray<UTriggerTaskBase*> LocalInstanceTasks;
-			GetImmediateActivationInformation().GetItems()[i].GetAllInstancedTask(LocalInstanceTasks);
+			(*IT).GetAllInstancedTask(LocalInstanceTasks);
 			InstanceTasks.Append(InstanceTasks);
 		}
 	}
@@ -1491,9 +1486,9 @@ void UTriggerTaskBase::PendingToExecuteTask()
 {
 	if (PendingToExecuteInfo.ActivationHandle.IsValid())
 	{
-		FTaskActivationInfo& ActivationInfo = GetImmediateActivationInformation().FindActiveInfoByActivationInfoHandle(PendingToExecuteInfo.ActivationHandle);
+		FTaskActivationInfo& ActivationInfo = GetImmediateActivationInformation_Mutable().FindActiveInfoByActivationInfoHandle(PendingToExecuteInfo.ActivationHandle);
 
-		if (ActivationInfo.IsVaild() && ActivationInfo.OtherTaskComponent != nullptr)
+		if (ActivationInfo.IsValid() && ActivationInfo.OtherTaskComponent != nullptr)
 		{
 			ActivationInfo.OtherTaskComponent->TransfereTask(GetTriggerOwner(), ActivationInfo.OtherTask, ActivationInfo.ProcessedExternalData, ActivationInfo.OwnerTask);
 		}

@@ -1,4 +1,5 @@
 #include "TriggerRepeatStyleBase.h"
+
 #include "TriggerTaskBase.h"
 
 UTriggerRepeatStyleBase::UTriggerRepeatStyleBase(const FObjectInitializer& ObjectInitializer)
@@ -32,3 +33,4 @@ UTriggerTaskBase* UTriggerRepeatStyleBase::GetRepeatedTriggerTask()
 {
 	return RepeatedTask.GetTriggerTask();
 }
+

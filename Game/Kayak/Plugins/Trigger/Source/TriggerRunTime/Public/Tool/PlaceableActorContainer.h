@@ -38,7 +38,6 @@ public:
 
 };
 
-
 /*
 * This class will still use the UE4 default ChildActorComponent, 
 * but I will only use this component to get class, Transform information. and that component will only exist in the editor
@@ -68,6 +67,7 @@ public:
 	virtual void PostInitProperties() override;
 	virtual void PostLoad() override;
 	virtual void Serialize(FArchive& Ar) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	//Override Object End
 
 	//Override Actor begin
@@ -134,6 +134,17 @@ public:
 	//The actor which is combined with this actor, or you can treat them as the child actor of the PlaceableActor
 	UPROPERTY(VisibleAnywhere, Category = "TriggerRuntime")
 	TArray<FChildActorInfo> ChildActorInfos;
+
+private:
+	
+	UFUNCTION()
+	void OnRep_ActorRemoved();
+
+	/*
+	* Used to replicate to client to destroyed the child actors in the client
+	*/
+	UPROPERTY(Transient, ReplicatedUsing=OnRep_ActorRemoved)
+	TArray<uint32> DestroyedActorNameHashes;
 
 private:
 #if WITH_EDITORONLY_DATA

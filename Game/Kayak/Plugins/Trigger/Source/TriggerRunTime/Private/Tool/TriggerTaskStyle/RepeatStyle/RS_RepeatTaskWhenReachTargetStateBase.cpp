@@ -54,7 +54,7 @@ bool URS_RepeatTaskWhenReachTargetStateBase::TryToRepeat_Implementation(UObject*
 	{
 		CashedActivationInfos = TaskOwner->GetImmediateActivationInformation();
 	}
-
+	
 	UTriggerTaskBase* Task = Cast<UTriggerTaskBase>(Object);
 
 	//This class only support trigger task
@@ -85,6 +85,10 @@ void URS_RepeatTaskWhenReachTargetStateBase::TriggerTaskStateCallbackForLoop(UEv
 	}
 }
 
+void URS_RepeatTaskWhenReachTargetStateBase::ReachTargetTriggerState(UTriggerTaskBase* Task)
+{
+}
+
 void URS_RepeatTaskWhenReachTargetStateBase::TryToRepeatTaskInternal()
 {
 	if (CheckTaskState->Evaluator())
@@ -109,7 +113,7 @@ bool URS_RepeatTaskWhenReachTargetStateBase::RepeatTask(UTriggerTaskBase* Task)
 
 	FTaskActivationInfo& ActivationInfo = CashedActivationInfos.FindActiveInfoByTriggerTask(Task);
 
-	if (!ActivationInfo.IsVaild() || UTriggerBlueprintLib::GetOperationInfoManager() == nullptr)
+	if (!ActivationInfo.IsValid() || UTriggerBlueprintLib::GetOperationInfoManager() == nullptr)
 		return false;
 
 	UTriggerTaskStart_RepeatTaskWhenReachState* ToggleInformation = Cast<UTriggerTaskStart_RepeatTaskWhenReachState>(UTriggerBlueprintLib::GetOperationInfoManager()->AddNewOperationByClass(this, UTriggerTaskStart_RepeatTaskWhenReachState::StaticClass()).Operation);

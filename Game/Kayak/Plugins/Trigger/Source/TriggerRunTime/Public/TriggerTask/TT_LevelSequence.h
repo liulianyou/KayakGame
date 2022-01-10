@@ -8,6 +8,7 @@
 
 class ALevelSequenceActor;
 class ULevelSequencePlayer;
+class UGameplayEffect;
 
 UENUM()
 enum class ETTLevelSequenceState : uint8
@@ -39,18 +40,36 @@ protected:
     UFUNCTION()
     void OnSequenceFinished();
 
-    void RemoveSequenceBind();
+    void ResetSequence();
 
     UFUNCTION()
     void OnRep_IsSequencePlaying();
 
     ULevelSequencePlayer* GetSequencePlayer();
-    virtual void DisablePlayerInput();
-    virtual void EnablePlayerInput();
+    virtual void OnSequecePlay();
+    virtual void OnSequenceFinish();
+    void SimulatePause(ULevelSequencePlayer& InSequencePlayer);
+    void RecoverFromSimulatePause(ULevelSequencePlayer& InSequencePlayer);
+
+    virtual void AddFreezeEffectToAI();
+    virtual void RemoveFreezeEffectFromAI();
 public:
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "LevelSequence")
     ALevelSequenceActor* LevelSequenceActor;
+    
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "LevelSequence")
+    bool bFreezeAI;
 
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "LevelSequence", meta = (EditCondition = "bFreezeAI"))
+    TSubclassOf<UGameplayEffect> FreezeAIGameplayEffect;
+    
+    //SimulatePause will cause crash, so do not use bSimulatePause.
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "LevelSequence")
+    bool bSimulatePause;
+
+    //use LevelSequencePlayRate to simulate World Pause state but LevelSequence.
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "LevelSequence", meta = (EditCondition = "bSimulatePause"))
+    float LevelSequencePlayRate;
 private:
     UPROPERTY(Replicated, ReplicatedUsing = OnRep_IsSequencePlaying)
     ETTLevelSequenceState SequenceState;

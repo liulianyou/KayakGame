@@ -10,7 +10,7 @@
 #include "UObject/ObjectMacros.h"
 #include "Templates/SubclassOf.h"
 
-#include "ItemRuntimeDataBase.h"
+#include "ItemDataBase.h"
 
 #include "ItemRuntimeData.generated.h"
 

@@ -76,7 +76,7 @@ void FTaskActivationInfo::Reset()
 }
 
 
-void FTaskActivationInfo::GetAllInstancedTask(TArray<UTriggerTaskBase*>& InstancedTasks)
+void FTaskActivationInfo::GetAllInstancedTask(TArray<UTriggerTaskBase*>& InstancedTasks) const
 {
 	InstancedTasks.Empty();
 
@@ -106,7 +106,7 @@ bool FTaskActivationInfo::ShouldReplicateActiveInfo() const
 		return false;
 }
 
-bool FTaskActivationInfo::IsVaild() const
+bool FTaskActivationInfo::IsValid() const
 {
 	if(OwnerTask == nullptr 
 		|| OtherTaskComponent == nullptr 

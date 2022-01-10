@@ -20,7 +20,7 @@ void UTriggerEditorConfig::SetDefaultValueFromTriggerEditorConfigFile()
 		FString ReturnValue;
 		GConfig->GetString(TriggerEditorConfigName, *PropertyName, ReturnValue, TriggerEditorIni);
 
-		UProperty* Property = GetClass()->FindPropertyByName(*PropertyName);
+		FProperty* Property = GetClass()->FindPropertyByName(*PropertyName);
 
 		if (Property != nullptr)
 		{

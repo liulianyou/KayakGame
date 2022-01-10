@@ -495,7 +495,11 @@ public:
 
 	//Get the immediate information for activate, this can be changed when the this task is activated by different ways
 	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime")
-	FTaskActivationInfoContainer& GetImmediateActivationInformation();
+	const FTaskActivationInfoContainer& GetImmediateActivationInformation() const { return ImmediateActivationInformation; }
+
+	//Get the immediate information for activate, this can be changed when the this task is activated by different ways
+	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime")
+	FTaskActivationInfoContainer& GetImmediateActivationInformation_Mutable() { return ImmediateActivationInformation; }
 
 	/*
 	* Get all instanced tasks which is created by this template

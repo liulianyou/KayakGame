@@ -6,7 +6,7 @@ void IItemInterface::Initialize(UItemDataBase* NewData)
 {
 	UItemComponentBase* Component = GetItemComponent();
 
-	Component->SetNewItemData(NewData);
+	Component->AddNewItemData(NewData);
 
 	OnInitialize(NewData);
 }
@@ -28,5 +28,5 @@ void IItemInterface::SetItemOwner(UItemInventoryComponent* NewOwner)
 		return;
 	}
 
-	ItemComponent->SetItemOwner(NewOwner);
+	ItemComponent->SetAvatarOwner(NewOwner);
 }

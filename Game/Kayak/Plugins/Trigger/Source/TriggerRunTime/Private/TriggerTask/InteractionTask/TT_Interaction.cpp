@@ -219,11 +219,11 @@ void UTT_Interaction::TryToSleep(UOperationInformationBase* SleepOperation /* = 
 	{
 		AActor* Actor = Cast<AActor>(Causers[i]);
 
-		FTaskActivationInfo& ActivationInfo = GetImmediateActivationInformation().FindActiveInfoByActor(Actor);
+		FTaskActivationInfo& ActivationInfo = GetImmediateActivationInformation_Mutable().FindActiveInfoByActor(Actor);
 
-		int Index = GetImmediateActivationInformation().FindOrAddNewActiveInfo(ActivationInfo);
+		int Index = GetImmediateActivationInformation_Mutable().FindOrAddNewActiveInfo(ActivationInfo);
 
-		GetImmediateActivationInformation().RemoveActiveInfoByIndex(Index);
+		GetImmediateActivationInformation_Mutable().RemoveActiveInfoByIndex(Index);
 	}
 
 	EndInteraction(Causers, EInteractionEndType::EInteractionEndType_Interrupt, true);
@@ -247,7 +247,7 @@ void UTT_Interaction::TryToStop(UOperationInformationBase* StopOperationInfo)
 		}
 	}
 
-	GetImmediateActivationInformation().EmptyContainer();
+	GetImmediateActivationInformation_Mutable().EmptyContainer();
 
 	EndInteraction(Causers, EInteractionEndType::EInteractionEndType_Interrupt, true);
 
@@ -379,15 +379,31 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 
 	FGameplayAbilitySpec* AS = nullptr;
 
+	bool NeedToGiveNewAbility = false;
+
 	if (ResultHandle == nullptr)
+	{
+		NeedToGiveNewAbility = true;
+	}
+	else
+	{
+		AS = AbilitysSystem->FindAbilitySpecFromHandle(*ResultHandle);
+
+		if (AS == nullptr)
+		{
+			NeedToGiveNewAbility = true;
+		}
+	}
+
+	if (NeedToGiveNewAbility)
 	{
 		FGameplayAbilitySpecHandle Handle;
 		Handle = AbilitysSystem->GiveAbility(FGameplayAbilitySpec(GamePlayAbilityClass));
 		ResultHandle = &Handle;
+
+		AS = AbilitysSystem->FindAbilitySpecFromHandle(*ResultHandle);
 	}
-
-	AS = AbilitysSystem->FindAbilitySpecFromHandle(*ResultHandle);
-
+	
 	if(AS == nullptr)
 		return true;
 
@@ -423,15 +439,97 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 	//Add the new ability map
 	AbilityMap.Add(TargetActor, *ResultHandle);
 
-	AbilitysSystem->TryActivateAbility(*ResultHandle, true);
+	if (!AbilitysSystem->TryActivateAbility(*ResultHandle, true))
+	{
+		// TODO: Failed to try activate ability, maybe the interaction should end by itself.
+		TArray<UObject*> Causers = { TargetActor };
+		AbilityTryToEndInteraction(*ResultHandle, Causers, EInteractionEndType::EInteractionEndType_Cancle, false);
+	}
 
 	//Make sure the target ability should be removed when it is ended as if the player interact with the target interaction again, the interaction actor will give him new ability
 	//AbilitysSystem->SetRemoveAbilityOnEnd(Handle);
 
-
-
 	//Always return false as we should wait the ability to check weather we should continue this action
 	return false;
+}
+
+/*
+* Remove all invalid ability space handle while the ability may end itself without notify the trigger task to end interaction
+*/
+void UTT_Interaction::RemoveInvalidAbilityCash()
+{
+	//Remove the matched ability map elements when the ability have removed from the ability system of the target actor
+	for (auto IT = AbilityMap.CreateIterator(); IT; ++IT)
+	{
+		AActor* TargetActor = Cast<AActor>(IT.Key());
+
+		if (TargetActor == nullptr)
+		{
+			IT.RemoveCurrent();
+			continue;
+		}
+
+		FGameplayAbilitySpecHandle* HandlePtr = AbilityMap.Find(TargetActor);
+
+		if (HandlePtr == nullptr)
+		{
+			IT.RemoveCurrent();
+			continue;
+		}
+		
+		UAbilitySystemComponent* AbilitysSystem = Cast<UAbilitySystemComponent>(TargetActor->GetComponentByClass(UAbilitySystemComponent::StaticClass()));
+
+		if (AbilitysSystem == nullptr)
+			continue;
+
+		FGameplayAbilitySpec* AS = AbilitysSystem->FindAbilitySpecFromHandle(*HandlePtr);
+
+		if (AS == nullptr)
+		{
+			IT.RemoveCurrent();
+		}
+	}
+}
+
+void UTT_Interaction::NotifyAbilityEnd(TArray<UObject*>& Causers)
+{
+	for (auto IT = AbilityMap.CreateIterator(); IT; ++IT)
+	{
+		bool NeedToEndAbility = Causers.Num() == 0 || Causers.Find(IT.Key()) != INDEX_NONE;
+
+		if(!NeedToEndAbility)
+			continue;
+
+		AActor* TargetActor = Cast<AActor>(IT.Key());
+
+		if (TargetActor == nullptr)
+		{
+			continue;
+		}
+
+		FGameplayAbilitySpecHandle* HandlePtr = AbilityMap.Find(TargetActor);
+
+		if (HandlePtr == nullptr)
+		{
+			continue;
+		}
+
+		UAbilitySystemComponent* AbilitysSystem = Cast<UAbilitySystemComponent>(TargetActor->GetComponentByClass(UAbilitySystemComponent::StaticClass()));
+
+		if (AbilitysSystem == nullptr)
+			continue;
+
+		FGameplayAbilitySpec* AS = AbilitysSystem->FindAbilitySpecFromHandle(*HandlePtr);
+
+		if (AS == nullptr)
+		{
+			continue;
+		}
+
+		AS->GetPrimaryInstance()->CancelAbility(AS->GetPrimaryInstance()->GetCurrentAbilitySpecHandle(), AS->GetPrimaryInstance()->GetCurrentActorInfo(), AS->GetPrimaryInstance()->GetCurrentActivationInfo(), true);
+	}
+
+	RemoveInvalidAbilityCash();
 }
 
 void UTT_Interaction::AddContributor(UContributeRuleBase* Contributor)
@@ -439,6 +537,9 @@ void UTT_Interaction::AddContributor(UContributeRuleBase* Contributor)
 	if(Contributor == nullptr || Contributor->Contributor == nullptr)
 		return;
 		
+	if(!CanBeInteracted(Contributor->Contributor))
+		return;
+
 	if (InteractionRule != nullptr && !InteractionRule->CanAddNewContributor(Contributor))
 		return;
 
@@ -490,6 +591,9 @@ bool UTT_Interaction::ReceiveNotifyFromOthersComponent(UTriggerTaskComponentBase
 		return false;
 
 	FInteractionInfo& InteractionInfo = GetValidInteractionInfo(ExternalData->GetToggledActor(), TriggerInteractionStage::ActiveInteractStage);
+
+	if(!CanBeInteracted(ExternalData->GetToggledActor()))
+		return false;
 
 	//If there is no valid interaction info then just skip this action
 	if (InteractionInfo == FInteractionInfo::InvaildValue)
@@ -551,6 +655,14 @@ void UTT_Interaction::SetInteractionRule(UInteractionRuleBase* Value)
 	InteractionRule = Value;
 
 	InteractionRule->SetOwnerTask(this);
+}
+
+void UTT_Interaction::AbilityTryToEndInteractionByInstance(UGameplayAbility* AbilityInstance, const TArray<UObject*>& Causers, EInteractionEndType EndType, bool RemoveInstance)
+{
+	if(AbilityInstance == nullptr)
+		return;
+
+	AbilityTryToEndInteraction(AbilityInstance->GetCurrentAbilitySpecHandle(), Causers, EndType, RemoveInstance);
 }
 
 void UTT_Interaction::AbilityTryToEndInteraction_Implementation(const FGameplayAbilitySpecHandle Handle, const TArray<UObject*>& Causers, EInteractionEndType EndType, bool RemoveInstance)
@@ -644,21 +756,16 @@ void UTT_Interaction::AbilityTryToStartInteraction( AActor* TargetActor, const F
 void UTT_Interaction::EndInteraction(TArray<UObject*>& Causers, EInteractionEndType EndType, bool RemoveInstance)
 {
 	TArray<UObject*> NoAbilityCausers;
-	NoAbilityCausers.Empty();
-
-	//If this interaction have interaction ability I should notify the ability to end 
-	for (int i = 0; i < Causers.Num(); i++)
+	//By default I assume all causers do not have any ability
+	NoAbilityCausers.Append(Causers);
+	
+	//If this interaction have interaction ability I should notify the ability to end
+	for (auto It = AbilityMap.CreateIterator(); It; ++It)
 	{
-		if(Causers[i] == nullptr || !Causers[i]->IsValidLowLevel())
-			continue;
-
-		//Flag to check weather this interaction task has been ended by the ability
-		bool EndAbility = false;
-
 		//First loop all ability map to process the matched actor ability
-		for (auto It = AbilityMap.CreateIterator(); It; ++It)
-		{
-			if (It.Key() != nullptr && It.Key()->IsValidLowLevel() && It.Key() == Causers[i])
+		if(Causers.Num() == 0 || Causers.Find(It.Key()) != INDEX_NONE)
+		{			
+			if (It.Key() != nullptr && It.Key()->IsValidLowLevel())
 			{
 				UAbilitySystemComponent* AbilitysSystem = Cast<UAbilitySystemComponent>(It.Key()->GetComponentByClass(UAbilitySystemComponent::StaticClass()));
 
@@ -669,6 +776,9 @@ void UTT_Interaction::EndInteraction(TArray<UObject*>& Causers, EInteractionEndT
 
 				if (AS == nullptr)
 					continue;
+
+				//Cash the key in case the ability end will remove the current element 
+				AActor* TargetActor = It.Key();
 
 				if (AS->GetPrimaryInstance()->GetClass()->ImplementsInterface(UInteractionSupportInterface::StaticClass()))
 				{
@@ -710,31 +820,13 @@ void UTT_Interaction::EndInteraction(TArray<UObject*>& Causers, EInteractionEndT
 					}
 				}
 
-				EndAbility = true;
-
+				NoAbilityCausers.Remove(TargetActor);
+				
 				break;
 			}
 		}
-
-		//Remove the matched ability map elements
-		for (int j = 0; j < Causers.Num(); j++)
-		{
-			AActor* TargetActor = Cast<AActor>(Causers[i]);
-			FGameplayAbilitySpecHandle* LocalHandle = AbilityMap.Find(TargetActor);
-
-			if (LocalHandle != nullptr)
-			{
-				AbilityMap.Remove(TargetActor);
-			}
-		}
-
-		if (!EndAbility)
-		{
-			NoAbilityCausers.AddUnique(Causers[i]);
-		}
-
 	}
-
+	
 	if (NoAbilityCausers.Num() > 0)
 	{
 		AActor* OwnerActor = TryToGetOwnerActor();
@@ -787,6 +879,8 @@ FGameplayTag UTT_Interaction::GetVaildInteractionCancelTag()
 
 void UTT_Interaction::EndInteractionInternal(const TArray<UObject*>& Causers, EInteractionEndType EndType, bool RemoveInstance)
 {
+	RemoveInvalidAbilityCash();
+
 	//No matter which type of end interaction, I need to remove the contributors belong to these causers
 	if (InteractionRule != nullptr)
 	{
@@ -991,6 +1085,45 @@ const TArray<FInteractionInfo>& UTT_Interaction::GetInteractionInfos() const
     }
 }
 
+bool UTT_Interaction::CanBeInteracted_Implementation( UObject* Causer )
+{
+	AActor* TargetActor = Cast<AActor>(Causer);
+
+	if(TargetActor == nullptr)
+		return true;
+
+	for (auto IT = AbilityMap.CreateIterator(); IT; ++IT)
+	{
+		if(IT.Key() == TargetActor)
+			continue;
+
+		FGameplayAbilitySpecHandle* HandlePtr = AbilityMap.Find(TargetActor);
+
+		if (HandlePtr == nullptr)
+		{
+			continue;
+		}
+
+		UAbilitySystemComponent* AbilitysSystem = Cast<UAbilitySystemComponent>(TargetActor->GetComponentByClass(UAbilitySystemComponent::StaticClass()));
+
+		if (AbilitysSystem == nullptr)
+			continue;
+
+		FGameplayAbilitySpec* AS = AbilitysSystem->FindAbilitySpecFromHandle(*HandlePtr);
+
+		if (AS != nullptr && AS->GetPrimaryInstance())
+		{
+			FGameplayAbilityActorInfo ActorInfo = AS->GetPrimaryInstance()->GetActorInfo();
+
+			if (!AS->GetPrimaryInstance()->CanActivateAbility(*HandlePtr, &ActorInfo))
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
 
 void UTT_Interaction::Server_Interaction(AActor* TargetActor)
 {

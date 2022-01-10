@@ -10,17 +10,14 @@ UItemDataBase::UItemDataBase(const FObjectInitializer& ObjectInitializer)
 	
 }
 
-bool UItemDataBase::IsValidItemData()
+bool UItemDataBase::IsValidItemData() const
 {
 	return !(IsPendingKill() || RuntimdDataClass == nullptr);
 }
 
 void UItemDataBase::InitializeInternal()
 {
-	if (!ID.IsValid())
-	{
-		ID = FGuid::NewGuid();
-	}
+	
 }
 
 void UItemDataBase::BeginDestroy()
@@ -29,7 +26,7 @@ void UItemDataBase::BeginDestroy()
 
 	for (auto It = GetReferencedItemComponents().CreateConstIterator(); It; ++It)
 	{
-		RemoveReferencedComponent(*It);
+		RemoveReferencedComponent(It.Key());
 	}
 }
 
@@ -40,7 +37,7 @@ void UItemDataBase::AddReferencedComponent(UItemComponentBase* ItemComponent)
 
 	if (RuntimdDataClass != nullptr)
 	{
-		UItemRuntimeDataBase* NewItemRunttmeData = NewObject<UItemRuntimeDataBase>(ItemComponent, RuntimdDataClass);
+		UItemRuntimeDataBase* NewItemRunttmeData = NewObject<UItemRuntimeDataBase>(ItemComponent, RuntimdDataClass.Get());
 
 		if (NewItemRunttmeData)
 		{
@@ -89,12 +86,7 @@ void UItemRuntimeDataBase::BeginDestroy()
 
 bool UItemRuntimeDataBase::IsNameStableForNetworking() const
 {
-	return bNetAddressable :: Super::IsNameStableForNetworking();
-}
-
-bool UItemRuntimeDataBase::IsSupportedForNetworking() const
-{
-	return true;
+	return bNetAddressable || Super::IsNameStableForNetworking();
 }
 
 int32 UItemRuntimeDataBase::GetFunctionCallspace(UFunction* Function, FFrame* Stack)
@@ -131,7 +123,7 @@ bool UItemRuntimeDataBase::CallRemoteFunction(UFunction* Function, void* Parms, 
 	return bProcessed;
 }
 
-bool UItemRuntimeDataBase::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags);
+bool UItemRuntimeDataBase::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags)
 {
 	//To replicate sub objects in this data
 	/*
@@ -307,11 +299,11 @@ void UItemRuntimeDataBase::InitializeFromNewDataInternal(UItemDataBase* NewData)
 	}
 }
 
-void UItemRuntimeDataBase::AvatarOwnerChanged(UItemInventoryComponent* NewAvatarOwner)
+void UItemRuntimeDataBase::AvatarOwnerChanged(UItemInventoryComponent* OldAvatarOwner, UItemInventoryComponent* NewAvatarOwner)
 {
 	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemRuntimeDataBase, OnAvatarOwnerChanged)))
 	{
-		OnAvatarOwnerChanged(NewAvatarOwner);
+		OnAvatarOwnerChanged(OldAvatarOwner, NewAvatarOwner);
 	}
 }
 
@@ -352,5 +344,10 @@ void UItemRuntimeDataBase::MarkDataPrepared()
 	bDataPrepared = true;
 
 	DataPreparedEvent.Broadcast(this);
+}
+
+void UItemRuntimeDataBase::OnRep_ID()
+{
+	
 }
 

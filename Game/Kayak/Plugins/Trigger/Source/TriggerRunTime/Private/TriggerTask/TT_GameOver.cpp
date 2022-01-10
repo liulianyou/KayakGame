@@ -65,6 +65,8 @@ bool UTT_GameOver::Prepare()
 	if(!Super::Prepare())
 		return false;
 
+	GameOverInfo.Clear();
+
 	Active();
 
 	if (GetStartConditions() != nullptr)
@@ -83,15 +85,19 @@ void UTT_GameOver::Active(bool ForceActive )
 {
 	Super::Active(ForceActive);
 
-	FGameOverInfo GameOverInfo;
-
 	GameOverInfo.URL = "-map=" + NextMapName;
 
 	if (GetStartConditions() != nullptr)
 	{
-		GetStartConditions()->GetPassedCondition(GameOverInfo.GameOverCondtions);
+		TArray<UEvaluatorBase*> GameOverConfiitions;
+		GetStartConditions()->GetPassedCondition(GameOverConfiitions);
+
+		for (int i = 0; i < GameOverConfiitions.Num(); i++)
+		{
+			GameOverInfo.GameOverCondtions.Add(DuplicateObject<UEvaluatorBase>(GameOverConfiitions[i], GetTransientPackage()));
+		}
 	}
-	
+
 	FString GameOverReason;
 
 	for (int i = 0; i < GameOverInfo.GameOverCondtions.Num(); i++)
@@ -105,11 +111,6 @@ void UTT_GameOver::Active(bool ForceActive )
 	}
 
 	UE_LOG(LogTrigger, Warning, TEXT("GameOver: %s"), *GameOverReason);
-
-	if (TryToGetOwnerActor() != nullptr && TryToGetOwnerActor()->HasAuthority())
-	{
-		FTriggerDelegate::GameOverNativeDelegate.Broadcast(this, GameOverInfo);
-	}
 }
 
 
@@ -142,7 +143,17 @@ void UTT_GameOver::Skip(UOperationInformationBase* SkipOperationInfo)
 
 void UTT_GameOver::Finished(UOperationInformationBase* FinishOperationInfo)
 {
+	//Before finish game over task I need to reset the start conditions
+	if (GetStartConditions() != nullptr)
+	{
+		//When this game over is active I need to reset the Prerequisite
+		ResetCondition(GetStartConditions());
+	}
+
 	Super::Finished(FinishOperationInfo);
+
+	//When this task finished it can notify the outer that game over
+	NotifyGameOver();
 }
 
 void UTT_GameOver::PostFinished()
@@ -177,4 +188,10 @@ bool UTT_GameOver::CanTick()
 	return Result;
 }
 
-
+void UTT_GameOver::NotifyGameOver()
+{
+	if (TryToGetOwnerActor() != nullptr && TryToGetOwnerActor()->HasAuthority())
+	{
+		FTriggerDelegate::GameOverNativeDelegate.Broadcast(this, GameOverInfo);
+	}
+}

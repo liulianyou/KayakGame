@@ -25,7 +25,7 @@ void UCheckTaskState::NativeInitialize(UObject* OwnerObject)
 		}
 		else
 		{
-			UE_LOG(LogTrigger, Error, TEXT("There is more than one condition:%s to inspect the same state of other Task"), *GetPathName());
+			UE_LOG(LogTrigger, Display, TEXT("There is more than one condition:%s to inspect the same state of other Task"), *GetPathName());
 		}
 	}
 }

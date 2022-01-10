@@ -45,6 +45,7 @@ public:
 	//Override UObject
 	virtual void BeginDestroy() override;
 	//Override UObject
+
 	//Override EffectDataBase
 	virtual void OpenEffect(UTriggerEffectDataOperationStyleBase* OpenStyle);
 	virtual void CloseEffect(UTriggerEffectDataOperationStyleBase* CloseStyle);

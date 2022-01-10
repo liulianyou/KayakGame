@@ -38,7 +38,7 @@ bool UTT_EffectBase::Prepare()
 
 void UTT_EffectBase::Active(bool ForceActive /* = true */)
 {
-	FTaskActivationInfo& ActivatioInfo = GetImmediateActivationInformation().FindActiveInfoByIndex(GetCurrentActiveInfoIndex());
+	FTaskActivationInfo& ActivatioInfo = GetImmediateActivationInformation_Mutable().FindActiveInfoByIndex(GetCurrentActiveInfoIndex());
 
 	TArray<UObject*> Causers;
 
@@ -51,12 +51,18 @@ void UTT_EffectBase::Active(bool ForceActive /* = true */)
 
 		for (int i = 0; i < OuterScopes.Num(); i++)
 		{
-			Causers.Add(OuterScopes[i].Causer);
+			if (OuterScopes[i].Causer != nullptr)
+			{
+				Causers.Add(OuterScopes[i].Causer);
+			}
 		}
 	}
 	else
 	{
-		Causers.Add(StartOperationInfo->GetToggledActor());
+		if (StartOperationInfo->GetToggledActor() != nullptr)
+		{
+			Causers.Add(StartOperationInfo->GetToggledActor());
+		}
 	}
 
 	OpenEffect(Causers);

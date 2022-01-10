@@ -3,19 +3,19 @@
 #include "ItemDataBase.h"
 #include "Net/UnrealNetwork.h"
 
-TScriptInterface<IItemInterface> FItemContainer::operator[](int index)
+bool FItemInfo::IsValid() const
 {
-	return Items[i];
+	return !!Item;
 }
 
 int FItemContainer::AddNewItem(TScriptInterface<IItemInterface>)
 {
-	
+	return INDEX_NONE;
 }
 
 int FItemContainer::RemoveItem(TScriptInterface<IItemInterface>)
 {
-	
+	return INDEX_NONE;
 }
 
 
@@ -43,10 +43,10 @@ void UItemInventoryComponent::OnUnregister()
 {
 	for (auto IT = ItemContainer.CreateIterator(); IT; ++IT)
 	{
-		if(IT == nullptr || IT->GetItemComponent() == nullptr)
+		if((*IT).IsValid() || (*IT).Item->GetItemComponent() == nullptr)
 			continue;
 	
-		IT->GetItemComponent()->SetAvatarOwner(nullptr);
+		(*IT).Item->GetItemComponent()->SetAvatarOwner(nullptr);
 	}
 
 	Super::OnUnregister();
@@ -58,10 +58,10 @@ void UItemInventoryComponent::GetAllItems(TArray<TScriptInterface<IItemInterface
 
 	for (auto IT = ItemContainer.CreateConstIterator(); IT; ++IT)
 	{
-		if(!(*IT).IsValid())
+		if((*IT).IsValid())
 			continue;
 
-		OutItems.Add(*IT);
+		OutItems.Add((*IT).Item);
 	}
 }
 
@@ -72,23 +72,23 @@ void UItemInventoryComponent::GetAllItemsWithClass(TSubclassOf<UItemRuntimeData>
 
 	for (auto IT = ItemContainer.CreateConstIterator(); IT; ++IT)
 	{
-		if (!(*IT).IsValid())
+		if ((*IT).IsValid())
 			continue;
 
-		UItemComponentBase* ItemComponent = (*IT)->GetItemComponent();
+		UItemComponentBase* ItemComponent = (*IT).Item->GetItemComponent();
 
 		if(ItemComponent == nullptr)
 			continue;
 
-		UItemRuntimeDataBase* RuntimeData = ItemComponent->GetItemRuntimeData();
+		//UItemRuntimeDataBase* RuntimeData = ItemComponent->GetItemRuntimeData();
 
-		if(RuntimeData == nullptr)
-			continue;
+		//if(RuntimeData == nullptr)
+		//	continue;
 
-		if (ItemType.Get() == nullptr || ItemType->IsA(RuntimeData->GetClass()))
-		{
-			OutItems.AddUnique(*IT);
-		}
+		//if (ItemType.Get() == nullptr || ItemType->IsA(RuntimeData->GetClass()))
+		//{
+		//	OutItems.AddUnique(*IT);
+		//}
 	}
 }
 
@@ -111,14 +111,14 @@ int UItemInventoryComponent::AddNewItemWithItemClass(TSubclassOf<UObject> ItemTy
 	if (!ItemType->ImplementsInterface(UItemInterface::StaticClass()))
 		return INDEX_NONE;
 
-	UObject* NewItem = NewObject<UObject>( this, ItemType );
+	UObject* NewItemObject = NewObject<UObject>( this, ItemType );
 
-	if(NewItem == nullptr)
+	if(NewItemObject == nullptr)
 		return INDEX_NONE;
 
 	TScriptInterface<IItemInterface> NewItem;
-	NewItem.SetObject(NewItem);
-	NewItem.SetInterface( ItemType->GetInterfaceAddress() );
+	NewItem.SetObject(NewItemObject);
+	NewItem.SetInterface( ItemType->GetInterfaceAddress(UItemInterface::StaticClass()) );
 
 	return ItemContainer.AddNewItem(NewItem);
 }
@@ -130,8 +130,6 @@ int UItemInventoryComponent::RemoveItem(TScriptInterface<IItemInterface> Removed
 		return INDEX_NONE;
 
 	int Result = ItemContainer.RemoveItem(RemovedItem);
-
-	RemovedItem->Destroy();
 
 	return Result;
 }
@@ -145,57 +143,65 @@ int UItemInventoryComponent::RemoveItemWithDataClass(TSubclassOf<UItemRuntimeDat
 {
 	for (auto IT = ItemContainer.CreateIterator(); IT; ++IT)
 	{
-		if (IT == nullptr)
+		if ((*IT).IsValid())
 		{
 			IT.RemoveCurrent();
 
 			continue;
 		}
 
-		if (IT->GetItemComponent() == nullptr)
+		if ((*IT).Item->GetItemComponent() == nullptr)
 		{
-			UE_LOG(LogItem, Warning, TEXT(" The target item:%s must have one item component "), *IT->GetClass()->GetName());
+			UE_LOG(LogItem, Warning, TEXT(" The target item:%s must have one item component "), *(*IT).Item.GetObject()->GetClass()->GetName());
 
 			IT.RemoveCurrent();
 
 			continue;
 		}
 
-		if (IT->GetItemComponent()->GetItemRuntimeData() == nullptr)
+		if ((*IT).Item->GetItemComponent()->GetItemRuntimeDatas().Num() == 0)
 		{
-			UE_LOG(LogItem, Warning, TEXT(" The target item:%s must have one runtime data!! "), *IT->GetPathName());
+			UE_LOG(LogItem, Warning, TEXT(" The target item:%s must have one runtime data!! "), *(*IT).Item.GetObject()->GetPathName());
 
 			IT.RemoveCurrent();
 
 			continue;
 		}
 
-		bool IsMatchedItem = false;
+		for (int i = 0; i < (*IT).Item->GetItemComponent()->GetItemRuntimeDatas().Num(); i++)
+		{
+			UItemRuntimeDataBase* ItemRuntimeData = (*IT).Item->GetItemComponent()->GetItemRuntimeDatas()[i];
 
-		if (ItemType == nullptr)
-		{
-			IsMatchedItem = true;
-		}
-		else
-		{
-			if (CheckExactClass )
+			if (ItemRuntimeData == nullptr)
 			{
-				if (IT->GetItemComponent()->GetItemRuntimeData()->GetClass() == ItemType)
+				continue;
+			}
+
+			bool IsMatchedItem = false;
+
+			if (ItemType == nullptr)
+			{
+				IsMatchedItem = true;
+			}
+			else
+			{
+				if (CheckExactClass)
+				{
+					if (ItemRuntimeData->GetClass() == ItemType)
+					{
+						IsMatchedItem = true;
+					}
+				}
+				else if (ItemRuntimeData->GetClass()->IsChildOf(ItemType))
 				{
 					IsMatchedItem = true;
 				}
 			}
-			else if(IT->GetItemComponent()->GetItemRuntimeData()->GetClass()->IsChildOf(ItemType))
+
+			if (IsMatchedItem)
 			{
-				IsMatchedItem = true;
+				IT.RemoveCurrent();
 			}
-		}
-
-		if (IsMatchedItem)
-		{
-			IT->Destroy();
-
-			IT.RemoveCurrent();
 		}
 	}
 
@@ -207,7 +213,7 @@ int UItemInventoryComponent::RemoveItemWithItemClass(TSubclassOf<UObject> ItemTy
 {
 	for (auto IT = ItemContainer.CreateIterator(); IT; ++IT)
 	{
-		if (IT == nullptr)
+		if ((*IT).IsValid())
 		{
 			IT.RemoveCurrent();
 
@@ -218,19 +224,18 @@ int UItemInventoryComponent::RemoveItemWithItemClass(TSubclassOf<UObject> ItemTy
 
 		if (CheckExactClass)
 		{
-			if (IT->GetItemComponent()->GetClass() == ItemType)
+			if ((*IT).Item->GetItemComponent()->GetClass() == ItemType)
 			{
 				IsMatchedItem = true;
 			}
 		}
-		else if (IT->GetClass()->IsChildOf(ItemType))
+		else if ((*IT).Item.GetObject()->GetClass()->IsChildOf(ItemType))
 		{
 			IsMatchedItem = true;
 		}
 
 		if (IsMatchedItem)
 		{
-			IT->Destroy();
 			IT.RemoveCurrent();
 		}
 	}

@@ -10,9 +10,10 @@
 #include "LevelSequenceActor.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/PlayerController.h"
+#include "Kismet/GameplayStatics.h"
 
 UTT_LevelSequence::UTT_LevelSequence(const FObjectInitializer& ObjectInitializer)
-    :Super(ObjectInitializer), SequenceState(ETTLevelSequenceState::ETTLSS_NotPlay)
+    :Super(ObjectInitializer), bFreezeAI(false), bSimulatePause(false), LevelSequencePlayRate(10000.0f), SequenceState(ETTLevelSequenceState::ETTLSS_NotPlay)
 {
 
 }
@@ -46,6 +47,13 @@ void UTT_LevelSequence::Active(bool ForceActive /*= true*/)
     }
 
     SequenceState = ETTLevelSequenceState::ETTLSS_Playing;
+
+    AActor* OwnerActor = TryToGetOwnerActor();
+    if (OwnerActor)
+    {
+        OwnerActor->ForceNetUpdate();
+    }
+
     PlaySequence(*SequencePlayer);
 }
 
@@ -61,10 +69,10 @@ void UTT_LevelSequence::TryToStop(UOperationInformationBase* StopOperationInfo/*
     if (SequencePlayer)
     {//stop, no matter the player is playing or paused.
         SequencePlayer->GoToEndAndStop();
-        RemoveSequenceBind();
+        ResetSequence();
     }
     SequenceState = ETTLevelSequenceState::ETTLSS_Finished;
-    EnablePlayerInput();
+    OnSequenceFinish();
 }
 
 void UTT_LevelSequence::TryToSleep(UOperationInformationBase* SleepOperationInfo /*= nullptr*/)
@@ -97,9 +105,9 @@ void UTT_LevelSequence::Reset(UOperationInformationBase* Operation /*= nullptr*/
         }
         SequencePlayer->ScrubToFrame(SequencePlayer->GetStartTime().Time);//stop and reset to start time.
     }
-    RemoveSequenceBind();
+    ResetSequence();
     SequenceState = ETTLevelSequenceState::ETTLSS_NotPlay;
-    EnablePlayerInput();
+    OnSequenceFinish();
 }
 
 void UTT_LevelSequence::Skip(UOperationInformationBase* SkipStyle /*= nullptr*/)
@@ -115,9 +123,9 @@ void UTT_LevelSequence::Skip(UOperationInformationBase* SkipStyle /*= nullptr*/)
     {
         SequencePlayer->GoToEndAndStop();
     }
-    RemoveSequenceBind();
+    ResetSequence();
     SequenceState = ETTLevelSequenceState::ETTLSS_Finished;
-    EnablePlayerInput();
+    OnSequenceFinish();
 }
 
 void UTT_LevelSequence::Pause(UOperationInformationBase* OperationInfo /* = nullptr */)
@@ -197,7 +205,8 @@ void UTT_LevelSequence::PlaySequenceFromFrameTime(const FFrameTime& CurFrameTIme
 
 void UTT_LevelSequence::PlaySequence(ULevelSequencePlayer& InSequencePlayer)
 {
-    DisablePlayerInput();
+    SimulatePause(InSequencePlayer);
+    OnSequecePlay();
     InSequencePlayer.Play();
     InSequencePlayer.OnFinished.AddDynamic(this, &UTT_LevelSequence::OnSequenceFinished);
 }
@@ -206,12 +215,12 @@ void UTT_LevelSequence::OnSequenceFinished()
 {
     Finished();
 
-    EnablePlayerInput();
-    RemoveSequenceBind();
     SequenceState = ETTLevelSequenceState::ETTLSS_Finished;
+    OnSequenceFinish();
+    ResetSequence();
 }
 
-void UTT_LevelSequence::RemoveSequenceBind()
+void UTT_LevelSequence::ResetSequence()
 {
     if (LevelSequenceActor && LevelSequenceActor->IsValidLowLevel())
     {
@@ -219,6 +228,7 @@ void UTT_LevelSequence::RemoveSequenceBind()
         if (SequencePlayer)
         {
             SequencePlayer->OnFinished.RemoveDynamic(this, &UTT_LevelSequence::OnSequenceFinished);
+            RecoverFromSimulatePause(*SequencePlayer);
         }
     }
 }
@@ -244,7 +254,8 @@ void UTT_LevelSequence::OnRep_IsSequencePlaying()
         if (SequencePlayer)
         {//go to the end frame, maybe modify.
             SequencePlayer->GoToEndAndStop();
-            RemoveSequenceBind();
+            ResetSequence();
+            OnSequenceFinish();
         }
     }
         break;
@@ -273,12 +284,49 @@ ULevelSequencePlayer* UTT_LevelSequence::GetSequencePlayer()
     return LevelSequenceActor->GetSequencePlayer();
 }
 
-void UTT_LevelSequence::DisablePlayerInput()
+void UTT_LevelSequence::OnSequecePlay()
 {
-
+    if (bFreezeAI)
+    {
+        AddFreezeEffectToAI();
+    }
 }
 
-void UTT_LevelSequence::EnablePlayerInput()
+void UTT_LevelSequence::OnSequenceFinish()
 {
+    if (bFreezeAI)
+    {
+        RemoveFreezeEffectFromAI();
+    }
+}
 
+void UTT_LevelSequence::SimulatePause(ULevelSequencePlayer& InSequencePlayer)
+{
+    if (false == bSimulatePause)
+    {
+        return;
+    }
+    UE_LOG(LogTemp, Warning, TEXT("UTT_LevelSequence::SimulatePause bSimulatePause maybe crash!"));
+    check(LevelSequencePlayRate > 0.0f);
+
+    UGameplayStatics::SetGlobalTimeDilation(this, 1.0f / LevelSequencePlayRate);
+    InSequencePlayer.SetPlayRate(LevelSequencePlayRate);
+}
+
+void UTT_LevelSequence::RecoverFromSimulatePause(ULevelSequencePlayer& InSequencePlayer)
+{
+    if (false == bSimulatePause)
+    {
+        return;
+    }
+    UGameplayStatics::SetGlobalTimeDilation(this, 1.0f);
+    InSequencePlayer.SetPlayRate(1.0f);
+}
+
+void UTT_LevelSequence::AddFreezeEffectToAI()
+{
+}
+
+void UTT_LevelSequence::RemoveFreezeEffectFromAI()
+{
 }
