@@ -41,6 +41,8 @@ void UItemDataBase::AddReferencedComponent(UItemComponentBase* ItemComponent)
 
 		if (NewItemRunttmeData)
 		{
+			NewItemRunttmeData->Initialize(this);
+
 			ItemComponent->AddNewRuntimeData(NewItemRunttmeData);
 
 			GetReferencedItemComponents_Mutable().Add(ItemComponent, NewItemRunttmeData);
@@ -59,7 +61,7 @@ void UItemDataBase::RemoveReferencedComponent(UItemComponentBase* ItemComponent)
 	{
 		if (IT.Key() == ItemComponent)
 		{
-			IT.Key()->RemoveItemRuntimeData(IT.Value());
+			IT.Value().PendingRemoved = true;
 
 			OnRemoveReferencedComponent(ItemComponent);
 
@@ -168,11 +170,35 @@ void UItemRuntimeDataBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProp
 	DOREPLIFETIME(UItemRuntimeDataBase, ItemOwner);
 }
 
-void UItemRuntimeDataBase::Initialize(UItemComponentBase* ItemComponent)
+void UItemRuntimeDataBase::PreNetReceive()
 {
-	OnInitialzie(ItemComponent);
+	Super::PreNetReceive();
+
+
+}
+
+void UItemRuntimeDataBase::PostNetReceive()
+{
+	Super::PostNetReceive();
+
+	MarkDataPrepared();
+}
+
+void UItemRuntimeDataBase::SetItemComponentOwner(UItemComponentBase* ItemComponent)
+{
+	OnSetItemComponentOwner(ItemComponent);
 
 	ItemOwner = ItemComponent;
+}
+
+void UItemRuntimeDataBase::Initialize(UItemDataBase* ItemData)
+{
+	if(bHasBeenInitialized)
+		return;
+
+	OnInitialize(ItemData);
+
+	bHasBeenInitialized = true;
 }
 
 void UItemRuntimeDataBase::Finialize()
@@ -290,15 +316,6 @@ void UItemRuntimeDataBase::Gained(const FItemScopeChangeInfo& GainedInfo)
 	ToggleItemStateChanged(EItemState::Gained);
 }
 
-
-void UItemRuntimeDataBase::InitializeFromNewDataInternal(UItemDataBase* NewData)
-{
-	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemRuntimeDataBase, OnInitializeDataFromNewDataInternal)))
-	{
-		OnInitializeDataFromNewDataInternal(NewData);
-	}
-}
-
 void UItemRuntimeDataBase::AvatarOwnerChanged(UItemInventoryComponent* OldAvatarOwner, UItemInventoryComponent* NewAvatarOwner)
 {
 	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemRuntimeDataBase, OnAvatarOwnerChanged)))
@@ -309,7 +326,10 @@ void UItemRuntimeDataBase::AvatarOwnerChanged(UItemInventoryComponent* OldAvatar
 
 void UItemRuntimeDataBase::OnRep_ItemOwner(UItemComponentBase* OldItemOnwer)
 {
-	
+	if(OldItemOnwer == ItemOwner)
+		return;
+
+	SetItemComponentOwner(ItemOwner);
 }
 
 void UItemRuntimeDataBase::SetNewItemOwner_Implementation(UItemComponentBase* ItemComponent)
@@ -341,6 +361,10 @@ void UItemRuntimeDataBase::ItemDataChangedInItemOwner(UItemComponentBase* Item, 
 
 void UItemRuntimeDataBase::MarkDataPrepared()
 {
+	//If this data have been prepared do not mark it again
+	if (bDataPrepared)
+		return;
+
 	bDataPrepared = true;
 
 	DataPreparedEvent.Broadcast(this);

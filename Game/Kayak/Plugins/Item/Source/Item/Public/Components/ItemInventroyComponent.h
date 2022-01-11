@@ -26,16 +26,8 @@ struct ITEM_API FItemInfo : public FFastArraySerializerItem
 	GENERATED_BODY()
 
 public:
-	
-	bool IsValid() const;
 
-
-public:
-	
-	//The item which contain item component
-	UPROPERTY()
-	TScriptInterface<IItemInterface> Item;
-
+	explicit operator bool() const { return IsValid(); }
 	friend bool operator==(const FItemInfo& LeftInfo, const FItemInfo& RightInfo)
 	{
 		return LeftInfo.Item == RightInfo.Item;
@@ -44,95 +36,17 @@ public:
 	{
 		return !(LeftInfo == RightInfo);
 	}
-};
 
+private:
+	
+	bool IsValid() const;
 
-template< typename ElementType, typename ContainerType >
-class FItemContainerIterator
-{
 public:
-
-	FItemContainerIterator(const ContainerType& InContainer, int32 StartIdx = 0)
-		: index(StartIdx)
-		, Current(nullptr)
-		, Container(const_cast<ContainerType&>(InContainer))
-	{
-		if (index >= 0)
-		{
-			UpdateCurrent();
-		}
-	}
-
-	~FItemContainerIterator()
-	{
-	}
-
-
-	void operator++()
-	{
-		Next();
-	}
-
-	ElementType& operator*() const
-	{
-		check(Current);
-		return *Current;
-	}
-
-	ElementType& operator->() const
-	{
-		check(Current);
-		return *Current;
-	}
-
-	explicit operator bool() const
-	{
-		return (Current != nullptr);
-	}
-
-	friend bool operator==(const FItemContainerIterator& Lhs, const FItemContainerIterator& Rhs)
-	{
-		return Lhs.Current == Rhs.Current;
-	}
-
-	friend bool operator!=(const FItemContainerIterator& Lhs, const FItemContainerIterator& Rhs)
-	{
-		return Lhs.Current != Rhs.Current;
-	}
-
-	typename TEnableIf<!TIsConst<ContainerType>::Value, void >::Type RemoveCurrent()
-	{
-		Container.Items.RemoveAt(index);
-		index--;
-		Next();
-	}
-
-private:
-
-	void Next()
-	{
-		index++;
-
-		UpdateCurrent();
-	}
-
-	void UpdateCurrent()
-	{
-		Current = &Container.Items[index];
-
-		// If the current element is pending remove, go to the next one.
-		if (!Current)
-		{
-			Next();
-		}
-	}
-
-private:
-	int32	index;
-	ElementType* Current;
-	ContainerType& Container;
+	
+	//The item which contain item component
+	UPROPERTY()
+	TScriptInterface<IItemInterface> Item;
 };
-
 
 /*
 * As this container is used for net work, the order of elements is not fixed.

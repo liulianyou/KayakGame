@@ -33,8 +33,8 @@ class UItemInventoryComponent;
 * The base class for all items used in our game
 * You can treat it as the data scope of the target item. 
 * It is only used to initialize the item and get some informations from item
-* One game instance should have one instance of this data
-* 
+* One game instance should have one instance of this data(which is not CDO)
+* This data should only exist on the server
 */
 UCLASS(Blueprintable, BlueprintType, Abstract, Within="ItemManager", Category = "Item|ItemData")
 class ITEM_API UItemDataBase : public UObject
@@ -114,9 +114,9 @@ class ITEM_API UItemRuntimeDataBase : public UObject
 {
 	GENERATED_UCLASS_BODY()
 
-public:
+	friend UItemComponentBase;
 
-	typedef void (*RegisterFunction)();
+public:
 
 	//Override UObject
 	virtual void BeginDestroy() override;
@@ -131,6 +131,8 @@ public:
 	virtual bool IsSupportedForNetworking() const { return true; }
 	virtual int32 GetFunctionCallspace(UFunction* Function, FFrame* Stack) override;
 	virtual bool CallRemoteFunction(UFunction* Function, void* Parms, struct FOutParmRec* OutParms, FFrame* Stack) override;
+	virtual void PreNetReceive() override;
+	virtual void PostNetReceive() override;
 	//Override UObject
 
 	//Replicate the sub objects in this item runtime data 
@@ -138,100 +140,13 @@ public:
 #pragma  endregion NetworkSupport
 
 public:
-	
+
 	/*
-	* Initialize this data by the item
+	* Initialize the attributes in this data
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
-	void OnInitialzie(UItemComponentBase* ItemComponent);
-	virtual void Initialize( UItemComponentBase* ItemComponent );
-
-	//Invoked when this item data will not be used by the item component
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
-	void OnFinialize();
-	virtual void Finialize();
-
-	/*
-	* Invoked when the new avatar owner of the owner item have been changed.
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
-	void OnAvatarOwnerChanged(UItemInventoryComponent* OldAvatarOwner, UItemInventoryComponent* NewAvatarOwner);
-	virtual void AvatarOwnerChanged(UItemInventoryComponent* OldAvatarOwner, UItemInventoryComponent* NewAvatarOwner);
-
-	/*
-	* Give the BP one chance to define how to active this item
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
-	void OnActivateItem();
-
-	/*
-	* Active the item so that the outer can use this item
-	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	virtual void ActivateItem();
-
-	/*
-	* Give the BP one chance to define how to Deactive this item
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
-	void OnDeactivateItem();
-
-	/*
-	* Deactive this item so that the outer can not use this item.
-	* If the outer want to use this item it should active it first and then use it
-	* If one item deactivated all things related to this item should be cleared
-	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	virtual void DeactivateItem();
-
-
-	/*
-	* Give the BP one chance to do define how to start use this item
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
-	void OnStartUse();
-
-	/*
-	* Start to use this item, before use this item you need to active it again
-	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	virtual void StartUse();
-
-	/*
-	* Give the BP one change to define how to stop to use this item
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
-	void OnStopUse();
-
-	/*
-	* stop to use this item.
-	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	virtual void StopUse();
-
-	/*
-	* Give the BP one change to define how to  abandon this item
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
-	void OnAbandoned(const FItemScopeChangeInfo& AbandonInfo);
-
-	/*
-	* Abandon this item.
-	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	virtual void Abandoned(const FItemScopeChangeInfo& AbandonInfo);
-
-	/*
-	* Give the BP one change to define how to gain this item
-	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
-	void OnGained(const FItemScopeChangeInfo& GainedInfo);
-
-	/*
-	* Defines how to gain this item
-	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	virtual void Gained(const FItemScopeChangeInfo& GainedInfo);
+	void OnInitialize(UItemDataBase* ItemData);
+	virtual void Initialize(UItemDataBase* ItemData);
 
 	//Check weather this item has been activated
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
@@ -242,22 +157,77 @@ public:
 	bool IsUsing() const;
 
 	/*
-	* When the item data in the target item have been changed then the runtime data will change synchronize
+	* Initialize this data by the item
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
-	void OnItemDataChangedInItemOwner(UItemComponentBase* Item, UItemDataBase* OldData, UItemDataBase* NewData);
+	void OnSetItemComponentOwner(UItemComponentBase* ItemComponent);
+	virtual void SetItemComponentOwner(UItemComponentBase* ItemComponent);
 
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	virtual void ItemDataChangedInItemOwner( UItemComponentBase* Item, UItemDataBase* OldData, UItemDataBase* NewData );
+	//Invoked when this item data will not be used by the item component
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
+	void OnFinialize();
+	virtual void Finialize();
 
 protected:
 
 	/*
-	* This is only used to initialize the data when the data is changed
+	* Invoked when the new avatar owner of the owner item have been changed.
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
-	void OnInitializeDataFromNewDataInternal(UItemDataBase* NewData);
-	virtual void InitializeFromNewDataInternal(UItemDataBase* NewData);
+	void OnAvatarOwnerChanged(UItemInventoryComponent* OldAvatarOwner, UItemInventoryComponent* NewAvatarOwner);
+	virtual void AvatarOwnerChanged(UItemInventoryComponent* OldAvatarOwner, UItemInventoryComponent* NewAvatarOwner);
+
+	/*
+	* Active the item so that the outer can use this item
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	void OnActivateItem();
+	virtual void ActivateItem();
+
+	/*
+	* Deactive this item so that the outer can not use this item.
+	* If the outer want to use this item it should active it first and then use it
+	* If one item deactivated all things related to this item should be cleared
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	void OnDeactivateItem();
+	virtual void DeactivateItem();
+
+	/*
+	* Start to use this item, before use this item you need to active it again
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	void OnStartUse();
+	virtual void StartUse();
+
+	/*
+	* stop to use this item.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	void OnStopUse();
+	virtual void StopUse();
+
+	/*
+	* Abandon this item.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	void OnAbandoned(const FItemScopeChangeInfo& AbandonInfo);
+	virtual void Abandoned(const FItemScopeChangeInfo& AbandonInfo);
+
+	/*
+	* Defines how to gain this item
+	*/
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
+	void OnGained(const FItemScopeChangeInfo& GainedInfo);
+	virtual void Gained(const FItemScopeChangeInfo& GainedInfo);
+
+
+	/*
+	* When the item data in the target item have been changed then the runtime data will change synchronize
+	*/
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
+	void OnItemDataChangedInItemOwner(UItemComponentBase* Item, UItemDataBase* OldData, UItemDataBase* NewData);
+	virtual void ItemDataChangedInItemOwner( UItemComponentBase* Item, UItemDataBase* OldData, UItemDataBase* NewData );
 
 public:
 
@@ -279,7 +249,6 @@ public:
 
 	UFUNCTION()
 	void OnRep_ItemOwner(UItemComponentBase* OldItemOnwer);
-
 
 #pragma  region GET_SET_IMPLEMATION
 public:
@@ -368,4 +337,8 @@ private:
 	*/
 	uint32 bNetAddressable : 1;
 
+	/*
+	* Flag to check weather this data has been initialized
+	*/
+	uint32 bHasBeenInitialized : 1;
 };

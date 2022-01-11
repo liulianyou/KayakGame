@@ -2,15 +2,203 @@
 #include "ItemManager.h"
 #include "ItemBlueprintLib.h"
 #include "Net/UnrealNetwork.h"
+#include "Engine/ActorChannel.h"
 #include "ItemDataBase.h"
 #include "ItemBlueprintLib.h"
 #include "ItemDefinition.h"
 #include "ItemGlobal.h"
 
+FRuntimeDataItem::FRuntimeDataItem()
+	:PendingRemoved(false)
+{
+	
+}
+
+FRuntimeDataItem::FRuntimeDataItem(UItemRuntimeDataBase* _RuntimeData, FRuntimeDataItem* _PreElement, FRuntimeDataItem* _NextElement)
+	: PendingRemoved(false),
+	RuntimeData(_RuntimeData),
+	PreElement(_PreElement),
+	NextElement(_NextElement)
+{
+	
+}
+
+~FRuntimeDataItem::FRuntimeDataItem()
+{
+	if (RuntimeData != null && RuntimeData->IsValidLowLevel())
+	{
+		RuntimeData->Finalize();
+		RuntimeData->MarkForPendingKill();
+	}
+}
+
+bool FRuntimeDataItem::IsValid() const
+{
+	if(RuntimeData == nullptr || !RuntimeData->IsValidLowLevel())
+		return false;
+
+	if(PendingRemoved)
+		return false;
+
+	return true;
+}
+
+void FRuntimeDataItem::PreReplicatedRemove(const struct FItemRuntimeDataContainer& InArray)
+{
+	PendingRemoved = true;
+}
+
+void FRuntimeDataItem::PostReplicatedAdd(const struct FItemRuntimeDataContainer& InArray)
+{
+	
+}
+
+void FRuntimeDataItem::PostReplicatedChange(const struct FItemRuntimeDataContainer& InArray)
+{
+	
+}
+
+FItemRuntimeDataContainer::FItemRuntimeDataContainer()
+	:FFastArraySerializer()
+{
+	Items.Empty();
+	SetDeltaSerializationEnabled(true);
+
+	EndPendingElementPtr = &HeadPendingElement;
+}
+
+void FItemRuntimeDataContainer::RegiseterComponentOwner(UItemComponentBase* ComponentOwner)
+{
+	ItemOwner = ComponentOwner;
+}
+
+
+bool FItemRuntimeDataContainer::IsValid()
+{
+	if(RuntimeData == nullptr)
+		return false;
+
+	return true;
+}
+
+void FItemRuntimeDataContainer::AddNewItem(UItemRuntimeDataBase* NewItem)
+{
+	if(NewItem == nullptr)
+		return;
+	
+	bool IsExist = true;
+
+	for (const FRuntimeDataItem& Item : this)
+	{
+		if (Item == NewItem)
+		{
+			Item.PendingRemoved = false;
+			IsExist = true;
+			break;
+		}
+	}
+
+	if (!IsExist)
+	{
+		//This is the first element try to added to array
+		if (EndPendingElementPtr == nullptr)
+		{
+			*EndPendingElementPtr = new FRuntimeDataItem(NewItem);
+		}
+		else
+		{
+			**EndPendingElementPtr = new FRuntimeDataItem(NewItem);
+		}
+
+		EndPendingElementPtr = &((*EndPendingElementPtr)->NextElement);
+	}
+}
+
+void FItemRuntimeDataContainer::RemoveItem(UItemRuntimeDataBase* OldItem)
+{
+	for (const FRuntimeDataItem& Item : this)
+	{
+		if (Item == OldItem)
+		{
+			//The actual remove action will be occurred at the DecrementLock
+			Item.PendingRemoved = true;
+			break;
+		}
+	}
+}
+
+int FItemRuntimeDataContainer::GetIndexOfItem(UItemRuntimeDataBase* RuntimeData)
+{
+	for (auto IT = CreateIterator(0, true); IT; ++IT)
+	{
+		if (IT->RuntimeData == RuntimeData)
+			return IT->GetIndex();
+	}
+}
+
+UItemRuntimeDataBase* GetItemByIndex(int Index)
+{
+	for (auto IT = CreateIterator(0, true); IT; ++IT)
+	{
+		if (IT.GetIndex() == Index)
+			return IT.GetValue();
+	}
+
+	return nullptr;
+}
+
+void FItemRuntimeDataContainer::GetItemCount() const
+{
+	int Count = Items.Num();
+
+	FRuntimeDataItem* Current = HeadPendingElement;
+	FRuntimeDataItem* Stop = *EndPendingElementPtr;
+
+	while (Current != Stop)
+	{
+		Count++;
+		Current = Current->NextElement;
+	}
+
+	return Count;
+}
+
+void FItemRuntimeDataContainer::IncrementLock()
+{
+	LockCount++;
+}
+
+void FItemRuntimeDataContainer::DecrementLock()
+{
+	if(--LockCount != 0)
+		return;
+	
+	int RemoveCount = 0;
+	bool ModifiedArray = false;
+
+	for (auto IT = CreateIterator(); IT; ++IT)
+	{
+		if (!(*IT))
+		{
+			IT.RemoveCurrent();
+
+			ModifiedArray = true;
+		}
+	}
+
+	//Reset the end element so that the add and remove  operation will occurs when the the elements has been changed
+	EndPendingElementPtr = &HeadPendingElement;
+
+	if (ModifiedArray)
+	{
+		MarkArrayDirty();
+	}
+}
+
 UItemComponentBase::UItemComponentBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
-
+	RuntimeDataContainer.RegiseterComponentOwner(this);
 }
 
 void UItemComponentBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -18,6 +206,46 @@ void UItemComponentBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UItemComponentBase, OwnerAvatar);
+	DOREPLIFETIME(UItemComponentBase, RuntimeDataContainer);
+}
+
+bool UItemComponentBase::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags)
+{
+	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
+
+	for (const FRuntimeDataItem& Item : RuntimeDataContainer)
+	{
+		WroteSomething |= Item.RuntimeData->ReplicateSubobjects(Channel, Bunch, RepFlags);
+
+		WroteSomething |= Channel->ReplicateSubobject(const_cast<UItemRuntimeDataBase*>(Item.RuntimeData), *Bunch, *RepFlags);
+	}
+
+	return WroteSomething;
+}
+
+void UItemComponentBase::PreNetReceive()
+{
+	Super::PreNetReceive();
+
+	RuntimeDataContainer.IncrementLock();
+}
+
+void UItemComponentBase::PostNetReceive()
+{
+	Super::PostNetReceive();
+
+	//Try to release the resources for the runtime data
+	RuntimeDataContainer.DecrementLock();
+}
+
+void UItemComponentBase::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	for (const FRuntimeDataItem& Item: RuntimeDataContainer)
+	{
+		Item.RuntimeData->BeginPlay();
+	}
 }
 
 void UItemComponentBase::BeginDestroy()
@@ -106,22 +334,35 @@ void UItemComponentBase::UnregisterComponent()
 	OnUnregisterComponent();
 }
 
-void UItemComponentBase::ActivateItem()
+int UItemComponentBase::FindRuntimeDataIndex(UItemRuntimeDataBase* RuntimeData)
 {
-	//RuntimeData->ActivateItem();
+	return RuntimeDataContainer.GetIndexOfItem(RuntimeData);
 }
 
-void UItemComponentBase::DeactivateItem()
+void UItemComponentBase::ActivateItem(int Index /*= INDEX_NONE*/)
 {
+	if (Index == INDEX_NONE)
+	{
+		
+	}
+}
+
+void UItemComponentBase::DeactivateItem(int Index /*= INDEX_NONE*/)
+{
+	if (Index == INDEX_NONE)
+	{
+
+	}
+
 	//RuntimeData->DeactivateItem();
 }
 
-void UItemComponentBase::StartUse()
+void UItemComponentBase::StartUse(int Index /*= INDEX_NONE*/)
 {
 	//RuntimeData->StartUse();
 }
 
-void UItemComponentBase::StopUse()
+void UItemComponentBase::StopUse(int Index/* = INDEX_NONE*/)
 {
 	//RuntimeData->StopUse();
 }
@@ -251,24 +492,12 @@ void UItemComponentBase::OnRep_OwnerAvatar(UItemInventoryComponent* OldAvatar)
 
 void UItemComponentBase::AddNewRuntimeData(UItemRuntimeDataBase* NewRuntimeData)
 {
-	//This runtime data have been added
-	if( GetItemRuntimeDatas().Find(NewRuntimeData) != INDEX_NONE)
-		return;
+	NewRuntimeData->SetItemComponentOwner(this);
 
-	RuntimeDatas.Add(NewRuntimeData);
-
-	NewRuntimeData->Initialize(this);
+	RuntimeDataContainer.AddNewItem(NewRuntimeData);
 }
 
-void UItemComponentBase::RemoveItemRuntimeData(UItemRuntimeDataBase* RuntimeDataClass)
+void UItemComponentBase::RemoveItemRuntimeData(UItemRuntimeDataBase* RuntimeData)
 {
-	for (auto IT = RuntimeDatas.CreateIterator(); IT; ++IT)
-	{
-		if (*IT == nullptr || *IT == RuntimeDataClass)
-		{
-			(*IT)->Finialize();
-			IT.RemoveCurrent();
-			continue;
-		}
-	}
+	RuntimeDataContainer.RemoveItem(RuntimeData);
 }

@@ -10,14 +10,149 @@
 #include "UObject/ObjectMacros.h"
 #include "Templates/SubclassOf.h"
 #include "Templates/SharedPointer.h"
+#include "Engine/EngineTypes.h"
 #include "ItemDefinition.h"
 #include "ItemInterface.h"
+#include "ItemContainerInterator.h"
 
 #include "ItemComponent.generated.h"
 
 class UItemDataBase;
 class UItemRuntimeDataBase;
 class UItemInventoryComponent;
+struct FItemRuntimeDataContainer;
+
+//The activation information for this task
+USTRUCT(BlueprintType)
+struct ITEM_API FRuntimeDataItem : public FFastArraySerializerItem
+{
+	GENERATED_BODY()
+
+	FRuntimeDataItem();
+	FRuntimeDataItem(UItemRuntimeDataBase* RuntimeData, FRuntimeDataItem* _PreElement = nullptr, FRuntimeDataItem* _NextElement = nullptr);
+	~FRuntimeDataItem();
+public:
+
+	void PreReplicatedRemove(const struct FItemRuntimeDataContainer& InArray);
+	void PostReplicatedAdd(const struct FItemRuntimeDataContainer& InArray);
+	void PostReplicatedChange(const struct FItemRuntimeDataContainer& InArray);
+
+public:
+
+	explicit operator bool() const { return IsValid(); }
+	friend bool operator==(FRuntimeDataItem Left, UItemRuntimeDataBase* RuntimeData)
+	{
+		return Left.RuntimeData == RuntimeData;
+	}
+private:
+
+	//Check weather this item is valid
+	bool IsValid() const;
+
+public:
+
+	//The runtime data
+	UPROPERTY()
+	UItemRuntimeDataBase* RuntimeData = nullptr;
+	
+public:
+	
+	//Flag to check weather this item will be removed at the next safe frame
+	bool PendingRemoved = false;
+
+	//The next element which behind it 
+	FRuntimeDataItem* NextElement = nullptr;
+	FRuntimeDataItem* PreElement = nullptr;
+};
+
+/*
+* As this container is used for net work, the order of elements is not fixed.
+* We can only use interaction to access the element
+*/
+USTRUCT()
+struct ITEM_API FItemRuntimeDataContainer : public FFastArraySerializer
+{
+	GENERATED_BODY()
+
+	INTERACTOR_DEFINITION(FRuntimeDataItem, FItemRuntimeDataContainer);
+
+public:
+
+	FItemRuntimeDataContainer();
+
+public:
+
+	void AddNewItem(UItemRuntimeDataBase* RuntimeData);
+	void RemoveItem(UItemRuntimeDataBase* RuntimeData);
+	int GetIndexOfItem(UItemRuntimeDataBase* RuntimeData);
+	UItemRuntimeDataBase* GetItemByIndex(int Index);
+
+	/*
+	* Get the total number of items include the item which is not valid
+	*/
+	int GetItemCount() const;
+
+	//Increment the lock count for the target attribute
+	void IncrementLock();
+	//Decrement the lock count if the lock count come into zero then I can release the resource safely
+	void DecrementLock();
+
+	void RegiseterComponentOwner( UItemComponentBase* ComponentOwner );
+
+public:
+	
+	FORCEINLINE void PreReplicatedRemove(const TArrayView<int32>& RemovedIndices, int32 FinalSize) { }
+	FORCEINLINE void PostReplicatedAdd(const TArrayView<int32>& AddedIndices, int32 FinalSize) { }
+	FORCEINLINE void PostReplicatedChange(const TArrayView<int32>& ChangedIndices, int32 FinalSize) { }
+
+	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
+	{
+		return FFastArraySerializer::FastArrayDeltaSerialize<FRuntimeDataItem, FItemRuntimeDataContainer>(Items, DeltaParms, *this);
+	}
+
+	template<typename Type, typename SerializerType>
+	bool ShouldWriteFastArrayItem(const Type& Item, const bool bIsWritingOnClient) const
+	{
+		return !bIsWritingOnClient || Item.ReplicationID != INDEX_NONE;
+	}
+
+public:
+
+	/*
+	* As sometime the item owner will do a lot item operation in one frame if I add them to it each time,
+	* This will do a lot remove and add operations
+	*/
+
+	//The first element which want to be added to this container in this container
+	FRuntimeDataItem* HeadPendingElement = nullptr;
+	//The last element which want to be added to this container 
+	FRuntimeDataItem** EndPendingElementPtr = nullptr;
+
+private:
+	
+	//All items that need to be replicated to clients
+	UPROPERTY()
+	TArray<FRuntimeDataItem> Items;
+
+private:
+	
+	//The owner of this container
+	UItemComponentBase* ItemOwner = nullptr;
+
+	/*
+	* Simulate the safe point to release all resource safely
+	*/
+	mutable int LockCount;
+};
+
+template<>
+struct TStructOpsTypeTraits< FItemRuntimeDataContainer > : public TStructOpsTypeTraitsBase2< FItemRuntimeDataContainer >
+{
+	enum
+	{
+		WithNetDeltaSerializer = true,
+	};
+};
 
 /*
 * The component which is used for item.
@@ -46,8 +181,13 @@ class ITEM_API UItemComponentBase : public UActorComponent
 public:
 	
 	//Override Object
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void BeginDestroy() override;
+	virtual void BeginPlay() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual bool ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags) override;
+	virtual void PreNetReceive() override;
+	virtual void PostNetReceive() override;
+
 	//Override Object
 
 	//Override ActorComponent
@@ -67,10 +207,16 @@ public:
 	virtual void Initialzie( TScriptInterface<IItemInterface> NewItemOwner );
 
 	/*
+	* Find the index for the target runtime data in this component
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	int FindRuntimeDataIndex(UItemRuntimeDataBase* RuntimeData);
+
+	/*
 	* Active the item so that the outer can use this item 
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void ActivateItem();
+	virtual void ActivateItem(int Index = INDEX_NONE);
 
 	/*
 	* Deactive this item so that the outer can not use this item.
@@ -78,19 +224,19 @@ public:
 	* If one item deactivated all things related to this item should be cleared
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void DeactivateItem();
+	virtual void DeactivateItem(int Index = INDEX_NONE);
 
 	/*
 	* Start to use this item, before use this item you need to active it again
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void StartUse();
+	virtual void StartUse(int Index = INDEX_NONE);
 
 	/*
 	* stop to use this item.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void StopUse();
+	virtual void StopUse(int Index = INDEX_NONE);
 
 	/*
 	* Abandon this item.
@@ -146,9 +292,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
 	const TArray<UItemDataBase*>& GetItemDatas() const { return ItemDatas; }
 
-	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	const TArray<UItemRuntimeDataBase*>& GetItemRuntimeDatas() const { return RuntimeDatas; };
-
 protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
@@ -172,7 +315,7 @@ private:
 	*
 	* @param RuntimeData the item runtime data that will be removed
 	*/
-	void RemoveItemRuntimeData(UItemRuntimeDataBase* RuntimeDataClass);
+	void RemoveItemRuntimeData(UItemRuntimeDataBase* RuntimeData);
 
 public:
 	
@@ -203,8 +346,8 @@ private:
 	/*
 	* The runtime data which is used for this item
 	*/
-	UPROPERTY(Transient)
-	TArray<UItemRuntimeDataBase*> RuntimeDatas;
+	UPROPERTY(Transient, Replicated)
+	FItemRuntimeDataContainer RuntimeDataContainer;
 	
 	/*
 	* Which avatar own this component, this value can be null, such as the player abandon this item on the ground.
