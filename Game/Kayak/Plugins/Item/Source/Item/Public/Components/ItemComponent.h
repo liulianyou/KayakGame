@@ -61,8 +61,8 @@ public:
 	bool PendingRemoved = false;
 
 	//The next element which behind it 
-	FRuntimeDataItem* NextElement = nullptr;
 	FRuntimeDataItem* PreElement = nullptr;
+	FRuntimeDataItem* NextElement = nullptr;
 };
 
 /*
@@ -74,18 +74,18 @@ struct ITEM_API FItemRuntimeDataContainer : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-	INTERACTOR_DEFINITION(FRuntimeDataItem, FItemRuntimeDataContainer);
-
 public:
 
 	FItemRuntimeDataContainer();
+
+	ITERATOR_DEFINITION(FRuntimeDataItem, FItemRuntimeDataContainer);
 
 public:
 
 	void AddNewItem(UItemRuntimeDataBase* RuntimeData);
 	void RemoveItem(UItemRuntimeDataBase* RuntimeData);
 	int GetIndexOfItem(UItemRuntimeDataBase* RuntimeData);
-	UItemRuntimeDataBase* GetItemByIndex(int Index);
+	UItemRuntimeDataBase* GetRuntimeDataByIndex(int Index);
 
 	/*
 	* Get the total number of items include the item which is not valid
@@ -216,7 +216,7 @@ public:
 	* Active the item so that the outer can use this item 
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void ActivateItem(int Index = INDEX_NONE);
+	virtual void ActivateItem(int Index);
 
 	/*
 	* Deactive this item so that the outer can not use this item.
@@ -224,19 +224,19 @@ public:
 	* If one item deactivated all things related to this item should be cleared
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void DeactivateItem(int Index = INDEX_NONE);
+	virtual void DeactivateItem(int Index);
 
 	/*
 	* Start to use this item, before use this item you need to active it again
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void StartUse(int Index = INDEX_NONE);
+	virtual void StartUse(int Index);
 
 	/*
 	* stop to use this item.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void StopUse(int Index = INDEX_NONE);
+	virtual void StopUse(int Index);
 
 	/*
 	* Abandon this item.
@@ -378,10 +378,10 @@ private:
 };
 	
 #define  ItemComponentFramework()\
-	virtual void ActivateItem() override;\
-	virtual void DeactivateItem() override; \
-	virtual void StartUse() override; \
-	virtual void StopUse() override; \
+	virtual void ActivateItem(int Index) override;\
+	virtual void DeactivateItem(int Index) override; \
+	virtual void StartUse(int Index) override; \
+	virtual void StopUse(int Index) override; \
 	virtual void Abandoned(const FItemScopeChangeInfo& AbandonInfo) override; \
 	virtual void Gained(const FItemScopeChangeInfo& GainedInfo) override;
 

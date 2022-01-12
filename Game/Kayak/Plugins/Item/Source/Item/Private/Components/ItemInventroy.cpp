@@ -5,7 +5,7 @@
 
 bool FItemInfo::IsValid() const
 {
-	return !!Item;
+	return !!Item && !PendingRemoved && Item->GetItemComponent() != nullptr;
 }
 
 int FItemContainer::AddNewItem(TScriptInterface<IItemInterface>)
@@ -16,6 +16,22 @@ int FItemContainer::AddNewItem(TScriptInterface<IItemInterface>)
 int FItemContainer::RemoveItem(TScriptInterface<IItemInterface>)
 {
 	return INDEX_NONE;
+}
+
+int FItemContainer::GetItemNum()
+{
+	return INDEX_NONE;
+}
+
+void FItemContainer::IncrementLock()
+{
+	LockCount++;
+}
+
+void FItemContainer::DecrementLock()
+{
+	if(--LockCount != 0)
+		return;
 }
 
 
@@ -43,9 +59,6 @@ void UItemInventoryComponent::OnUnregister()
 {
 	for (auto IT = ItemContainer.CreateIterator(); IT; ++IT)
 	{
-		if((*IT).IsValid() || (*IT).Item->GetItemComponent() == nullptr)
-			continue;
-	
 		(*IT).Item->GetItemComponent()->SetAvatarOwner(nullptr);
 	}
 
@@ -58,9 +71,6 @@ void UItemInventoryComponent::GetAllItems(TArray<TScriptInterface<IItemInterface
 
 	for (auto IT = ItemContainer.CreateConstIterator(); IT; ++IT)
 	{
-		if((*IT).IsValid())
-			continue;
-
 		OutItems.Add((*IT).Item);
 	}
 }
@@ -72,9 +82,6 @@ void UItemInventoryComponent::GetAllItemsWithClass(TSubclassOf<UItemRuntimeData>
 
 	for (auto IT = ItemContainer.CreateConstIterator(); IT; ++IT)
 	{
-		if ((*IT).IsValid())
-			continue;
-
 		UItemComponentBase* ItemComponent = (*IT).Item->GetItemComponent();
 
 		if(ItemComponent == nullptr)
@@ -139,107 +146,14 @@ int UItemInventoryComponent::RemoveItem(TScriptInterface<IItemInterface> Removed
 * As the item type will not be invalid if you set at common situation
 * the nullptr is user want to use it null
 */
-int UItemInventoryComponent::RemoveItemWithDataClass(TSubclassOf<UItemRuntimeData> ItemType, bool CheckExactClass /*= false*/, bool DestroyItem /*= false*/)
+int UItemInventoryComponent::RemoveItemWithDataClass(TSubclassOf<UItemDataBase> ItemType, bool CheckExactClass /*= false*/, bool DestroyItem /*= false*/)
 {
-	for (auto IT = ItemContainer.CreateIterator(); IT; ++IT)
-	{
-		if ((*IT).IsValid())
-		{
-			IT.RemoveCurrent();
-
-			continue;
-		}
-
-		if ((*IT).Item->GetItemComponent() == nullptr)
-		{
-			UE_LOG(LogItem, Warning, TEXT(" The target item:%s must have one item component "), *(*IT).Item.GetObject()->GetClass()->GetName());
-
-			IT.RemoveCurrent();
-
-			continue;
-		}
-
-		if ((*IT).Item->GetItemComponent()->GetItemRuntimeDatas().Num() == 0)
-		{
-			UE_LOG(LogItem, Warning, TEXT(" The target item:%s must have one runtime data!! "), *(*IT).Item.GetObject()->GetPathName());
-
-			IT.RemoveCurrent();
-
-			continue;
-		}
-
-		for (int i = 0; i < (*IT).Item->GetItemComponent()->GetItemRuntimeDatas().Num(); i++)
-		{
-			UItemRuntimeDataBase* ItemRuntimeData = (*IT).Item->GetItemComponent()->GetItemRuntimeDatas()[i];
-
-			if (ItemRuntimeData == nullptr)
-			{
-				continue;
-			}
-
-			bool IsMatchedItem = false;
-
-			if (ItemType == nullptr)
-			{
-				IsMatchedItem = true;
-			}
-			else
-			{
-				if (CheckExactClass)
-				{
-					if (ItemRuntimeData->GetClass() == ItemType)
-					{
-						IsMatchedItem = true;
-					}
-				}
-				else if (ItemRuntimeData->GetClass()->IsChildOf(ItemType))
-				{
-					IsMatchedItem = true;
-				}
-			}
-
-			if (IsMatchedItem)
-			{
-				IT.RemoveCurrent();
-			}
-		}
-	}
-
-	return ItemContainer.GetItemNum();
+	return INDEX_NONE;
 }
 
 
 int UItemInventoryComponent::RemoveItemWithItemClass(TSubclassOf<UObject> ItemType, bool CheckExactClass /*= false*/, bool DestroyItem /*= false*/)
 {
-	for (auto IT = ItemContainer.CreateIterator(); IT; ++IT)
-	{
-		if ((*IT).IsValid())
-		{
-			IT.RemoveCurrent();
-
-			continue;
-		}
-
-		bool IsMatchedItem = false;
-
-		if (CheckExactClass)
-		{
-			if ((*IT).Item->GetItemComponent()->GetClass() == ItemType)
-			{
-				IsMatchedItem = true;
-			}
-		}
-		else if ((*IT).Item.GetObject()->GetClass()->IsChildOf(ItemType))
-		{
-			IsMatchedItem = true;
-		}
-
-		if (IsMatchedItem)
-		{
-			IT.RemoveCurrent();
-		}
-	}
-
-	return ItemContainer.GetItemNum();
+	return INDEX_NONE;
 }
 

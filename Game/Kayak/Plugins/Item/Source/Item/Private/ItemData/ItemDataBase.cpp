@@ -61,7 +61,7 @@ void UItemDataBase::RemoveReferencedComponent(UItemComponentBase* ItemComponent)
 	{
 		if (IT.Key() == ItemComponent)
 		{
-			IT.Value().PendingRemoved = true;
+			ItemComponent->RemoveItemRuntimeData(IT.Value());
 
 			OnRemoveReferencedComponent(ItemComponent);
 
@@ -330,14 +330,6 @@ void UItemRuntimeDataBase::OnRep_ItemOwner(UItemComponentBase* OldItemOnwer)
 		return;
 
 	SetItemComponentOwner(ItemOwner);
-}
-
-void UItemRuntimeDataBase::SetNewItemOwner_Implementation(UItemComponentBase* ItemComponent)
-{
-	if(ItemOwner == ItemComponent)
-		return;
-	
-	ItemOwner = ItemComponent;
 }
 
 void UItemRuntimeDataBase::ToggleItemStateChanged(EItemState NewItemState)

@@ -124,6 +124,10 @@ public:
 	//The original location before this scope changed
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FLocationInfo SourceLocationInfo;
+
+	//The index of runtime data which will be applied this action
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	int RuntimeDataIndex;
 };
 
 /*

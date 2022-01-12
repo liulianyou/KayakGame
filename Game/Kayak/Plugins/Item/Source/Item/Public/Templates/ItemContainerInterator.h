@@ -9,23 +9,21 @@ class FItemContainerIterator
 {
 public:
 
-	FItemContainerIterator(const ContainerType& _InContainer, int32 _StartIdx = 0, bool _SkipInvalidElement = true)
+	FItemContainerIterator(const ContainerType& _InContainer, int32 _StartIdx = 0, bool _SkipInvalidElement = true, bool _SearchInPendingList = false)
 		: index(_StartIdx)
 		, Current(nullptr)
 		, Container(const_cast<ContainerType&>(_InContainer))
 		, SkipInvalidElement(_SkipInvalidElement)
+		, SearchInPendingList(_SearchInPendingList)
 	{
-		Container->IncrementLock();
+		Container.IncrementLock();
 
-		if (index >= 0)
-		{
-			UpdateCurrent();
-		}
+		UpdateCurrent();
 	}
 
 	~FItemContainerIterator()
 	{
-		Container->DecrementLock();
+		Container.DecrementLock();
 	}
 
 
@@ -86,11 +84,12 @@ public:
 
 	int GetIndex() const { return index; }
 	ElementType* GetValue() const { return Current; }
+
 private:
 
 	FORCEINLINE ElementType* AdvancePending(ElementType** Next)
 	{
-		return (Next != const_cast<ElementType**>(EndPendingElementPtr)) ? *Next : nullptr;
+		return (Next != const_cast<ElementType**>(Container.EndPendingElementPtr)) ? *Next : nullptr;
 	}
 
 	void Next()
@@ -135,25 +134,22 @@ private:
 	int32	index;
 	ElementType* Current;
 	ContainerType& Container;
-	bool SearchInPendingList = false;
-	//Weather to skip the invalid element in the target container when interat the container
+	//Weather to skip the invalid element in the target container when use this iterator to access all elements
 	bool SkipInvalidElement;
+	//Flag to check weather this iterator try to access items in the pending list
+	bool SearchInPendingList = false;
 };
 
-#define  INTERACTOR_DEFINITION( ItemClass, CotanierClass )\
+#define  ITERATOR_DEFINITION( ItemClass, CotanierClass )\
 public:\
-	friend class FItemContainerIterator<const FRuntimeDataItem, FItemRuntimeDataContainer>;\
-	friend class FItemContainerIterator<FRuntimeDataItem, FItemRuntimeDataContainer>;\
-	\
-	typedef FItemContainerIterator<const FRuntimeDataItem, FItemRuntimeDataContainer> ConstIterator;\
-	typedef FItemContainerIterator<FRuntimeDataItem, FItemRuntimeDataContainer> Iterator;\
-	\
-	FORCEINLINE ConstIterator CreateConstIterator( int StartIndex = 0, bool SkipInvalidElement = false; ) const { return ConstIterator(*this, StartIndex, SkipInvalidElement); }\
-	FORCEINLINE Iterator CreateIterator(int StartIndex = 0, bool SkipInvalidElement = false;) { return Iterator(*this, StartIndex, SkipInvalidElement); }\
-	\
-	FORCEINLINE friend Iterator begin(FItemRuntimeDataContainer* Container) { return Container->CreateIterator(); }\
-	FORCEINLINE friend Iterator end(FItemRuntimeDataContainer* Container) { return Iterator(*Container, -1); }\
-	\
-	FORCEINLINE friend ConstIterator begin(const FItemRuntimeDataContainer* Container) { return Container->CreateConstIterator(); }\
-	FORCEINLINE friend ConstIterator end(const FItemRuntimeDataContainer* Container) { return ConstIterator(*Container, -1); }\
+	friend class FItemContainerIterator<const ItemClass, CotanierClass>;\
+	friend class FItemContainerIterator<ItemClass, CotanierClass>;\
+	typedef FItemContainerIterator<const ItemClass, CotanierClass> ConstIterator;\
+	typedef FItemContainerIterator<ItemClass, CotanierClass> Iterator;\
+	FORCEINLINE ConstIterator CreateConstIterator( int StartIndex = 0, bool SkipInvalidElement = false) const { return ConstIterator(*this, StartIndex, SkipInvalidElement); }\
+	FORCEINLINE Iterator CreateIterator(int StartIndex = 0, bool SkipInvalidElement = false) { return Iterator(*this, StartIndex, SkipInvalidElement); }\
+	FORCEINLINE friend Iterator begin(CotanierClass* Container) { return Container->CreateIterator(); }\
+	FORCEINLINE friend Iterator end(CotanierClass* Container) { return Iterator(*Container, -1); }\
+	FORCEINLINE friend ConstIterator begin(const CotanierClass* Container) { return Container->CreateConstIterator(); }\
+	FORCEINLINE friend ConstIterator end(const CotanierClass* Container) { return ConstIterator(*Container, -1); }
 

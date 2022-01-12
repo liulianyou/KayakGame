@@ -9,26 +9,29 @@
 #include "ItemGlobal.h"
 
 FRuntimeDataItem::FRuntimeDataItem()
-	:PendingRemoved(false)
+	: RuntimeData(nullptr)
+	, PendingRemoved(false)
+	, PreElement(nullptr)
+	, NextElement(nullptr)
 {
 	
 }
 
 FRuntimeDataItem::FRuntimeDataItem(UItemRuntimeDataBase* _RuntimeData, FRuntimeDataItem* _PreElement, FRuntimeDataItem* _NextElement)
-	: PendingRemoved(false),
-	RuntimeData(_RuntimeData),
-	PreElement(_PreElement),
-	NextElement(_NextElement)
+	: RuntimeData(_RuntimeData)
+	, PendingRemoved(false)
+	, PreElement(_PreElement)
+	, NextElement(_NextElement)
 {
 	
 }
 
-~FRuntimeDataItem::FRuntimeDataItem()
+FRuntimeDataItem::~FRuntimeDataItem()
 {
-	if (RuntimeData != null && RuntimeData->IsValidLowLevel())
+	if (RuntimeData != nullptr && RuntimeData->IsValidLowLevel())
 	{
-		RuntimeData->Finalize();
-		RuntimeData->MarkForPendingKill();
+		RuntimeData->Finialize();
+		RuntimeData->MarkPendingKill();
 	}
 }
 
@@ -72,15 +75,6 @@ void FItemRuntimeDataContainer::RegiseterComponentOwner(UItemComponentBase* Comp
 	ItemOwner = ComponentOwner;
 }
 
-
-bool FItemRuntimeDataContainer::IsValid()
-{
-	if(RuntimeData == nullptr)
-		return false;
-
-	return true;
-}
-
 void FItemRuntimeDataContainer::AddNewItem(UItemRuntimeDataBase* NewItem)
 {
 	if(NewItem == nullptr)
@@ -88,11 +82,11 @@ void FItemRuntimeDataContainer::AddNewItem(UItemRuntimeDataBase* NewItem)
 	
 	bool IsExist = true;
 
-	for (const FRuntimeDataItem& Item : this)
+	for (auto IT = CreateIterator(); IT; ++IT)
 	{
-		if (Item == NewItem)
+		if ((*IT).RuntimeData == NewItem)
 		{
-			Item.PendingRemoved = false;
+			(*IT).PendingRemoved = false;
 			IsExist = true;
 			break;
 		}
@@ -107,7 +101,7 @@ void FItemRuntimeDataContainer::AddNewItem(UItemRuntimeDataBase* NewItem)
 		}
 		else
 		{
-			**EndPendingElementPtr = new FRuntimeDataItem(NewItem);
+			**EndPendingElementPtr = FRuntimeDataItem(NewItem);
 		}
 
 		EndPendingElementPtr = &((*EndPendingElementPtr)->NextElement);
@@ -116,12 +110,12 @@ void FItemRuntimeDataContainer::AddNewItem(UItemRuntimeDataBase* NewItem)
 
 void FItemRuntimeDataContainer::RemoveItem(UItemRuntimeDataBase* OldItem)
 {
-	for (const FRuntimeDataItem& Item : this)
+	for (auto IT = CreateIterator(); IT; ++IT)
 	{
-		if (Item == OldItem)
+		if ((*IT).RuntimeData == OldItem)
 		{
 			//The actual remove action will be occurred at the DecrementLock
-			Item.PendingRemoved = true;
+			(*IT).PendingRemoved = true;
 			break;
 		}
 	}
@@ -131,23 +125,25 @@ int FItemRuntimeDataContainer::GetIndexOfItem(UItemRuntimeDataBase* RuntimeData)
 {
 	for (auto IT = CreateIterator(0, true); IT; ++IT)
 	{
-		if (IT->RuntimeData == RuntimeData)
-			return IT->GetIndex();
+		if ((*IT).RuntimeData == RuntimeData)
+			return IT.GetIndex();
 	}
+
+	return INDEX_NONE;
 }
 
-UItemRuntimeDataBase* GetItemByIndex(int Index)
+UItemRuntimeDataBase* FItemRuntimeDataContainer::GetRuntimeDataByIndex(int Index)
 {
 	for (auto IT = CreateIterator(0, true); IT; ++IT)
 	{
 		if (IT.GetIndex() == Index)
-			return IT.GetValue();
+			return IT.GetValue()->RuntimeData;
 	}
 
 	return nullptr;
 }
 
-void FItemRuntimeDataContainer::GetItemCount() const
+int FItemRuntimeDataContainer::GetItemCount() const
 {
 	int Count = Items.Num();
 
@@ -213,11 +209,11 @@ bool UItemComponentBase::ReplicateSubobjects(class UActorChannel* Channel, class
 {
 	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
 
-	for (const FRuntimeDataItem& Item : RuntimeDataContainer)
+	for (auto IT = RuntimeDataContainer.CreateIterator(); IT; ++IT)
 	{
-		WroteSomething |= Item.RuntimeData->ReplicateSubobjects(Channel, Bunch, RepFlags);
+		WroteSomething |= (*IT).RuntimeData->ReplicateSubobjects(Channel, Bunch, RepFlags);
 
-		WroteSomething |= Channel->ReplicateSubobject(const_cast<UItemRuntimeDataBase*>(Item.RuntimeData), *Bunch, *RepFlags);
+		WroteSomething |= Channel->ReplicateSubobject(const_cast<UItemRuntimeDataBase*>((*IT).RuntimeData), *Bunch, *RepFlags);
 	}
 
 	return WroteSomething;
@@ -242,9 +238,9 @@ void UItemComponentBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	for (const FRuntimeDataItem& Item: RuntimeDataContainer)
+	for (auto IT = RuntimeDataContainer.CreateIterator(); IT; ++IT)
 	{
-		Item.RuntimeData->BeginPlay();
+		(*IT).RuntimeData->BeginPlay();
 	}
 }
 
@@ -341,40 +337,62 @@ int UItemComponentBase::FindRuntimeDataIndex(UItemRuntimeDataBase* RuntimeData)
 
 void UItemComponentBase::ActivateItem(int Index /*= INDEX_NONE*/)
 {
-	if (Index == INDEX_NONE)
+	UItemRuntimeDataBase* RuntimeData = RuntimeDataContainer.GetRuntimeDataByIndex(Index);
+
+	if (RuntimeData != nullptr)
 	{
-		
+		RuntimeData->ActivateItem();
 	}
 }
 
 void UItemComponentBase::DeactivateItem(int Index /*= INDEX_NONE*/)
 {
-	if (Index == INDEX_NONE)
+	UItemRuntimeDataBase* RuntimeData = RuntimeDataContainer.GetRuntimeDataByIndex(Index);
+
+	if (RuntimeData != nullptr)
 	{
-
+		RuntimeData->DeactivateItem();
 	}
-
-	//RuntimeData->DeactivateItem();
 }
 
 void UItemComponentBase::StartUse(int Index /*= INDEX_NONE*/)
 {
-	//RuntimeData->StartUse();
+	UItemRuntimeDataBase* RuntimeData = RuntimeDataContainer.GetRuntimeDataByIndex(Index);
+
+	if (RuntimeData != nullptr)
+	{
+		RuntimeData->StartUse();
+	}
 }
 
 void UItemComponentBase::StopUse(int Index/* = INDEX_NONE*/)
 {
-	//RuntimeData->StopUse();
+	UItemRuntimeDataBase* RuntimeData = RuntimeDataContainer.GetRuntimeDataByIndex(Index);
+
+	if (RuntimeData != nullptr)
+	{
+		RuntimeData->StopUse();
+	}
 }
 
 void UItemComponentBase::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
 {
-	//RuntimeData->Abandoned(AbandonInfo);
+	UItemRuntimeDataBase* RuntimeData = RuntimeDataContainer.GetRuntimeDataByIndex(AbandonInfo.RuntimeDataIndex);
+
+	if (RuntimeData != nullptr)
+	{
+		RuntimeData->Abandoned(AbandonInfo);
+	}
 }
 
 void UItemComponentBase::Gained(const FItemScopeChangeInfo& GainedInfo)
 {
-	//RuntimeData->Gained(GainedInfo);
+	UItemRuntimeDataBase* RuntimeData = RuntimeDataContainer.GetRuntimeDataByIndex(GainedInfo.RuntimeDataIndex);
+
+	if (RuntimeData != nullptr)
+	{
+		RuntimeData->Gained(GainedInfo);
+	}
 }
 
 TScriptInterface<IItemInterface> UItemComponentBase::GetItemOwner() const
@@ -447,12 +465,11 @@ void UItemComponentBase::SetAvatarOwner(UItemInventoryComponent* NewAvatar)
 
 	OwnerAvatar = NewAvatar;
 
-	for (int i = 0; i < RuntimeDatas.Num(); i++)
-	{
-		if (RuntimeDatas[i] == nullptr)
-			continue;
+	int RuntimeNum = RuntimeDataContainer.GetItemCount();
 
-		RuntimeDatas[i]->AvatarOwnerChanged(OldAvatarOnwer, NewAvatar);
+	for (auto IT = RuntimeDataContainer.CreateIterator(0, true); IT; ++IT)
+	{
+		(*IT).RuntimeData->AvatarOwnerChanged(OldAvatarOnwer, NewAvatar);
 	}
 
 	AvatarOwnerChanged.Broadcast(this, OldAvatarOnwer, NewAvatar);

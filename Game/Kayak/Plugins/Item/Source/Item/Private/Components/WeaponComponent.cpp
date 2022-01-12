@@ -16,24 +16,24 @@ void UWeaponComponent::UnregisterComponent()
 	Super::UnregisterComponent();
 }
 
-void UWeaponComponent::ActivateItem()
+void UWeaponComponent::ActivateItem(int Index)
 {
-	Super::ActivateItem();
+	Super::ActivateItem(Index);
 }
 
-void UWeaponComponent::DeactivateItem()
+void UWeaponComponent::DeactivateItem(int Index)
 {
-	Super::DeactivateItem();
+	Super::DeactivateItem(Index);
 }
 
-void UWeaponComponent::StartUse()
+void UWeaponComponent::StartUse(int Index)
 {
-	Super::StartUse();
+	Super::StartUse(Index);
 }
 
-void UWeaponComponent::StopUse()
+void UWeaponComponent::StopUse(int Index)
 {
-	Super::StopUse();
+	Super::StopUse(Index);
 }
 
 void UWeaponComponent::Abandoned(const FItemScopeChangeInfo& AbandonInfo)

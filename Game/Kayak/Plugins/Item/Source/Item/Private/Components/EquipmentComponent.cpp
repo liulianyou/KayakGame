@@ -27,24 +27,24 @@ bool UEquipmentComponent::TryToUnequip_Implementation()
 }
 
 
-void UEquipmentComponent::ActivateItem()
+void UEquipmentComponent::ActivateItem(int Index)
 {
-	Super::ActivateItem();
+	Super::ActivateItem(Index);
 }
 
-void UEquipmentComponent::DeactivateItem()
+void UEquipmentComponent::DeactivateItem(int Index)
 {
-	Super::DeactivateItem();
+	Super::DeactivateItem(Index);
 }
 
-void UEquipmentComponent::StartUse()
+void UEquipmentComponent::StartUse(int Index)
 {
-	Super::StartUse();
+	Super::StartUse(Index);
 }
 
-void UEquipmentComponent::StopUse()
+void UEquipmentComponent::StopUse(int Index)
 {
-	Super::StopUse();
+	Super::StopUse(Index);
 }
 
 void UEquipmentComponent::Abandoned(const FItemScopeChangeInfo& AbandonInfo)

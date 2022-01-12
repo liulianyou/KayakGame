@@ -180,7 +180,7 @@ protected:
 	/*
 	* Active the item so that the outer can use this item
 	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
 	void OnActivateItem();
 	virtual void ActivateItem();
 
@@ -189,28 +189,28 @@ protected:
 	* If the outer want to use this item it should active it first and then use it
 	* If one item deactivated all things related to this item should be cleared
 	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
 	void OnDeactivateItem();
 	virtual void DeactivateItem();
 
 	/*
 	* Start to use this item, before use this item you need to active it again
 	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
 	void OnStartUse();
 	virtual void StartUse();
 
 	/*
 	* stop to use this item.
 	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
 	void OnStopUse();
 	virtual void StopUse();
 
 	/*
 	* Abandon this item.
 	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
 	void OnAbandoned(const FItemScopeChangeInfo& AbandonInfo);
 	virtual void Abandoned(const FItemScopeChangeInfo& AbandonInfo);
 
@@ -252,12 +252,6 @@ public:
 
 #pragma  region GET_SET_IMPLEMATION
 public:
-
-	/*
-	* Set new item owner to this runtime data
-	*/
-	UFUNCTION(BlueprintNativeEvent)
-	void SetNewItemOwner(UItemComponentBase* ItemComponent);
 
 	/*
 	* Get the item owner of this runtime data

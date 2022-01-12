@@ -46,6 +46,15 @@ public:
 	//The item which contain item component
 	UPROPERTY()
 	TScriptInterface<IItemInterface> Item;
+
+public:
+
+	//Flag to check weather this item will be removed at the next safe frame
+	bool PendingRemoved = false;
+
+	//Double direction list
+	FItemInfo* PreElement = nullptr;
+	FItemInfo* NextElement = nullptr;
 };
 
 /*
@@ -57,13 +66,20 @@ struct ITEM_API FItemContainer : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
+	ITERATOR_DEFINITION(FItemInfo, FItemContainer);
+
 public:
 
 	int AddNewItem(TScriptInterface<IItemInterface>);
 	int RemoveItem(TScriptInterface<IItemInterface>);
-	int GetItemNum() { return Items.Num(); }
+	int GetItemNum();
 
 public:
+
+	//Increment the lock count for the target attribute
+	void IncrementLock();
+	//Decrement the lock count if the lock count come into zero then I can release the resource safely
+	void DecrementLock();
 
 	//Used to serialize this container for net replication
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
@@ -76,26 +92,19 @@ private:
 	UPROPERTY()
 	TArray<FItemInfo> Items;
 
-
 public:
 
-	friend class FItemContainerIterator<const FItemInfo, FItemContainer>;
-	friend class FItemContainerIterator<FItemInfo, FItemContainer>;
+	//The first element which want to be added to this container in this container
+	FItemInfo* HeadPendingElement = nullptr;
+	//The last element which want to be added to this container 
+	FItemInfo** EndPendingElementPtr = nullptr;
 
-	typedef FItemContainerIterator<const FItemInfo, FItemContainer> ConstIterator;
-	typedef FItemContainerIterator<FItemInfo, FItemContainer> Iterator;
-
-	FORCEINLINE ConstIterator CreateConstIterator() const { return ConstIterator(*this); }
-	FORCEINLINE Iterator CreateIterator() { return Iterator(*this); }
-
+private:
 	/*
-	* Make the outer can use for(auto IT : FItemContainer)
+	* Simulate the safe point to release all resource safely
 	*/
-	FORCEINLINE friend Iterator begin(FItemContainer* Container) { return Container->CreateIterator(); }
-	FORCEINLINE friend Iterator end(FItemContainer* Container) { return Iterator(*Container, -1); }
+	mutable int LockCount;
 
-	FORCEINLINE friend ConstIterator begin(const FItemContainer* Container) { return Container->CreateConstIterator(); }
-	FORCEINLINE friend ConstIterator end(const FItemContainer* Container) { return ConstIterator(*Container, -1); }
 };
 
 template<>
@@ -174,7 +183,7 @@ public:
 	* #return the remain counts of items
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemInventory")
-	int RemoveItemWithDataClass(TSubclassOf<UItemRuntimeData> ItemType, bool CheckExactClass = false, bool DestroyItem = false);
+	int RemoveItemWithDataClass(TSubclassOf<UItemDataBase> ItemType, bool CheckExactClass = false, bool DestroyItem = false);
 
 	/*
 	* Remove all items with the specific type
