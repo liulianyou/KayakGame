@@ -69,7 +69,7 @@ public:
 * As this container is used for net work, the order of elements is not fixed.
 * We can only use interaction to access the element
 */
-USTRUCT()
+USTRUCT(BlueprintType)
 struct ITEM_API FItemRuntimeDataContainer : public FFastArraySerializer
 {
 	GENERATED_BODY()
@@ -289,8 +289,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
 	void RemoveItemData(UItemDataBase* ItemData);
 
+	//Get the container of the runtime data
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	const TArray<UItemDataBase*>& GetItemDatas() const { return ItemDatas; }
+	const FItemRuntimeDataContainer& GetItemRuntimeDataContainer() const { return RuntimeDataContainer; }
 
 protected:
 
@@ -369,12 +370,7 @@ private:
 
 private:
 
-	/*
-	* The instance data which will be used by this component.
-	* This data is the base data of runtime data.
-	* If some value is changed all component referenced by this data will change synchronize
-	*/
-	TArray<UItemDataBase*> ItemDatas;
+
 };
 	
 #define  ItemComponentFramework()\

@@ -15,9 +15,14 @@ bool UItemDataBase::IsValidItemData() const
 	return !(IsPendingKill() || RuntimdDataClass == nullptr);
 }
 
-void UItemDataBase::InitializeInternal()
+void UItemDataBase::Initialize()
 {
-	
+	OnInitialize();
+}
+
+void UItemDataBase::Finialize()
+{
+	OnFinialize();
 }
 
 void UItemDataBase::BeginDestroy()
@@ -197,6 +202,8 @@ void UItemRuntimeDataBase::Initialize(UItemDataBase* ItemData)
 		return;
 
 	OnInitialize(ItemData);
+
+	ReferencedItemData = ItemData;
 
 	bHasBeenInitialized = true;
 }

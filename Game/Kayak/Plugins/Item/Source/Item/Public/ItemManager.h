@@ -38,7 +38,7 @@ public:
 	* Create new data used for item system
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Item")
-	UItemDataBase* CreateNewItemData(TSubclassOf<UItemDataBase> ItemDataClass);
+	UItemDataBase* FindOrCreateNewItemData(TSubclassOf<UItemDataBase> ItemDataClass);
 
 	/*
 	* Remove all the data with the target class
@@ -57,17 +57,16 @@ public:
 	void RemoveItemDataByInstance(UItemDataBase* ItemData);
 
 	/*
-	* Create new Item which will use target class of item data
+	* Create new Item according to the item class
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Item")
-	TScriptInterface<IItemInterface> CreateNewItem(TSubclassOf<UItemDataBase> ItemDataClass);
+	TScriptInterface<IItemInterface> CreateNewItem(TSubclassOf<UObject> ItemClass);
 
 	/*
 	* Register the item to item system
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Item")
 	void RegisterItem(TScriptInterface<IItemInterface> NewItem );
-
 
 	/*
 	* unregister the item from item system
@@ -90,5 +89,5 @@ public:
 private:
 	
 	//All data which is used in our game
-	TMap<UItemDataBase*, TArray<TScriptInterface<IItemInterface>>> ItemMap;
+	TArray<UItemDataBase*> ItemDatas;
 };

@@ -247,8 +247,6 @@ void UItemComponentBase::BeginPlay()
 void UItemComponentBase::BeginDestroy()
 {
 	Super::BeginDestroy();
-
-	UnregisterComponent();
 }
 
 void UItemComponentBase::Initialzie(UObject* NewItemOnwer)
@@ -299,14 +297,6 @@ void UItemComponentBase::RegisterComponent()
 		ItemManager->RegisterItem(GetItemOwner());
 	}
 
-	for (int i = 0; i < ItemDatas.Num(); i++)
-	{
-		if (ItemDatas[i] == nullptr)
-			continue;
-
-		ItemDatas[i]->AddReferencedComponent(this);
-	}
-
 	OnRegisterComponent();
 }
 
@@ -317,14 +307,6 @@ void UItemComponentBase::UnregisterComponent()
 	if (ItemManager != nullptr)
 	{
 		ItemManager->UnregisterItem(GetItemOwner());
-	}
-
-	for (int i = 0; i < ItemDatas.Num(); i++)
-	{
-		if(ItemDatas[i] == nullptr)
-			continue;
-
-		ItemDatas[i]->RemoveReferencedComponent(this);
 	}
 
 	OnUnregisterComponent();
@@ -486,7 +468,7 @@ void UItemComponentBase::SetAvatarOwner(UItemInventoryComponent* NewAvatar)
 
 void UItemComponentBase::AddNewItemData(UItemDataBase* NewData)
 {
-	if(NewData == nullptr || !NewData->IsValidItemData() ||  GetItemDatas().Find(NewData) != INDEX_NONE)
+	if(NewData == nullptr || !NewData->IsValidItemData())
 		return;
 
 	NewData->AddReferencedComponent(this);

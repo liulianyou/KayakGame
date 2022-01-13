@@ -375,19 +375,18 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 		return true;
 	}
 
-	FGameplayAbilitySpecHandle* ResultHandle = AbilityMap.Find(TargetActor);
-
+	FGameplayAbilitySpecHandle* AbilitySpaceHandlePtr = AbilityMap.Find(TargetActor);
 	FGameplayAbilitySpec* AS = nullptr;
 
 	bool NeedToGiveNewAbility = false;
 
-	if (ResultHandle == nullptr)
+	if (AbilitySpaceHandlePtr == nullptr)
 	{
 		NeedToGiveNewAbility = true;
 	}
 	else
 	{
-		AS = AbilitysSystem->FindAbilitySpecFromHandle(*ResultHandle);
+		AS = AbilitysSystem->FindAbilitySpecFromHandle(*AbilitySpaceHandlePtr);
 
 		if (AS == nullptr)
 		{
@@ -397,11 +396,10 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 
 	if (NeedToGiveNewAbility)
 	{
-		FGameplayAbilitySpecHandle Handle;
-		Handle = AbilitysSystem->GiveAbility(FGameplayAbilitySpec(GamePlayAbilityClass));
-		ResultHandle = &Handle;
 
-		AS = AbilitysSystem->FindAbilitySpecFromHandle(*ResultHandle);
+		AbilitySpaceHandlePtr = new FGameplayAbilitySpecHandle(AbilitysSystem->GiveAbility(FGameplayAbilitySpec(GamePlayAbilityClass)));
+
+		AS = AbilitysSystem->FindAbilitySpecFromHandle(*AbilitySpaceHandlePtr);
 	}
 	
 	if(AS == nullptr)
@@ -437,13 +435,19 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 	}
 
 	//Add the new ability map
-	AbilityMap.Add(TargetActor, *ResultHandle);
+	AbilityMap.Add(TargetActor, *AbilitySpaceHandlePtr);
 
-	if (!AbilitysSystem->TryActivateAbility(*ResultHandle, true))
+	if (!AbilitysSystem->TryActivateAbility(*AbilitySpaceHandlePtr, true))
 	{
 		// TODO: Failed to try activate ability, maybe the interaction should end by itself.
 		TArray<UObject*> Causers = { TargetActor };
-		AbilityTryToEndInteraction(*ResultHandle, Causers, EInteractionEndType::EInteractionEndType_Cancle, false);
+		AbilityTryToEndInteraction(*AbilitySpaceHandlePtr, Causers, EInteractionEndType::EInteractionEndType_Cancle, false);
+	}
+
+	if (AbilitySpaceHandlePtr)
+	{
+		delete AbilitySpaceHandlePtr;
+		AbilitySpaceHandlePtr = nullptr;
 	}
 
 	//Make sure the target ability should be removed when it is ended as if the player interact with the target interaction again, the interaction actor will give him new ability

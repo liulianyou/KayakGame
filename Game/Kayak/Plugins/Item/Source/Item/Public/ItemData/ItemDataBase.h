@@ -49,6 +49,17 @@ public:
 
 public:
 
+	/*
+	* Invoked when this item data is created
+	*/
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemData")
+	void OnInitialize();
+	virtual void Initialize();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemData")
+	void OnFinialize();
+	virtual void Finialize();
+
 	//Remove the component which will use this data as its initial value
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemData")
 	void OnRemoveReferencedComponent(UItemComponentBase* ItemComponent);
@@ -71,14 +82,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "ItemData")
 	TMap<UItemComponentBase*, UItemRuntimeDataBase*>& GetReferencedItemComponents_Mutable() { return ReferencedItemComponents; }
-
-protected:
-
-	/*
-	* This function should be invoked by any other initialization to populate the default members
-	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemData")
-	void InitializeInternal();
 
 public:
 
@@ -167,6 +170,13 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
 	void OnFinialize();
 	virtual void Finialize();
+
+	/*
+	* Get the item data which will respect for the base value of this runtime data.
+	* We can not change any default value in the item data through the runtime data.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	const UItemDataBase* GetItemData() const { return ReferencedItemData; }
 
 protected:
 
@@ -310,6 +320,13 @@ private:
 	UItemComponentBase* ItemOwner = nullptr;
 
 private:
+
+	/*
+	* Which data used to respect for the default value of this runtime data.
+	* If some value in the item data has been changed all referenced runtime data will change synchronize.
+	* This value should never be null, if it is null means this 
+	*/
+	UItemDataBase* ReferencedItemData;
 
 	//The state of current item
 	EItemState ItemState;

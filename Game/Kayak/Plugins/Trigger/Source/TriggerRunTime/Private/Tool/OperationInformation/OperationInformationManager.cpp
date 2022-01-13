@@ -1,6 +1,8 @@
 #include "OperationInformationManager.h"
 #include "OperationInformationBase.h"
 #include "OperationInformationContainer.h"
+#include "TriggerEventSystemInfoBase.h"
+#include "TriggerManager.h"
 
 FOperationInfoSpace FOperationInfoSpace::InvalidData;
 
@@ -44,24 +46,33 @@ TArray<FOperationInfoSpace>& UOperationInformationManager::GetOperationSpaces()
 
 FOperationInfoSpace& UOperationInformationManager::AddNewOperationByClass(UObject* Owner, TSubclassOf<UOperationInformationBase> OperationType)
 {
-	UOperationInformationBase* NewOperationInfo = NewObject<UOperationInformationBase>(this, OperationType);
-
-	FOperationInfoSpace NewOperation(Owner, NewOperationInfo);
-
-	int Index = Operations.Add(NewOperation);
-	
-	if(Index == INDEX_NONE)
-		return FOperationInfoSpace::InvalidData;
-	else
+	for (int TriggerEventIndex = 0; TriggerEventIndex < GetTriggerManager()->GetTriggerEventSystemInfo().Num(); TriggerEventIndex++)
 	{
-		for(int i = 0; i < ReplicatedContaners.Num(); i++)
+		if(Owner->GetWorld() != GetTriggerManager()->GetTriggerEventSystemInfo()[TriggerEventIndex]->GetWorld())
+			continue;
+		
+		UOperationInformationBase* NewOperationInfo = NewObject<UOperationInformationBase>(GetTriggerManager()->GetTriggerEventSystemInfo()[TriggerEventIndex], OperationType);
+
+		FOperationInfoSpace NewOperation(Owner, NewOperationInfo);
+
+		int Index = Operations.Add(NewOperation);
+
+		if (Index == INDEX_NONE)
+			return FOperationInfoSpace::InvalidData;
+		else
 		{
-			ReplicatedContaners[i]->AddNewItem(Owner, NewOperationInfo);
+			for (int i = 0; i < ReplicatedContaners.Num(); i++)
+			{
+				ReplicatedContaners[i]->AddNewItem(Owner, NewOperationInfo);
+			}
+
+			return Operations[Index];
 		}
 
-		return Operations[Index];
+		break;
 	}
-		
+
+	return FOperationInfoSpace::InvalidData;
 }
 
 FOperationInfoSpace& UOperationInformationManager::AddNewOperationByInstanceOperation(UObject* Owner, UOperationInformationBase* Operation)
