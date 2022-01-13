@@ -110,7 +110,7 @@ TScriptInterface<IItemInterface> UItemManager::CreateNewItem(TSubclassOf<UObject
 	ItemInterface->GetItemComponent()->Initialzie(NewItem);
 
 	Result.SetObject(NewItem);
-
+	Result.SetInterface(ItemInterface);
 
 	return NewItem;
 }
