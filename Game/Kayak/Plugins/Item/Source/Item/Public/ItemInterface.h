@@ -54,6 +54,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
 	void OnSetItemOwner(UItemInventoryComponent* NewOwner);
 	virtual void SetItemOwner(UItemInventoryComponent* NewOwner);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
+	bool OnHasAuthority() const;
+	virtual bool HasAuthority() const;
 };
 
 
