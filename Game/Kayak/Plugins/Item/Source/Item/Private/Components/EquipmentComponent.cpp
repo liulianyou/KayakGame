@@ -27,32 +27,32 @@ bool UEquipmentComponent::TryToUnequip_Implementation()
 }
 
 
-void UEquipmentComponent::ActivateItem(int Index)
+void UEquipmentComponent::ActivateItem(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::ActivateItem(Index);
+	Super::ActivateItem(QueryFilter);
 }
 
-void UEquipmentComponent::DeactivateItem(int Index)
+void UEquipmentComponent::DeactivateItem(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::DeactivateItem(Index);
+	Super::DeactivateItem(QueryFilter);
 }
 
-void UEquipmentComponent::StartUse(int Index)
+void UEquipmentComponent::StartUse(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::StartUse(Index);
+	Super::StartUse(QueryFilter);
 }
 
-void UEquipmentComponent::StopUse(int Index)
+void UEquipmentComponent::StopUse(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::StopUse(Index);
+	Super::StopUse(QueryFilter);
 }
 
-void UEquipmentComponent::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
+void UEquipmentComponent::Abandoned(const FItemScopeChangeInfo& AbandonInfo, const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::Abandoned(AbandonInfo);
+	Super::Abandoned(AbandonInfo, QueryFilter);
 }
 
-void UEquipmentComponent::Gained(const FItemScopeChangeInfo& GainedInfo)
+void UEquipmentComponent::Gained(const FItemScopeChangeInfo& GainedInfo, const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::Gained(GainedInfo);
+	Super::Gained(GainedInfo, QueryFilter);
 }

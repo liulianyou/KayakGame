@@ -7,6 +7,7 @@
 #include "ItemBlueprintLib.h"
 #include "ItemDefinition.h"
 #include "ItemGlobal.h"
+#include "ItemInventroyComponent.h"
 
 FRuntimeDataItem::FRuntimeDataItem()
 	: RuntimeData(nullptr)
@@ -24,15 +25,6 @@ FRuntimeDataItem::FRuntimeDataItem(UItemRuntimeDataBase* _RuntimeData, FRuntimeD
 	, NextElement(_NextElement)
 {
 	
-}
-
-FRuntimeDataItem::~FRuntimeDataItem()
-{
-	if (RuntimeData != nullptr && RuntimeData->IsValidLowLevel())
-	{
-		RuntimeData->Finialize();
-		RuntimeData->MarkPendingKill();
-	}
 }
 
 bool FRuntimeDataItem::IsValid() const
@@ -82,7 +74,7 @@ void FItemRuntimeDataContainer::AddNewItem(UItemRuntimeDataBase* NewItem)
 	
 	bool IsExist = true;
 
-	for (auto IT = CreateIterator(); IT; ++IT)
+	for (auto IT = CreateIterator(0, false); IT; ++IT)
 	{
 		if ((*IT).RuntimeData == NewItem)
 		{
@@ -172,10 +164,15 @@ void FItemRuntimeDataContainer::DecrementLock()
 	int RemoveCount = 0;
 	bool ModifiedArray = false;
 
-	for (auto IT = CreateIterator(); IT; ++IT)
+	for (auto IT = CreateIterator(0, false); IT; ++IT)
 	{
 		if (!(*IT))
 		{
+			if (IT.GetValue()->RuntimeData)
+			{
+				IT.GetValue()->RuntimeData->Finialize();
+			}
+			
 			IT.RemoveCurrent();
 
 			ModifiedArray = true;
@@ -189,6 +186,81 @@ void FItemRuntimeDataContainer::DecrementLock()
 	{
 		MarkArrayDirty();
 	}
+}
+
+void FItemRuntimeDataQueryFilter::GetRuntimeDatas( const UItemComponentBase* ItemComponent, TArray<UItemRuntimeDataBase*>& OuterRuntimeDatas) const
+{
+	OuterRuntimeDatas.Empty();
+
+	uint8 QueryParameter = GenerateQueryParameter( Index != INDEX_NONE, ItemRuntimeDataClass != nullptr, ItemRuntimeDataInstance != nullptr, ItemDataClass != nullptr);
+
+	if(ItemComponent == nullptr)
+		return;
+
+	for (auto IT = ItemComponent->GetItemRuntimeDataContainer().CreateConstIterator(); IT; ++IT)
+	{
+		uint8 LocalParameter = GenerateQueryParameter(
+			IsMatchedForIndex(IT), 
+			IsMatchedForItemRuntimeDataClass(IT), 
+			IsMatchedForItemRuntimeDataInstance(IT),
+			IsMatchedForItemDataClass(IT));
+
+		if (LocalParameter == QueryParameter)
+		{
+			OuterRuntimeDatas.Add(IT.GetValue()->RuntimeData);
+		}
+	}
+}
+
+uint8 FItemRuntimeDataQueryFilter::GenerateQueryParameter(bool IsValidIndex, bool IsValidRuntimeDataClass, bool IsValidRuntimeDataInstance, bool IsValidItemDataClass) const
+{
+	uint8 Result = 0;
+
+	Result |= !IsValidIndex					? ~EQueryParameter::EIndex						: EQueryParameter::EIndex;
+	Result |= !IsValidRuntimeDataClass		? ~EQueryParameter::EItemRuntimeDataClass		: EQueryParameter::EItemRuntimeDataClass;
+	Result |= !IsValidRuntimeDataInstance 	? ~EQueryParameter::EItemRunntimeDataInstance	: EQueryParameter::EItemRunntimeDataInstance;
+	Result |= !IsValidItemDataClass			? ~EQueryParameter::EItemDataClass				: EQueryParameter::EItemDataClass;
+
+	return Result;
+}
+
+bool FItemRuntimeDataQueryFilter::IsMatchedForIndex(const FItemRuntimeDataContainer::ConstIterator& IT) const
+{
+	if(!IT )
+		return false;
+
+	return (IT.GetIndex() == Index);
+}
+
+bool FItemRuntimeDataQueryFilter::IsMatchedForItemRuntimeDataClass(const FItemRuntimeDataContainer::ConstIterator& IT) const
+{
+	if (!IT)
+		return false;
+
+	if (IT.GetValue()->RuntimeData == nullptr)
+		return false;
+
+	return ItemRuntimeDataClass != IT.GetValue()->RuntimeData->GetClass();
+}
+
+bool FItemRuntimeDataQueryFilter::IsMatchedForItemRuntimeDataInstance(const FItemRuntimeDataContainer::ConstIterator& IT) const
+{
+	if (!IT)
+		return false;
+
+	return ItemRuntimeDataInstance != IT.GetValue()->RuntimeData;
+}
+
+bool FItemRuntimeDataQueryFilter::IsMatchedForItemDataClass(const FItemRuntimeDataContainer::ConstIterator& IT) const
+{
+	if (!IT)
+		return false;
+
+	if (IT.GetValue()->RuntimeData == nullptr || IT.GetValue()->RuntimeData->GetItemData() == nullptr)
+		return false;
+
+
+	return IT.GetValue()->RuntimeData->GetItemData()->GetClass() == ItemDataClass;
 }
 
 UItemComponentBase::UItemComponentBase(const FObjectInitializer& ObjectInitializer)
@@ -309,71 +381,90 @@ void UItemComponentBase::UnregisterComponent()
 		ItemManager->UnregisterItem(GetItemOwner());
 	}
 
+	for (auto IT = RuntimeDataContainer.CreateIterator(); IT; ++IT)
+	{
+		IT.GetValue()->RuntimeData->Finialize();
+
+		IT.RemoveCurrent();
+	}
+
 	OnUnregisterComponent();
 }
 
-int UItemComponentBase::FindRuntimeDataIndex(UItemRuntimeDataBase* RuntimeData)
+void UItemComponentBase::GetItemRuntimeData(const FItemRuntimeDataQueryFilter& QueryFilter, TArray<UItemRuntimeDataBase*>& OuterRuntimeData) const
 {
-	return RuntimeDataContainer.GetIndexOfItem(RuntimeData);
+	QueryFilter.GetRuntimeDatas(this, OuterRuntimeData);
 }
 
-void UItemComponentBase::ActivateItem(int Index /*= INDEX_NONE*/)
+void UItemComponentBase::ActivateItem(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	UItemRuntimeDataBase* RuntimeData = RuntimeDataContainer.GetRuntimeDataByIndex(Index);
+	TArray<UItemRuntimeDataBase*> RuntimeData;
 
-	if (RuntimeData != nullptr)
+	GetItemRuntimeData(QueryFilter, RuntimeData);
+
+	for (int i = 0; i < RuntimeData.Num(); i++)
 	{
-		RuntimeData->ActivateItem();
+		RuntimeData[i]->ActivateItem();
 	}
 }
 
-void UItemComponentBase::DeactivateItem(int Index /*= INDEX_NONE*/)
+void UItemComponentBase::DeactivateItem(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	UItemRuntimeDataBase* RuntimeData = RuntimeDataContainer.GetRuntimeDataByIndex(Index);
+	TArray<UItemRuntimeDataBase*> RuntimeData;
 
-	if (RuntimeData != nullptr)
+	GetItemRuntimeData(QueryFilter, RuntimeData);
+
+	for (int i = 0; i < RuntimeData.Num(); i++)
 	{
-		RuntimeData->DeactivateItem();
+		RuntimeData[i]->DeactivateItem();
 	}
 }
 
-void UItemComponentBase::StartUse(int Index /*= INDEX_NONE*/)
+void UItemComponentBase::StartUse(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	UItemRuntimeDataBase* RuntimeData = RuntimeDataContainer.GetRuntimeDataByIndex(Index);
+	TArray<UItemRuntimeDataBase*> RuntimeData;
 
-	if (RuntimeData != nullptr)
+	GetItemRuntimeData(QueryFilter, RuntimeData);
+
+	for (int i = 0; i < RuntimeData.Num(); i++)
 	{
-		RuntimeData->StartUse();
+		RuntimeData[i]->StartUse();
 	}
 }
 
-void UItemComponentBase::StopUse(int Index/* = INDEX_NONE*/)
+void UItemComponentBase::StopUse(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	UItemRuntimeDataBase* RuntimeData = RuntimeDataContainer.GetRuntimeDataByIndex(Index);
+	TArray<UItemRuntimeDataBase*> RuntimeData;
 
-	if (RuntimeData != nullptr)
+	GetItemRuntimeData(QueryFilter, RuntimeData);
+
+	for (int i = 0; i < RuntimeData.Num(); i++)
 	{
-		RuntimeData->StopUse();
+		RuntimeData[i]->StopUse();
 	}
 }
 
-void UItemComponentBase::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
+void UItemComponentBase::Abandoned(const FItemScopeChangeInfo& AbandonInfo, const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	UItemRuntimeDataBase* RuntimeData = RuntimeDataContainer.GetRuntimeDataByIndex(AbandonInfo.RuntimeDataIndex);
+	TArray<UItemRuntimeDataBase*> RuntimeData;
 
-	if (RuntimeData != nullptr)
+	GetItemRuntimeData(QueryFilter, RuntimeData);
+
+	for (int i = 0; i < RuntimeData.Num(); i++)
 	{
-		RuntimeData->Abandoned(AbandonInfo);
+		RuntimeData[i]->Abandoned(AbandonInfo);
 	}
 }
 
-void UItemComponentBase::Gained(const FItemScopeChangeInfo& GainedInfo)
+void UItemComponentBase::Gained(const FItemScopeChangeInfo& GainedInfo, const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	UItemRuntimeDataBase* RuntimeData = RuntimeDataContainer.GetRuntimeDataByIndex(GainedInfo.RuntimeDataIndex);
+	TArray<UItemRuntimeDataBase*> RuntimeData;
 
-	if (RuntimeData != nullptr)
+	GetItemRuntimeData(QueryFilter, RuntimeData);
+
+	for (int i = 0; i < RuntimeData.Num(); i++)
 	{
-		RuntimeData->Gained(GainedInfo);
+		RuntimeData[i]->Gained(GainedInfo);
 	}
 }
 
@@ -441,6 +532,24 @@ bool UItemComponentBase::IsWorldOwned() const
 	return OwnerAvatar == nullptr;
 }
 
+bool UItemComponentBase::HasAuthority() const
+{
+	if (GetOwner() != nullptr)
+	{
+		return GetOwner()->HasAuthority();
+	}
+	else if(GetItemOwner() != nullptr)
+	{
+		return GetItemOwner()->HasAuthority();
+	}
+	else if (GetAvatarOwner() != nullptr && GetAvatarOwner()->GetOwner() != nullptr)
+	{
+		return GetAvatarOwner()->GetOwner()->HasAuthority();
+	}
+
+	return false;
+}
+
 void UItemComponentBase::SetAvatarOwner(UItemInventoryComponent* NewAvatar)
 {
 	UItemInventoryComponent* OldAvatarOnwer =OwnerAvatar;
@@ -471,12 +580,44 @@ void UItemComponentBase::AddNewItemData(UItemDataBase* NewData)
 	if(NewData == nullptr || !NewData->IsValidItemData())
 		return;
 
+	TArray<UItemRuntimeDataBase*> RuntimeData;
+
+	GetItemRuntimeData(FItemRuntimeDataQueryFilter(TSubclassOf<UItemRuntimeDataBase>(GetClass())), RuntimeData);
+
+	//If the target item component already have this item runtime data which is bind to data, just skip this action
+	if (RuntimeData.Num() != 0)
+	{
+		UE_LOG(LogItem, Display, TEXT("The compoment %s already have the target item data %s"), GetItemOwner() == nullptr ? TEXT("Invalid component") : GetItemOwner().GetObject() == nullptr ? TEXT("Invalid component") : *GetItemOwner().GetObject()->GetName() );
+		return;
+	}
+
+	UItemRuntimeDataBase* NewItemRunttmeData = NewObject<UItemRuntimeDataBase>(this, NewData->GetRuntimeDataClass().Get());
+
+	if (NewItemRunttmeData)
+	{
+		NewItemRunttmeData->Initialize(NewData);
+	}
+
+	AddNewRuntimeData(NewItemRunttmeData);
+
 	NewData->AddReferencedComponent(this);
 }
 
 void UItemComponentBase::RemoveItemData(UItemDataBase* ItemData)
 {
-	
+	if (ItemData == nullptr || !ItemData->IsValidItemData())
+		return;
+
+	ItemData->RemoveReferencedComponent(this);
+
+	TArray<UItemRuntimeDataBase*> ItemRuntimeData;
+
+	GetItemRuntimeData( FItemRuntimeDataQueryFilter( TSubclassOf<UItemDataBase>(ItemData->GetClass()) ), ItemRuntimeData);
+
+	for (int i = 0; i < ItemRuntimeData.Num(); i++)
+	{
+		RemoveItemRuntimeData(ItemRuntimeData[i]);
+	}
 }
 
 void UItemComponentBase::OnRep_OwnerAvatar(UItemInventoryComponent* OldAvatar)
@@ -496,7 +637,12 @@ void UItemComponentBase::AddNewRuntimeData(UItemRuntimeDataBase* NewRuntimeData)
 	RuntimeDataContainer.AddNewItem(NewRuntimeData);
 }
 
-void UItemComponentBase::RemoveItemRuntimeData(UItemRuntimeDataBase* RuntimeData)
+void UItemComponentBase::RemoveItemRuntimeData(UItemRuntimeDataBase* ItemRuntimeData)
 {
-	RuntimeDataContainer.RemoveItem(RuntimeData);
+	if(ItemRuntimeData == nullptr)
+		return;
+
+	RuntimeDataContainer.RemoveItem(ItemRuntimeData);
+
+	ItemRuntimeData->Finialize();
 }

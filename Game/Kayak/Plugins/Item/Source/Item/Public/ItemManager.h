@@ -49,14 +49,6 @@ public:
 	void RemoveItemDataByClass(TSubclassOf<UItemDataBase> ItemDataClass, bool IgnoreChildClasses = false);
 
 	/*
-	* Remove the actual item data
-	* 
-	* @param ItemData		the actual item data instance which will be removed
-	*/
-	UFUNCTION(BlueprintCallable, Category = "Item")
-	void RemoveItemDataByInstance(UItemDataBase* ItemData);
-
-	/*
 	* Create new Item according to the item class
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Item")
@@ -78,16 +70,26 @@ public:
 	* Get all data which is used in the item system
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Item")
-	void GetAllItemDatas( TArray<UItemDataBase*>& OuterDatas ) const;
+	const TArray<UItemDataBase*>& GetAllItemDatas() const { return ItemDatas; }
 
 	/*
 	* Get all items which have been spawned in the item system
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Item")
-	void GetAllItems(TArray<TScriptInterface<IItemInterface>>& OuterItems) const;
+	const TArray<TScriptInterface<IItemInterface>>& GetAllItems() const { return Items; }
 
 private:
 	
 	//All data which is used in our game
+	UPROPERTY()
 	TArray<UItemDataBase*> ItemDatas;
+
+private:
+
+	/*
+	* All items in our game
+	*
+	* As the client don't have any item data I can not get items through item data
+	*/
+	TArray<TScriptInterface<IItemInterface>> Items;
 };

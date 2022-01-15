@@ -13,7 +13,7 @@
 #include "Engine/EngineTypes.h"
 #include "ItemDefinition.h"
 #include "ItemInterface.h"
-#include "ItemContainerInterator.h"
+#include "ItemContainerIterator.h"
 
 #include "ItemComponent.generated.h"
 
@@ -30,7 +30,6 @@ struct ITEM_API FRuntimeDataItem : public FFastArraySerializerItem
 
 	FRuntimeDataItem();
 	FRuntimeDataItem(UItemRuntimeDataBase* RuntimeData, FRuntimeDataItem* _PreElement = nullptr, FRuntimeDataItem* _NextElement = nullptr);
-	~FRuntimeDataItem();
 public:
 
 	void PreReplicatedRemove(const struct FItemRuntimeDataContainer& InArray);
@@ -155,6 +154,92 @@ struct TStructOpsTypeTraits< FItemRuntimeDataContainer > : public TStructOpsType
 };
 
 /*
+* The filter to query the runtime data in the target component
+*/
+USTRUCT(BlueprintType)
+struct ITEM_API FItemRuntimeDataQueryFilter
+{
+	GENERATED_BODY()
+
+public:
+
+	FItemRuntimeDataQueryFilter(){};
+	FItemRuntimeDataQueryFilter(int ItemIndex):Index(ItemIndex){};
+	FItemRuntimeDataQueryFilter(const TSubclassOf<UItemRuntimeDataBase>& RuntimeDataClass):ItemRuntimeDataClass(RuntimeDataClass){};
+	FItemRuntimeDataQueryFilter(const UItemRuntimeDataBase* RuntimeDataInstance):ItemRuntimeDataInstance(RuntimeDataInstance){};
+	FItemRuntimeDataQueryFilter(const TSubclassOf<UItemDataBase>& _ItemDataClass) :ItemDataClass(_ItemDataClass) {};
+
+	FItemRuntimeDataQueryFilter(FItemRuntimeDataQueryFilter&& OtherValue)
+	{
+		Index = MoveTemp(OtherValue.Index);
+		ItemRuntimeDataClass = MoveTemp(OtherValue.ItemRuntimeDataClass);
+		ItemRuntimeDataInstance = MoveTemp(OtherValue.ItemRuntimeDataInstance);
+		ItemDataClass = MoveTemp(OtherValue.ItemDataClass);
+	}
+
+	FItemRuntimeDataQueryFilter(const FItemRuntimeDataQueryFilter& OtherValue)
+	{
+		*this = OtherValue;
+	}
+
+	void operator=(const FItemRuntimeDataQueryFilter& OtherValue)
+	{
+		Index = OtherValue.Index;
+		ItemRuntimeDataClass = OtherValue.ItemRuntimeDataClass;
+		ItemRuntimeDataInstance = OtherValue.ItemRuntimeDataInstance; 
+		ItemDataClass = OtherValue.ItemDataClass;
+	}
+
+public:
+	
+	void GetRuntimeDatas( const UItemComponentBase* ItemComponent, TArray<UItemRuntimeDataBase*>& OuterRuntimeDatas ) const;
+
+private:
+	
+	enum EQueryParameter : uint8
+	{
+		EIndex = 1 << 0,
+		EItemRuntimeDataClass = 1 << 1,
+		EItemRunntimeDataInstance = 1 << 2,
+		EItemDataClass = 1 << 3,
+	};
+
+	uint8 GenerateQueryParameter( bool IsValidIndex, bool IsValidRuntimeDataClass, bool IsValidRuntimeDataInstance, bool IsValidItemDataClass) const;
+
+	bool IsMatchedForIndex(const FItemRuntimeDataContainer::ConstIterator& IT) const;
+	bool IsMatchedForItemRuntimeDataClass(const FItemRuntimeDataContainer::ConstIterator& IT) const;
+	bool IsMatchedForItemRuntimeDataInstance(const FItemRuntimeDataContainer::ConstIterator& IT) const;
+	bool IsMatchedForItemDataClass(const FItemRuntimeDataContainer::ConstIterator& IT) const;
+
+public:
+
+	/*
+	* The actual index of the item runtime data in the target item component
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta=(ShowOnlyInnerProperties))
+	int Index = INDEX_NONE;
+
+	/*
+	* The class of item data which will be used to initialize the default value of runtime data
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (ShowOnlyInnerProperties))
+	TSubclassOf<UItemDataBase> ItemDataClass = nullptr;
+
+	/*
+	* The class for the runtime data in the target item component
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (ShowOnlyInnerProperties))
+	TSubclassOf<UItemRuntimeDataBase> ItemRuntimeDataClass = nullptr;
+
+	/*
+	* The actual runtime data instance
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (ShowOnlyInnerProperties))
+	const UItemRuntimeDataBase* ItemRuntimeDataInstance = nullptr;
+
+};
+
+/*
 * The component which is used for item.
 * 
 * The component is used to expand the behavior the item runtime data.
@@ -175,8 +260,6 @@ UCLASS(BlueprintType, Blueprintable, Abstract, Category = "Item|Component")
 class ITEM_API UItemComponentBase : public UActorComponent
 {
 	GENERATED_UCLASS_BODY()
-
-	friend UItemDataBase;
 
 public:
 	
@@ -200,6 +283,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
 	void OnInitialize(UObject* NewItemOnwer);
 	
+	/*
+	* The target new item owner should be inherited from IItemInterface
+	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
 	virtual void Initialzie( UObject* NewItemOnwer );
 
@@ -210,13 +296,13 @@ public:
 	* Find the index for the target runtime data in this component
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	int FindRuntimeDataIndex(UItemRuntimeDataBase* RuntimeData);
+	void GetItemRuntimeData(const FItemRuntimeDataQueryFilter& QueryFilter, TArray<UItemRuntimeDataBase*>& OuterRuntimeData) const;
 
 	/*
 	* Active the item so that the outer can use this item 
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void ActivateItem(int Index);
+	virtual void ActivateItem(const FItemRuntimeDataQueryFilter& QueryFilter);
 
 	/*
 	* Deactive this item so that the outer can not use this item.
@@ -224,39 +310,41 @@ public:
 	* If one item deactivated all things related to this item should be cleared
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void DeactivateItem(int Index);
+	virtual void DeactivateItem(const FItemRuntimeDataQueryFilter& QueryFilter);
 
 	/*
 	* Start to use this item, before use this item you need to active it again
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void StartUse(int Index);
+	virtual void StartUse(const FItemRuntimeDataQueryFilter& QueryFilter);
 
 	/*
 	* stop to use this item.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void StopUse(int Index);
+	virtual void StopUse(const FItemRuntimeDataQueryFilter& QueryFilter);
 
 	/*
 	* Abandon this item.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void Abandoned(const FItemScopeChangeInfo& AbandonInfo);
+	virtual void Abandoned(const FItemScopeChangeInfo& AbandonInfo, const FItemRuntimeDataQueryFilter& QueryFilter );
 
 	/*
 	* Defines how to gain this item
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void Gained(const FItemScopeChangeInfo& GainedInfo);
+	virtual void Gained(const FItemScopeChangeInfo& GainedInfo, const FItemRuntimeDataQueryFilter& QueryFilter );
 
 	/*
 	* Try to check weather this item is owned by the world.
 	* If this item is owned by the world means every one can get it. it can be used by every one.
 	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ItemComponent")
 	bool IsWorldOwned() const;
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ItemComponent")
+	bool HasAuthority() const;
 public:
 
 	/*
@@ -290,8 +378,14 @@ public:
 	void RemoveItemData(UItemDataBase* ItemData);
 
 	//Get the container of the runtime data
-	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ItemComponent")
 	const FItemRuntimeDataContainer& GetItemRuntimeDataContainer() const { return RuntimeDataContainer; }
+
+	/*
+	* Get the default item class which this component will used to create new runtime data
+	*/
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ItemComponent")
+	const TArray<TSubclassOf<UItemDataBase>>& GetDefaultItemRuntimeDataClass() const { return DefaultItemDataClass; }
 
 protected:
 
@@ -309,6 +403,9 @@ protected:
 
 private:
 
+	/*
+	* Add new runtime data to this item component
+	*/
 	void AddNewRuntimeData(UItemRuntimeDataBase* NewRuntimeData);
 
 	/*
@@ -316,7 +413,7 @@ private:
 	*
 	* @param RuntimeData the item runtime data that will be removed
 	*/
-	void RemoveItemRuntimeData(UItemRuntimeDataBase* RuntimeData);
+	void RemoveItemRuntimeData(UItemRuntimeDataBase* ItemRuntimeData);
 
 public:
 	
@@ -326,14 +423,6 @@ public:
 
 public:
 
-	/*
-	* The data which will be used in this item to initialize the runtime data
-	*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ItemData")
-	TArray<TSubclassOf<UItemDataBase>> DefaultItemDataClass;
-
-public:
-	
 	//Invoked when the item data have been changed
 	UPROPERTY(BlueprintAssignable)
 	FItemDataChanged ItemDataChangedDelegate;
@@ -341,6 +430,14 @@ public:
 	//Broadcast when the avatar owner has been changed
 	UPROPERTY(BlueprintAssignable)
 	FAvatarOwnerChanged AvatarOwnerChanged;
+
+private:
+
+	/*
+	* The data which will be used in this item to initialize the runtime data
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ItemData", meta=(AllowPrivateAccess))
+	TArray<TSubclassOf<UItemDataBase>> DefaultItemDataClass;
 
 private:
 
@@ -374,44 +471,44 @@ private:
 };
 	
 #define  ItemComponentFramework()\
-	virtual void ActivateItem(int Index) override;\
-	virtual void DeactivateItem(int Index) override; \
-	virtual void StartUse(int Index) override; \
-	virtual void StopUse(int Index) override; \
-	virtual void Abandoned(const FItemScopeChangeInfo& AbandonInfo) override; \
-	virtual void Gained(const FItemScopeChangeInfo& GainedInfo) override;
+	virtual void ActivateItem(const FItemRuntimeDataQueryFilter& QueryFilter) override;\
+	virtual void DeactivateItem(const FItemRuntimeDataQueryFilter& QueryFilter) override; \
+	virtual void StartUse(const FItemRuntimeDataQueryFilter& QueryFilter) override; \
+	virtual void StopUse(const FItemRuntimeDataQueryFilter& QueryFilter) override; \
+	virtual void Abandoned(const FItemScopeChangeInfo& AbandonInfo, const FItemRuntimeDataQueryFilter& QueryFilter) override; \
+	virtual void Gained(const FItemScopeChangeInfo& GainedInfo, const FItemRuntimeDataQueryFilter& QueryFilter) override;
 
 /*
 * Just make implement the item frame work more easy, Ctrl + C, Ctrl + V, and change the NEWItemClass to the target component class
 */
 #if 0
-void NEWItemClass::ActivateItem()
+void NEWItemClass::ActivateItem(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::ActivateItem();
+	Super::ActivateItem(QueryFilter);
 }
 
-void NEWItemClass::DeactivateItem()
+void NEWItemClass::DeactivateItem(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::DeactivateItem();
+	Super::DeactivateItem(QueryFilter);
 }
 
-void NEWItemClass::StartUse()
+void NEWItemClass::StartUse(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::StartUse();
+	Super::StartUse(QueryFilter);
 }
 
-void NEWItemClass::StopUse()
+void NEWItemClass::StopUse(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::StopUse();
+	Super::StopUse(QueryFilter);
 }
 
-void NEWItemClass::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
+void NEWItemClass::Abandoned(const FItemScopeChangeInfo& AbandonInfo, const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::Abandoned(AbandonInfo);
+	Super::Abandoned(AbandonInfo, QueryFilter);
 }
 
-void NEWItemClass::Gained(const FItemScopeChangeInfo& GainedInfo)
+void NEWItemClass::Gained(const FItemScopeChangeInfo& GainedInfo, const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::Gained(GainedInfo);
+	Super::Gained(GainedInfo, QueryFilter);
 }
 #endif

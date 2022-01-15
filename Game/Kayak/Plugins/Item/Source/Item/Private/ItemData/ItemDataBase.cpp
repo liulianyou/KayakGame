@@ -31,7 +31,7 @@ void UItemDataBase::BeginDestroy()
 
 	for (auto It = GetReferencedItemComponents().CreateConstIterator(); It; ++It)
 	{
-		RemoveReferencedComponent(It.Key());
+		RemoveReferencedComponent(*It);
 	}
 }
 
@@ -40,20 +40,13 @@ void UItemDataBase::AddReferencedComponent(UItemComponentBase* ItemComponent)
 	if (ItemComponent == nullptr)
 		return;
 
-	if (RuntimdDataClass != nullptr)
+	if (GetReferencedItemComponents().Find(ItemComponent) == INDEX_NONE)
 	{
-		UItemRuntimeDataBase* NewItemRunttmeData = NewObject<UItemRuntimeDataBase>(ItemComponent, RuntimdDataClass.Get());
+		ItemComponent->AddNewItemData(this);
 
-		if (NewItemRunttmeData)
-		{
-			NewItemRunttmeData->Initialize(this);
+		GetReferencedItemComponents_Mutable().Add(ItemComponent);
 
-			ItemComponent->AddNewRuntimeData(NewItemRunttmeData);
-
-			GetReferencedItemComponents_Mutable().Add(ItemComponent, NewItemRunttmeData);
-
-			OnAddReferencedComponent(ItemComponent);
-		}
+		OnAddReferencedComponent(ItemComponent);
 	}
 }
 
@@ -64,13 +57,16 @@ void UItemDataBase::RemoveReferencedComponent(UItemComponentBase* ItemComponent)
 
 	for (auto IT = GetReferencedItemComponents_Mutable().CreateIterator(); IT; ++IT)
 	{
-		if (IT.Key() == ItemComponent)
+		if (*IT == ItemComponent)
 		{
-			ItemComponent->RemoveItemRuntimeData(IT.Value());
+			//Remove this element before the item component action to avoid infinity loop
+			IT.RemoveCurrent();
+
+			ItemComponent->RemoveItemData(this);
 
 			OnRemoveReferencedComponent(ItemComponent);
 
-			IT.RemoveCurrent();
+			break;
 		}
 	}
 }
@@ -211,6 +207,10 @@ void UItemRuntimeDataBase::Initialize(UItemDataBase* ItemData)
 void UItemRuntimeDataBase::Finialize()
 {
 	OnFinialize();
+
+	GetItemOwner()->RemoveItemData(ReferencedItemData);
+
+	ReferencedItemData = nullptr;
 
 	ItemOwner = nullptr;
 }

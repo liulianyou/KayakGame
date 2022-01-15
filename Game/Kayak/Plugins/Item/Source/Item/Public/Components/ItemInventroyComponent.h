@@ -10,7 +10,6 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/ScriptInterface.h"
-#include "Components/ActorComponent.h"
 #include "Engine/NetSerialization.h"
 
 #include "ItemInterface.h"

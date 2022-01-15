@@ -78,15 +78,18 @@ public:
 	* Get all components which use this data as its initialize data
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemData")
-	const TMap<UItemComponentBase*, UItemRuntimeDataBase*>& GetReferencedItemComponents() const { return ReferencedItemComponents;}
+	const TArray<UItemComponentBase*>& GetReferencedItemComponents() const { return ReferencedItemComponents;}
 
 	UFUNCTION(BlueprintCallable, Category = "ItemData")
-	TMap<UItemComponentBase*, UItemRuntimeDataBase*>& GetReferencedItemComponents_Mutable() { return ReferencedItemComponents; }
+	TArray<UItemComponentBase*>& GetReferencedItemComponents_Mutable() { return ReferencedItemComponents; }
 
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
 	const FString& GetID() const { return ID; }
+
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	const TSoftClassPtr<UItemRuntimeDataBase>& GetRuntimeDataClass() const { return RuntimdDataClass; }
 
 private:
 
@@ -102,8 +105,8 @@ private:
 
 private:
 
-	//All the runtime data which will use this data as its original initial data
-	TMap<UItemComponentBase*, UItemRuntimeDataBase*> ReferencedItemComponents;
+	//All the item component  which will use this data as its original initial data
+	TArray<UItemComponentBase*> ReferencedItemComponents;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDataPreparedEvent, UItemRuntimeDataBase*, ItemRuntimeData);
@@ -314,7 +317,7 @@ private:
 private:
 
 	/*
-	* where this component should exist
+	* Which component own this runtime data
 	*/
 	UPROPERTY(ReplicatedUsing = OnRep_ItemOwner)
 	UItemComponentBase* ItemOwner = nullptr;
@@ -324,9 +327,9 @@ private:
 	/*
 	* Which data used to respect for the default value of this runtime data.
 	* If some value in the item data has been changed all referenced runtime data will change synchronize.
-	* This value should never be null, if it is null means this 
+	* This value maybe null if this runtime data is replicated from the server, or this data do not be used
 	*/
-	UItemDataBase* ReferencedItemData;
+	UItemDataBase* ReferencedItemData = nullptr;
 
 	//The state of current item
 	EItemState ItemState;

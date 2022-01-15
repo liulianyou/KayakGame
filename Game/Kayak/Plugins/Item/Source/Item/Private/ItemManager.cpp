@@ -55,19 +55,6 @@ void UItemManager::RemoveItemDataByClass(TSubclassOf<UItemDataBase> ItemDataClas
 	}
 }
 
-void UItemManager::RemoveItemDataByInstance(UItemDataBase* ItemData)
-{
-	for (auto IT = ItemDatas.CreateIterator(); IT; ++IT)
-	{
-		if (ItemData == nullptr || 
-			(*IT) == ItemData)
-		{
-			(*IT)->Finialize();
-			IT.RemoveCurrent();
-		}
-	}
-}
-
 TScriptInterface<IItemInterface> UItemManager::CreateNewItem(TSubclassOf<UObject> ItemClass)
 {
 	if(ItemClass == nullptr)
@@ -117,20 +104,57 @@ TScriptInterface<IItemInterface> UItemManager::CreateNewItem(TSubclassOf<UObject
 
 void UItemManager::RegisterItem(TScriptInterface<IItemInterface> NewItem)
 {
-	
+	if(NewItem == nullptr || Items.Find(NewItem) != INDEX_NONE)
+		return ;
+
+	UItemComponentBase* ItemComponent = NewItem->GetItemComponent();
+
+	if (ItemComponent == nullptr)
+	{
+		UE_LOG(LogItem, Warning, TEXT("The target item %s should have one Item component and use GetItemComponent to get it!!"), 
+				NewItem.GetObject() == nullptr ? *(static_cast<IItemInterface*>(NewItem.GetInterface()))->_getUObject()->GetName() : *NewItem.GetObject()->GetName());
+		return;
+	}
+
+	//Only the server can use the item data to create runtime data. the client only get the runtime data through property replicated
+	if (ItemComponent->HasAuthority())
+	{
+		for (int i = 0; i < ItemComponent->GetDefaultItemRuntimeDataClass().Num(); i++)
+		{
+			UItemDataBase* ItemData = FindOrCreateNewItemData(ItemComponent->GetDefaultItemRuntimeDataClass()[i]);
+
+			if (ItemData == nullptr)
+				continue;
+
+			ItemComponent->AddNewItemData(ItemData);
+		}
+	}
+
+	Items.Add(NewItem);
 }
 
-void UItemManager::UnregisterItem(TScriptInterface<IItemInterface> OldItem)
+void UItemManager::UnregisterItem(TScriptInterface<IItemInterface> RemovedItem)
 {
-	
-}
 
-void UItemManager::GetAllItemDatas(TArray<UItemDataBase*>& OuterDatas) const
-{
-	
-}
+	if (RemovedItem == nullptr || Items.Find(RemovedItem) != INDEX_NONE)
+		return;
 
-void UItemManager::GetAllItems(TArray<TScriptInterface<IItemInterface>>& OuterItems) const
-{
-	
+	UItemComponentBase* ItemComponent = RemovedItem->GetItemComponent();
+
+	if (ItemComponent == nullptr)
+	{
+		UE_LOG(LogItem, Warning, TEXT("The target item %s should have one Item component and use GetItemComponent to get it!!"),
+			RemovedItem.GetObject() == nullptr ? *(static_cast<IItemInterface*>(RemovedItem.GetInterface()))->_getUObject()->GetName() : *RemovedItem.GetObject()->GetName());
+		return;
+	}
+
+	for (auto IT = ItemDatas.CreateIterator(); IT; ++IT)
+	{
+		if((*IT) == nullptr)
+			continue;
+
+		(*IT)->RemoveReferencedComponent(ItemComponent);
+	}
+
+	Items.Remove(RemovedItem);
 }

@@ -16,34 +16,34 @@ void UWeaponComponent::UnregisterComponent()
 	Super::UnregisterComponent();
 }
 
-void UWeaponComponent::ActivateItem(int Index)
+void UWeaponComponent::ActivateItem(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::ActivateItem(Index);
+	Super::ActivateItem(QueryFilter);
 }
 
-void UWeaponComponent::DeactivateItem(int Index)
+void UWeaponComponent::DeactivateItem(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::DeactivateItem(Index);
+	Super::DeactivateItem(QueryFilter);
 }
 
-void UWeaponComponent::StartUse(int Index)
+void UWeaponComponent::StartUse(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::StartUse(Index);
+	Super::StartUse(QueryFilter);
 }
 
-void UWeaponComponent::StopUse(int Index)
+void UWeaponComponent::StopUse(const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::StopUse(Index);
+	Super::StopUse(QueryFilter);
 }
 
-void UWeaponComponent::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
+void UWeaponComponent::Abandoned(const FItemScopeChangeInfo& AbandonInfo, const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::Abandoned(AbandonInfo);
+	Super::Abandoned(AbandonInfo, QueryFilter);
 }
 
-void UWeaponComponent::Gained(const FItemScopeChangeInfo& GainedInfo)
+void UWeaponComponent::Gained(const FItemScopeChangeInfo& GainedInfo, const FItemRuntimeDataQueryFilter& QueryFilter)
 {
-	Super::Gained(GainedInfo);
+	Super::Gained(GainedInfo, QueryFilter);
 }
 
 void UWeaponComponent::Reload_Implementation()

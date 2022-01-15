@@ -30,3 +30,13 @@ void IItemInterface::SetItemOwner(UItemInventoryComponent* NewOwner)
 
 	ItemComponent->SetAvatarOwner(NewOwner);
 }
+
+bool IItemInterface::HasAuthority() const
+{
+	if (_getUObject()->GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(IItemInterface, OnHasAuthority)))
+	{
+		return OnHasAuthority();
+	}
+
+	return false;
+}
