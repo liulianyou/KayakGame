@@ -16,19 +16,11 @@ void UItemManager::Initialize()
 	OnInitialize();
 }
 
-UItemDataBase* UItemManager::FindOrCreateNewItemData(TSubclassOf<UItemDataBase> ItemDataClass)
+UItemDataBase* UItemManager::CreateNewItemData(TSubclassOf<UItemDataBase> ItemDataClass)
 {
 	if (ItemDataClass == nullptr)
 	{
 		return nullptr;
-	}
-
-	for (auto IT = ItemDatas.CreateConstIterator(); IT; ++IT)
-	{
-		if ((*IT)->GetClass() == ItemDataClass)
-		{
-			return *IT;
-		}
 	}
 
 	UItemDataBase* NewItemData = NewObject<UItemDataBase>(this, ItemDataClass);
@@ -153,20 +145,6 @@ void UItemManager::RegisterItem(TScriptInterface<IItemInterface> NewItem)
 		return;
 	}
 
-	//Only the server can use the item data to create runtime data. the client only get the runtime data through property replicated
-	if (ItemComponent->HasAuthority())
-	{
-		for (int i = 0; i < ItemComponent->GetDefaultItemRuntimeDataClass().Num(); i++)
-		{
-			UItemDataBase* ItemData = FindOrCreateNewItemData(ItemComponent->GetDefaultItemRuntimeDataClass()[i]);
-
-			if (ItemData == nullptr)
-				continue;
-
-			ItemComponent->AddNewItemData(ItemData);
-		}
-	}
-
 	Items.AddUnique(NewItem);
 }
 
@@ -183,14 +161,6 @@ void UItemManager::UnregisterItem(TScriptInterface<IItemInterface> RemovedItem)
 		UE_LOG(LogItem, Warning, TEXT("The target item %s should have one Item component and use GetItemComponent to get it!!"),
 			RemovedItem.GetObject() == nullptr ? *(static_cast<IItemInterface*>(RemovedItem.GetInterface()))->_getUObject()->GetName() : *RemovedItem.GetObject()->GetName());
 		return;
-	}
-
-	for (auto IT = ItemDatas.CreateIterator(); IT; ++IT)
-	{
-		if((*IT) == nullptr)
-			continue;
-
-		(*IT)->RemoveReferencedComponent(ItemComponent);
 	}
 
 	Items.Remove(RemovedItem);

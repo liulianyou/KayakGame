@@ -38,7 +38,7 @@ public:
 	* Create new data used for item system
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Item")
-	UItemDataBase* FindOrCreateNewItemData(TSubclassOf<UItemDataBase> ItemDataClass);
+	UItemDataBase* CreateNewItemData(TSubclassOf<UItemDataBase> ItemDataClass);
 
 	/*
 	* Remove all the data with the target class

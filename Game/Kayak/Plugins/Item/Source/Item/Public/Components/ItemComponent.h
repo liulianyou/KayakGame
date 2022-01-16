@@ -383,12 +383,6 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ItemComponent")
 	const FItemRuntimeDataContainer& GetItemRuntimeDataContainer() const { return RuntimeDataContainer; }
 
-	/*
-	* Get the default item class which this component will used to create new runtime data
-	*/
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ItemComponent")
-	const TArray<TSubclassOf<UItemDataBase>>& GetDefaultItemRuntimeDataClass() const { return DefaultItemDataClass; }
-
 protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")
@@ -432,14 +426,6 @@ public:
 	//Broadcast when the avatar owner has been changed
 	UPROPERTY(BlueprintAssignable)
 	FAvatarOwnerChanged AvatarOwnerChanged;
-
-private:
-
-	/*
-	* The data which will be used in this item to initialize the runtime data
-	*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ItemData", meta=(AllowPrivateAccess))
-	TArray<TSubclassOf<UItemDataBase>> DefaultItemDataClass;
 
 private:
 
