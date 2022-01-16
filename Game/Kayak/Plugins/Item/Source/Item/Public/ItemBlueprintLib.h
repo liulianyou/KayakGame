@@ -14,6 +14,8 @@
 #include "ItemBlueprintLib.generated.h"
 
 class UItemManager;
+class UItemComponentBase;
+class UItemInventoryComponent;
 
 UCLASS()
 class ITEM_API UItemBlueprintLib : public UBlueprintFunctionLibrary
@@ -25,12 +27,25 @@ public:
 	/*
 	* Get the manager of the item system
 	*/
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Item")
 	static UItemManager* GetItemManager();
 
 	/*
 	* Get the global set of function used in the item system
 	*/
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Item")
 	static UItemGlobal* GetItemGlobal();
+
+	/*
+	* Get Item inventory component in the target object
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	static UItemInventoryComponent* GetItemInventoryComponent( UObject* Object );
+
+	/*
+	* Get Item component in the target object.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	static UItemComponentBase* GetItemComponent(UObject* Object);
+
 };

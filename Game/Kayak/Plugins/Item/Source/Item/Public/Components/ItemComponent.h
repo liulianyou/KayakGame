@@ -261,6 +261,8 @@ class ITEM_API UItemComponentBase : public UActorComponent
 {
 	GENERATED_UCLASS_BODY()
 
+	friend class UItemRuntimeDataBase;
+
 public:
 	
 	//Override Object

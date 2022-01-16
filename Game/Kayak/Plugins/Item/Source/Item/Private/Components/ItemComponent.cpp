@@ -102,7 +102,7 @@ void FItemRuntimeDataContainer::AddNewItem(UItemRuntimeDataBase* NewItem)
 
 void FItemRuntimeDataContainer::RemoveItem(UItemRuntimeDataBase* OldItem)
 {
-	for (auto IT = CreateIterator(); IT; ++IT)
+	for (auto IT = CreateIterator(0, false); IT; ++IT)
 	{
 		if ((*IT).RuntimeData == OldItem)
 		{
@@ -256,11 +256,11 @@ bool FItemRuntimeDataQueryFilter::IsMatchedForItemDataClass(const FItemRuntimeDa
 	if (!IT)
 		return false;
 
-	if (IT.GetValue()->RuntimeData == nullptr || IT.GetValue()->RuntimeData->GetItemData() == nullptr)
+	if (IT.GetValue()->RuntimeData == nullptr)
 		return false;
 
 
-	return IT.GetValue()->RuntimeData->GetItemData()->GetClass() == ItemDataClass;
+	return IT.GetValue()->RuntimeData->GetClass() == ItemDataClass->GetDefaultObject<UItemDataBase>()->GetRuntimeDataClass();
 }
 
 UItemComponentBase::UItemComponentBase(const FObjectInitializer& ObjectInitializer)
@@ -580,23 +580,10 @@ void UItemComponentBase::AddNewItemData(UItemDataBase* NewData)
 	if(NewData == nullptr || !NewData->IsValidItemData())
 		return;
 
-	TArray<UItemRuntimeDataBase*> RuntimeData;
+	//Only the authority component can get the new runtime data or the runtime data will be replicated
+	check(HasAuthority());
 
-	GetItemRuntimeData(FItemRuntimeDataQueryFilter(TSubclassOf<UItemRuntimeDataBase>(GetClass())), RuntimeData);
-
-	//If the target item component already have this item runtime data which is bind to data, just skip this action
-	if (RuntimeData.Num() != 0)
-	{
-		UE_LOG(LogItem, Display, TEXT("The compoment %s already have the target item data %s"), GetItemOwner() == nullptr ? TEXT("Invalid component") : GetItemOwner().GetObject() == nullptr ? TEXT("Invalid component") : *GetItemOwner().GetObject()->GetName() );
-		return;
-	}
-
-	UItemRuntimeDataBase* NewItemRunttmeData = NewObject<UItemRuntimeDataBase>(this, NewData->GetRuntimeDataClass().Get());
-
-	if (NewItemRunttmeData)
-	{
-		NewItemRunttmeData->Initialize(NewData);
-	}
+	UItemRuntimeDataBase* NewItemRunttmeData = NewData->CreateNewRuntimeData(this);
 
 	AddNewRuntimeData(NewItemRunttmeData);
 
@@ -643,6 +630,4 @@ void UItemComponentBase::RemoveItemRuntimeData(UItemRuntimeDataBase* ItemRuntime
 		return;
 
 	RuntimeDataContainer.RemoveItem(ItemRuntimeData);
-
-	ItemRuntimeData->Finialize();
 }

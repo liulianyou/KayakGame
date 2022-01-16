@@ -2,13 +2,19 @@
 #include "ItemComponent.h"
 #include "ItemDefinition.h"
 
-void IItemInterface::Initialize(UItemDataBase* NewData)
+UItemComponentBase* IItemInterface::GetItemComponent() const
 {
-	UItemComponentBase* Component = GetItemComponent();
+	if (_getUObject()->GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(IItemInterface, OnGetItemComponent)))
+	{
+		return OnGetItemComponent();
+	}
 
-	Component->AddNewItemData(NewData);
+	return nullptr;
+}
 
-	OnInitialize(NewData);
+void IItemInterface::Initialize(UItemInventoryComponent* InventoryOwner)
+{
+	OnInitialize(InventoryOwner);
 }
 
 void IItemInterface::SetItemOwner(UItemInventoryComponent* NewOwner)

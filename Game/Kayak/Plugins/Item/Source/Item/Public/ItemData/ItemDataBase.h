@@ -6,14 +6,14 @@
 * Purpose:	The base data which is used for the item.
 *			There is two kind of data used for item, One confined data(ItemData), one runtime data.
 *			Confined data is used to initialize the runtime data, and generate some informations of items.
-*			Confined data is singleton and when you change this data all runtime data it referenced to it will changed.
+*			Confined data stands for the base item type.
 *			The runtime data should be created or removed when item data is added or removed from the target item.
 *			RuntimeData is used to define the data which is used at runtime, it defined some operations of the data.
 *			The runtime data defines what the item is
 *			
 *			I split the data of item into two parts. part of them will have the same attributes.
-*			The item runtime data only respect for the behavior which is bind to the data attribute
-*			The component is used to expand the behavior for the item runtime, but it can only use the intrinsic attribute	
+*			The item runtime data only respect for the behavior which is bind to the intrinsic attribute
+*			The component is used to expand the behavior for the item runtime data, but it can only use the intrinsic attribute	in the item runtime data
 *			The item data will only exist at the server, the client will use the runtime data to replicate or do some RPC function
 */
 
@@ -33,8 +33,7 @@ class UItemInventoryComponent;
 * The base class for all items used in our game
 * You can treat it as the data scope of the target item. 
 * It is only used to initialize the item and get some informations from item
-* One game instance should have one instance of this data(which is not CDO)
-* This data should only exist on the server
+* By default This data should only exist on the server, and it should never be replicated
 */
 UCLASS(Blueprintable, BlueprintType, Abstract, Within="ItemManager", Category = "Item|ItemData")
 class ITEM_API UItemDataBase : public UObject
@@ -82,6 +81,16 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "ItemData")
 	TArray<UItemComponentBase*>& GetReferencedItemComponents_Mutable() { return ReferencedItemComponents; }
+
+	/*
+	* Create new runtime data through this item data
+	* 
+	* @param ComponentOwner the component which will use this runtime data
+	*/
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemData")
+	UItemRuntimeDataBase* OnCreateNewRuntimeData(UItemComponentBase* ItemComponentOwner);
+	UFUNCTION(BlueprintCallable, Category = "ItemData")
+	virtual UItemRuntimeDataBase* CreateNewRuntimeData(UItemComponentBase* ItemComponentOwner);
 
 public:
 
@@ -148,7 +157,8 @@ public:
 public:
 
 	/*
-	* Initialize the attributes in this data
+	* Initialize the attributes in this data.
+	* Invoked when the owner of this item has authority
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
 	void OnInitialize(UItemDataBase* ItemData);
@@ -163,23 +173,15 @@ public:
 	bool IsUsing() const;
 
 	/*
-	* Initialize this data by the item
+	* Set the new item component owner for this runtime data
 	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
-	void OnSetItemComponentOwner(UItemComponentBase* ItemComponent);
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
 	virtual void SetItemComponentOwner(UItemComponentBase* ItemComponent);
 
 	//Invoked when this item data will not be used by the item component
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
 	void OnFinialize();
 	virtual void Finialize();
-
-	/*
-	* Get the item data which will respect for the base value of this runtime data.
-	* We can not change any default value in the item data through the runtime data.
-	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	const UItemDataBase* GetItemData() const { return ReferencedItemData; }
 
 protected:
 
@@ -322,15 +324,6 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_ItemOwner)
 	UItemComponentBase* ItemOwner = nullptr;
 
-private:
-
-	/*
-	* Which data used to respect for the default value of this runtime data.
-	* If some value in the item data has been changed all referenced runtime data will change synchronize.
-	* This value maybe null if this runtime data is replicated from the server, or this data do not be used
-	*/
-	UItemDataBase* ReferencedItemData = nullptr;
-
 	//The state of current item
 	EItemState ItemState;
 
@@ -350,9 +343,4 @@ private:
 	* I need use this member to add external way to set this data is addressable
 	*/
 	uint32 bNetAddressable : 1;
-
-	/*
-	* Flag to check weather this data has been initialized
-	*/
-	uint32 bHasBeenInitialized : 1;
 };

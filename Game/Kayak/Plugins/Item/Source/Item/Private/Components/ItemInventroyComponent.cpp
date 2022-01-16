@@ -2,6 +2,7 @@
 #include "ItemComponent.h"
 #include "ItemDataBase.h"
 #include "Net/UnrealNetwork.h"
+#include "Templates/UnrealTemplate.h"
 
 bool FItemInfo::IsValid() const
 {
@@ -58,13 +59,20 @@ bool FItemQueryFilter::IsMatchedForItemDataClass(const FItemContainer::ConstIter
 	if(ItemComponent == nullptr)
 		return false;
 
-	for (auto RuntimeDataIT = ItemComponent->GetItemRuntimeDataContainer().CreateConstIterator(); RuntimeDataIT; ++RuntimeDataIT)
-	{
-		if(RuntimeDataIT.GetValue()->RuntimeData->GetItemData()->GetClass() == ItemClass)
-			return true;
-	}
+	TArray<UItemRuntimeDataBase*> RuntimeData;
 
-	return false;
+	ItemComponent->GetItemRuntimeData(FItemRuntimeDataQueryFilter( TSubclassOf<UItemDataBase>(ItemDataClass) ), RuntimeData);
+	
+	return RuntimeData.FindByPredicate([&](const UItemRuntimeDataBase* Data){
+			if(Data == nullptr)
+				return false;
+
+			if(Data->GetClass() == ItemRuntimeDataClass->GetDefaultObject<UItemDataBase>()->GetRuntimeDataClass())
+				return true;
+			else
+				return false;
+		}) != nullptr;
+
 }
 
 bool FItemQueryFilter::IsMatchedForItemRuntimeDataClass(const FItemContainer::ConstIterator& IT) const
@@ -80,13 +88,11 @@ bool FItemQueryFilter::IsMatchedForItemRuntimeDataClass(const FItemContainer::Co
 	if(ItemComponent == nullptr)
 		return false;
 
-	for (auto RuntimeDataIT = ItemComponent->GetItemRuntimeDataContainer().CreateConstIterator(); RuntimeDataIT; ++RuntimeDataIT)
-	{
-		if (RuntimeDataIT.GetValue()->RuntimeData->GetClass() == ItemRuntimeDataClass)
-			return true;
-	}
+	TArray<UItemRuntimeDataBase*> RuntimeData;
 
-	return false;
+	ItemComponent->GetItemRuntimeData(FItemRuntimeDataQueryFilter(ItemRuntimeDataClass), RuntimeData);
+
+	return RuntimeData.Num() != 0;
 }
 
 bool FItemQueryFilter::IsMatchedForIndex(const FItemContainer::ConstIterator& IT) const 
@@ -113,13 +119,11 @@ bool FItemQueryFilter::IsMatchedForRuntimeDataInstance(const FItemContainer::Con
 	if (ItemComponent == nullptr)
 		return false;
 
-	for (auto RuntimeDataIT = ItemComponent->GetItemRuntimeDataContainer().CreateConstIterator(); RuntimeDataIT; ++RuntimeDataIT)
-	{
-		if (RuntimeDataIT.GetValue()->RuntimeData == ItemRuntimeDataInstance)
-			return true;
-	}
+	TArray<UItemRuntimeDataBase*> RuntimeData;
 
-	return false;
+	ItemComponent->GetItemRuntimeData(FItemRuntimeDataQueryFilter(ItemRuntimeDataInstance), RuntimeData);
+
+	return RuntimeData.Num() != 0;
 }
 
 void FItemQueryFilter::GetItems(const UItemInventoryComponent* const InventoryComponent, TArray<TScriptInterface<IItemInterface>>& Items) const
@@ -129,17 +133,16 @@ void FItemQueryFilter::GetItems(const UItemInventoryComponent* const InventoryCo
 	if(InventoryComponent == nullptr)
 		return;
 
-	uint32 TargetMatchGole = GenerateQueryInfo();
+	uint32 TargetMatchGole = GenerateQueryInfo( ItemClass != nullptr, ItemDataClass != nullptr, ItemIndex != INDEX_NONE, ItemRuntimeDataInstance != nullptr, ItemRuntimeDataClass != nullptr );
 
 	for (auto IT = InventoryComponent->ItemContainer.CreateConstIterator(); IT; ++IT)
 	{
-		uint32 LocalMatchResult = 0;
-
-		LocalMatchResult |= IsMatchedForIndex(IT)					? EQueryFlag::EItemIndex				: ~EQueryFlag::EItemIndex;
-		LocalMatchResult |= IsMatchedForItemClass(IT)				? EQueryFlag::EItemClass				: ~EQueryFlag::EItemClass;
-		LocalMatchResult |= IsMatchedForItemDataClass(IT)			? EQueryFlag::EItemDataClass			: ~EQueryFlag::EItemDataClass;
-		LocalMatchResult |= IsMatchedForItemRuntimeDataClass(IT)	? EQueryFlag::EItemRuntimeDataClass		: ~EQueryFlag::EItemRuntimeDataClass;
-		LocalMatchResult |= IsMatchedForRuntimeDataInstance(IT)		? EQueryFlag::EItemRuntimeDataInstance	: ~EQueryFlag::EItemRuntimeDataInstance;
+		uint32 LocalMatchResult = GenerateQueryInfo(
+			IsMatchedForItemClass(IT),
+			IsMatchedForItemDataClass(IT),
+			IsMatchedForIndex(IT),
+			IsMatchedForRuntimeDataInstance(IT),
+			IsMatchedForItemRuntimeDataClass(IT));
 	
 		if (LocalMatchResult == TargetMatchGole)
 		{
@@ -148,14 +151,15 @@ void FItemQueryFilter::GetItems(const UItemInventoryComponent* const InventoryCo
 	}	
 }
 
-uint32 FItemQueryFilter::GenerateQueryInfo() const
+uint32 FItemQueryFilter::GenerateQueryInfo(bool IsMatchedItemClass, bool IsItemClassMatched, bool IsIndexMatched, bool IsRuntimeDataMatched, bool IsRuntimeDataClassMathced) const
 {
 	uint32 Result = 0;
-	Result |= ItemIndex != 0						? EQueryFlag::EItemIndex				: ~EQueryFlag::EItemIndex;
-	Result |= ItemClass != nullptr					? EQueryFlag::EItemClass				: ~EQueryFlag::EItemClass;
-	Result |= ItemDataClass != nullptr				? EQueryFlag::EItemDataClass			: ~EQueryFlag::EItemDataClass;
-	Result |= ItemRuntimeDataClass != nullptr		? EQueryFlag::EItemRuntimeDataClass		: ~EQueryFlag::EItemRuntimeDataClass;
-	Result |= ItemRuntimeDataInstance != nullptr	? EQueryFlag::EItemRuntimeDataInstance	: ~EQueryFlag::EItemRuntimeDataInstance;
+
+	Result |= IsIndexMatched						? EQueryFlag::EItemIndex				: ~EQueryFlag::EItemIndex;
+	Result |= IsMatchedItemClass					? EQueryFlag::EItemClass				: ~EQueryFlag::EItemClass;
+	Result |= IsItemClassMatched					? EQueryFlag::EItemDataClass			: ~EQueryFlag::EItemDataClass;
+	Result |= IsRuntimeDataClassMathced				? EQueryFlag::EItemRuntimeDataClass		: ~EQueryFlag::EItemRuntimeDataClass;
+	Result |= IsRuntimeDataMatched					? EQueryFlag::EItemRuntimeDataInstance	: ~EQueryFlag::EItemRuntimeDataInstance;
 
 	return Result;
 }
@@ -173,6 +177,26 @@ void UItemInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UItemInventoryComponent, ItemContainer);
+	DOREPLIFETIME(UItemInventoryComponent, InventoryOwner);
+}
+
+bool UItemInventoryComponent::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags)
+{
+	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
+
+	for (auto IT = ItemContainer.CreateIterator(); IT; ++IT)
+	{
+		if((*IT).Item.GetObject() == nullptr 
+			//As the actor has it own channel to replicate its properties
+			|| (*IT).Item.GetObject()->GetClass()->IsChildOf(AActor::StaticClass()))
+			continue;
+
+		WroteSomething |= (*IT).Item->ReplicateSubobjects(Channel, Bunch, RepFlags);
+
+		WroteSomething |= Channel->ReplicateSubobject((*IT).Item.GetObject(), *Bunch, *RepFlags);
+	}
+
+	return WroteSomething;
 }
 
 void UItemInventoryComponent::OnRegister()
@@ -188,6 +212,21 @@ void UItemInventoryComponent::OnUnregister()
 	}
 
 	Super::OnUnregister();
+}
+
+void UItemInventoryComponent::Initialize()
+{
+	OnInitialize();
+}
+
+void UItemInventoryComponent::SetItemOwner(UObject* NewOwner)
+{
+	if(NewOwner == InventoryOwner)
+		return;
+
+	OnSetItemOwner(NewOwner);
+
+	InventoryOwner = NewOwner;
 }
 
 void UItemInventoryComponent::GetItems(TArray<TScriptInterface<IItemInterface>>& OutItems, const FItemQueryFilter& ItemQueryFilter) const
@@ -237,4 +276,14 @@ int UItemInventoryComponent::RemoveItem(TScriptInterface<IItemInterface> Removed
 	int Result = ItemContainer.RemoveItem(RemovedItem);
 
 	return Result;
+}
+
+
+void UItemInventoryComponent::OnRep_InventoryOwner(UObject* OldOwner)
+{
+	UObject* NewItemOwner = InventoryOwner;
+
+	TGuardValue<UObject*>(InventoryOwner, OldOwner);
+
+	SetItemOwner(NewItemOwner);
 }

@@ -1,9 +1,12 @@
 #include "KayakCharacterBase.h"
+#include "ItemInventroyComponent.h"
+
 
 AKayakCharacterBase::AKayakCharacterBase( const FObjectInitializer& ObjectInitializer )
 	:Super(ObjectInitializer)
 {
 	AbilityComponent = CreateDefaultSubobject<UKayakAbilitySystemComponentBase>(KayakCharacterSubObjectName::AbilitySystemName);
+	ItemInventoryComponent = CreateDefaultSubobject<UItemInventoryComponent>(KayakCharacterSubObjectName::ItemInventoryName);
 }
 
 void AKayakCharacterBase::PostInitializeComponents()

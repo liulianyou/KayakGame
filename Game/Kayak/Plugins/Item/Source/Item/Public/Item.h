@@ -18,7 +18,7 @@ public:
 	*/
 	static inline IItemModuleInterface& Get()
 	{
-		QUICK_SCOPE_CYCLE_COUNTER(STAT_IGameplayAbilitiesModule_Get);
+		QUICK_SCOPE_CYCLE_COUNTER(STAT_IItemModule_Get);
 		static IItemModuleInterface& Singleton = FModuleManager::LoadModuleChecked< IItemModuleInterface >("Item");
 		return Singleton;
 	}

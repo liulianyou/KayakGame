@@ -71,6 +71,40 @@ void UItemDataBase::RemoveReferencedComponent(UItemComponentBase* ItemComponent)
 	}
 }
 
+UItemRuntimeDataBase* UItemDataBase::CreateNewRuntimeData(UItemComponentBase* ItemComponentOwner)
+{
+	if(ItemComponentOwner == nullptr || !IsValidItemData())
+		return nullptr;
+
+	//Only the authority component can get the new runtime data or the runtime data will be replicated
+	check(ItemComponentOwner->HasAuthority());
+
+	UItemRuntimeDataBase* Result = nullptr;
+
+	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemDataBase, OnCreateNewRuntimeData)))
+	{
+		Result = OnCreateNewRuntimeData(ItemComponentOwner);
+
+		if (Result == nullptr)
+		{
+			UE_LOG(LogItem, Warning, TEXT("Trying to create new runtime data in the BP function: OnCreateNewRuntimeData in class %s which returned nullptr, pleack check BP function or rmeove it, let native class to create new runtime Data"), *GetClass()->GetName());
+		}
+	}
+
+	Result = NewObject<UItemRuntimeDataBase>(ItemComponentOwner, GetRuntimeDataClass().Get());
+
+	if (Result != nullptr)
+	{
+		Result->Initialize(this);
+
+		Result->SetItemComponentOwner(ItemComponentOwner);
+
+		AddReferencedComponent(ItemComponentOwner);
+	}
+
+	return Result;
+}
+
 UItemRuntimeDataBase::UItemRuntimeDataBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
@@ -84,6 +118,8 @@ void UItemRuntimeDataBase::BeginPlay()
 
 void UItemRuntimeDataBase::BeginDestroy()
 {
+	SetItemComponentOwner(nullptr);
+
 	Super::BeginDestroy();
 }
 
@@ -174,8 +210,6 @@ void UItemRuntimeDataBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProp
 void UItemRuntimeDataBase::PreNetReceive()
 {
 	Super::PreNetReceive();
-
-
 }
 
 void UItemRuntimeDataBase::PostNetReceive()
@@ -187,32 +221,39 @@ void UItemRuntimeDataBase::PostNetReceive()
 
 void UItemRuntimeDataBase::SetItemComponentOwner(UItemComponentBase* ItemComponent)
 {
-	OnSetItemComponentOwner(ItemComponent);
+	if(ItemComponent == ItemOwner)
+		return;
+
+	if (ItemOwner != nullptr)
+	{
+		ItemOwner->RemoveItemRuntimeData(this);
+	}
 
 	ItemOwner = ItemComponent;
+
+	if (ItemComponent != nullptr)
+	{
+		ItemComponent->AddNewRuntimeData(this);
+	}
 }
 
 void UItemRuntimeDataBase::Initialize(UItemDataBase* ItemData)
 {
-	if(bHasBeenInitialized)
+	if(!IsDataPrepared())
 		return;
 
 	OnInitialize(ItemData);
 
-	ReferencedItemData = ItemData;
-
-	bHasBeenInitialized = true;
+	MarkDataPrepared();
 }
 
 void UItemRuntimeDataBase::Finialize()
 {
 	OnFinialize();
 
-	GetItemOwner()->RemoveItemData(ReferencedItemData);
+	DeactivateItem();
 
-	ReferencedItemData = nullptr;
-
-	ItemOwner = nullptr;
+	SetItemComponentOwner(nullptr);
 }
 
 bool UItemRuntimeDataBase::IsActivated() const

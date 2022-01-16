@@ -2,6 +2,7 @@
 #include "ItemDataBase.h"
 #include "ItemDefinition.h"
 #include "ItemComponent.h"
+#include "ItemInventroyComponent.h"
 #include "GameFramework/Actor.h"
 
 UItemManager::UItemManager(const FObjectInitializer& ObjectInitialzier)
@@ -55,49 +56,85 @@ void UItemManager::RemoveItemDataByClass(TSubclassOf<UItemDataBase> ItemDataClas
 	}
 }
 
-TScriptInterface<IItemInterface> UItemManager::CreateNewItem(TSubclassOf<UObject> ItemClass)
+TScriptInterface<IItemInterface> UItemManager::CreateNewItem(TSubclassOf<UObject> ItemClass, UItemInventoryComponent* ItemOwner, UObject* WorldContent  /*= nullptr*/)
 {
-	if(ItemClass == nullptr)
+	if (ItemClass == nullptr)
+	{
+		UE_LOG(LogItem, Warning, TEXT("Try to create item with none class!!"));
 		return nullptr;
+	}
 
 	if (!ItemClass->ImplementsInterface(UItemInterface::StaticClass()))
 	{
-		UE_LOG(LogItem, Warning, TEXT("Try to create new Item with class:%s do not inherited from ItemInterface!! "), *ItemClass->GetName());
+		UE_LOG(LogItem, Warning, TEXT("Try to create item with class %s do not inherit from IItemInterface!!"), *ItemClass->GetName());
+
 		return nullptr;
 	}
 
-	UObject* NewItem = nullptr;
+	bool IsActor = ItemClass->IsChildOf(AActor::StaticClass());
 
-	if (ItemClass->IsChildOf(AActor::StaticClass()))
+	FActorSpawnParameters Parameters;
+	Parameters.bNoFail = true;
+
+	if (ItemOwner == nullptr)
 	{
-		 NewItem = GetWorld()->SpawnActor<AActor>(ItemClass);
+		if (!IsActor)
+		{
+			UE_LOG(LogItem, Warning, TEXT("Try to create item with class %s to the world which is not one actor!!"), *ItemClass->GetName());
+
+			return nullptr;
+		}
+	}
+
+	TScriptInterface<IItemInterface> NewItem;
+	UObject* NewItemObject = nullptr;
+
+	if (IsActor)
+	{
+		if (ItemOwner != nullptr)
+		{
+			AActor* OwnerActor = Cast<AActor>(ItemOwner->GetInventoryOwner());
+
+			if (OwnerActor == nullptr)
+			{
+				Parameters.Owner = ItemOwner->GetOwner();
+			}
+			else
+			{
+				Parameters.Owner = OwnerActor;
+			}
+		}
+
+		UWorld* World = GEngine->GetWorldFromContextObject(WorldContent, EGetWorldErrorMode::LogAndReturnNull);
+
+		//Should never pass
+		if (World == nullptr)
+			return nullptr;
+
+		NewItemObject = World->SpawnActor<AActor>(ItemClass);
 	}
 	else
 	{
-		NewItem = NewObject<UObject>( this, ItemClass);
+		NewItemObject = NewObject<UObject>(ItemOwner, ItemClass);
 	}
 
-	if (NewItem == nullptr)
+	if (NewItemObject == nullptr)
 	{
+		UE_LOG(LogItem, Warning, TEXT("Three is not enough memeory to create new item object!!"));
 		return nullptr;
 	}
-
-	TScriptInterface<IItemInterface> Result;
-
-	IItemInterface* ItemInterface = Cast<IItemInterface>(NewItem);
+		
+	IItemInterface* ItemInterface = static_cast<IItemInterface*>(NewItemObject->GetInterfaceAddress(UItemInterface::StaticClass()));
 
 	if (ItemInterface == nullptr)
 	{
-		ItemInterface = static_cast<IItemInterface*>(NewItem->GetInterfaceAddress(UItemInterface::StaticClass()));
+		ItemInterface->Initialize(ItemOwner);
 	}
 
-	if(ItemInterface == nullptr)
-		return nullptr;
+	NewItem.SetInterface(NewItemObject->GetInterfaceAddress(UItemInterface::StaticClass()));
+	NewItem.SetObject(NewItemObject);
 
-	ItemInterface->GetItemComponent()->Initialzie(NewItem);
-
-	Result.SetObject(NewItem);
-	Result.SetInterface(ItemInterface);
+	Items.AddUnique(NewItem);
 
 	return NewItem;
 }
@@ -130,7 +167,7 @@ void UItemManager::RegisterItem(TScriptInterface<IItemInterface> NewItem)
 		}
 	}
 
-	Items.Add(NewItem);
+	Items.AddUnique(NewItem);
 }
 
 void UItemManager::UnregisterItem(TScriptInterface<IItemInterface> RemovedItem)

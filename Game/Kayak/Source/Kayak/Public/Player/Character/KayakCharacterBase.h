@@ -11,22 +11,24 @@
 
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
+#include "ItemInventoryInterface.h"
 
 #include "KayakCharacterBase.generated.h"
 
 class UAbilitySystemComponent;
+class UItemInventoryComponent;
 
 namespace KayakCharacterSubObjectName
 {
 	static FName AbilitySystemName = TEXT("KayakAbilitySystem");
+	static FName ItemInventoryName = TEXT("KayakItemSystem");
 };
-
 
 /*
 * All pawns which is used to show some local appearance should derived from this class, include player and AI
 */
 UCLASS(Blueprintable, BlueprintType, Abstract, Category = "Kayak|Player")
-class KAYAK_API AKayakCharacterBase : public ACharacter, public IAbilitySystemInterface
+class KAYAK_API AKayakCharacterBase : public ACharacter, public IAbilitySystemInterface, public IItemInventoryInterface
 {
 	GENERATED_UCLASS_BODY()
 
@@ -42,7 +44,14 @@ public:
 	/*
 	* Get the ability system component;
 	*/
+	UFUNCTION(BlueprintCallable, Category = "Ability")
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const { return AbilityComponent; }
+
+	/*
+	* Get the item inventory component to use the item system
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Ability")
+	virtual UItemInventoryComponent* GetItemInventoryComponent() const { return ItemInventoryComponent; }
 
 public:
 
@@ -92,4 +101,10 @@ private:
 	*/
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Kayak|Ability", meta = (AllowPrivateAccess = true))
 	UAbilitySystemComponent* AbilityComponent;
+
+	/*
+	* The inventory component used to hold all operations and manipulations for item system
+	*/
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Kayak|Ability", meta = (AllowPrivateAccess = true))
+	UItemInventoryComponent* ItemInventoryComponent;
 };

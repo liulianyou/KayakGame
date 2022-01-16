@@ -49,10 +49,14 @@ public:
 	void RemoveItemDataByClass(TSubclassOf<UItemDataBase> ItemDataClass, bool IgnoreChildClasses = false);
 
 	/*
-	* Create new Item according to the item class
+	* Create new item form the target item class.
+	*
+	* @param ItemClass which will used to spawn new item, the pending spawned item should have one item component
+	* @param ItemOwner	If the item owner is null this function will only spawn one object which is inherit from the AActor.
+	*					If the item owner is null means this item is created for the world
 	*/
-	UFUNCTION(BlueprintCallable, Category = "Item")
-	TScriptInterface<IItemInterface> CreateNewItem(TSubclassOf<UObject> ItemClass);
+	UFUNCTION(BlueprintCallable, Category = "Item", meta = (WorldContext = "WorldContent"))
+	TScriptInterface<IItemInterface> CreateNewItem(TSubclassOf<UObject> ItemClass, UItemInventoryComponent* ItemOwner, UObject* WorldContent  = nullptr);
 
 	/*
 	* Register the item to item system

@@ -12,6 +12,7 @@
 #include "UObject/ScriptInterface.h"
 #include "Engine/NetSerialization.h"
 
+#include "ItemContainerIterator.h"
 #include "ItemInterface.h"
 
 #include "ItemInventroyComponent.generated.h"
@@ -143,7 +144,7 @@ private:
 	/*
 	* Generate the information of this query
 	*/
-	uint32 GenerateQueryInfo() const;
+	uint32 GenerateQueryInfo( bool IsMatchedItemClass, bool IsItemClassMatched, bool IsIndexMatched, bool IsRuntimeDataMatched, bool IsRuntimeDataClassMathced ) const;
 
 protected:
 
@@ -210,6 +211,7 @@ public:
 
 	//Override UObject
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual bool ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags) override;
 	//Override UObject
 
 	//Override ActorComponent
@@ -218,6 +220,29 @@ public:
 	//Override ActorComponent
 
 public:
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemInventory")
+	void OnInitialize();
+	UFUNCTION(BlueprintCallable, Category = "ItemInventory")
+	void Initialize();
+
+public:
+
+	/*
+	* Set the direct owner of this inventory component
+	*/
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemInventory")
+	void OnSetItemOwner(UObject* NewOwner);
+	UFUNCTION(BlueprintCallable, Category = "ItemInventory")
+	void SetItemOwner( UObject* NewOwner );
+
+	/*
+	* Get the owner of the inventory.
+	* As the default UActorComponent::GetOwner will get one actor.
+	* sometimes the other want to just use this inventory to store items and access the items system.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemInventory")
+	UObject* GetInventoryOwner() const {return InventoryOwner;}
 
 	/*
 	* Get all items in this inventory according to the query rule
@@ -253,6 +278,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemInventory")
 	int RemoveItem(TScriptInterface<IItemInterface> RemovedItem, bool DestroyItem = false);
 
+public:
+	
+	UFUNCTION()
+	virtual void OnRep_InventoryOwner(UObject* OldOwner);
+
 private:
 	
 	/*
@@ -260,5 +290,14 @@ private:
 	*/
 	UPROPERTY(Replicated)
 	FItemContainer ItemContainer;
+
+	/*
+	* Cashed point to the owner.
+	* 
+	* This owner may not be one actor as someone want to just use this class to access the item system.
+	*/
+	UPROPERTY(ReplicatedUsing = OnRep_InventoryOwner)
+	mutable UObject* InventoryOwner;
+
 
 };

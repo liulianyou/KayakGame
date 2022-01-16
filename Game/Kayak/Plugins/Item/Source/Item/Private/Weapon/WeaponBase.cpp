@@ -18,8 +18,3 @@ UItemComponentBase* AWeaponBase::GetItemComponent() const
 {
 	return ItemComponent;
 }
-
-void AWeaponBase::Initialize(UItemDataBase* NewData)
-{
-	IItemInterface::Initialize(NewData);
-}

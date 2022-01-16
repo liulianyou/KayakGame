@@ -9,11 +9,13 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "UObject/ScriptInterface.h"
+#include "Engine/EngineTypes.h"
+#include "Engine/ActorChannel.h"
 #include "ItemDefinition.h"
 #include "ItemInterface.generated.h"
 
 class UItemComponentBase;
-class UItemDataBase;
+class UItemInventoryComponent;
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
@@ -34,19 +36,21 @@ class ITEM_API IItemInterface
 public:
 	
 	/*
-	* Get the data which this item will be used
+	* Get the item component which will make the inherited object to be one Item.
 	* One Item should only have one component to hand the specific item feature
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "Item", meta = (DisplayName="GetItemData"))
 	UItemComponentBase* OnGetItemComponent() const;
-	virtual UItemComponentBase* GetItemComponent() const PURE_VIRTUAL(&IItemInterface::OnGetItemComponent, return OnGetItemComponent();)
+	virtual UItemComponentBase* GetItemComponent() const;
 
 	/*
-	* Initialize this item from the external item data
+	* Initialize this item from the inventory
+	* 
+	* @param InventoryOwner null means this item is created in the world
 	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
-	void OnInitialize(UItemDataBase* NewData);
-	virtual void Initialize( UItemDataBase* NewData );
+	void OnInitialize(UItemInventoryComponent* InventoryOwner);
+	virtual void Initialize(UItemInventoryComponent* InventoryOwner);
 
 	/*
 	*	Set new owner for this item
@@ -55,16 +59,24 @@ public:
 	void OnSetItemOwner(UItemInventoryComponent* NewOwner);
 	virtual void SetItemOwner(UItemInventoryComponent* NewOwner);
 
+	/*
+	* Flag to check weather this item has authority.
+	* Only the authority item can create runtime data through item data
+	*/
 	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
 	bool OnHasAuthority() const;
 	virtual bool HasAuthority() const;
+
+	/*
+	* As some item is just one object and I want to use make the object can use the property replicate
+	*/
+	virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) { return false; }
 };
 
 
 
 #define  ItemInterfaceFramework()\
 	virtual UItemComponentBase* GetItemComponent() const override;\
-	virtual void Initialize( UItemDataBase* NewData ) override;\
 	
 
 /*
@@ -74,10 +86,5 @@ public:
 UItemComponentBase* NEWItemClass::GetItemComponent() const
 {
 	return IItemInterface::GetItemComponent();
-}
-
-void NEWItemClass::Initialize(UItemDataBase* NewData)
-{
-	IItemInterface::Initialize(NewData);
 }
 #endif
