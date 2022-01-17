@@ -10,12 +10,9 @@
 #include "UObject/ObjectMacros.h"
 #include "Templates/SubclassOf.h"
 
-#include "ItemDataBase.h"
+#include "ItemData.h"
 
 #include "ItemRuntimeData.generated.h"
-
-class UGameplayEffect;
-class UGameplayAbility;
 
 
 UCLASS(BlueprintType, Blueprintable, Category = "Item|ItemRuntimeData")
@@ -23,6 +20,31 @@ class ITEM_API UItemRuntimeData : public UItemRuntimeDataBase
 {
 	GENERATED_UCLASS_BODY()
 
+public:
+	
+	//Override ItemRuntimeDataBase
+	virtual void Initialize(UItemDataBase* ItemData) override;
+	//Override ItemRuntimeDataBase
 
+public:
+	
+	/*
+	* All effects which will be used in differ
+	*/
+	UPROPERTY(BlueprintReadWrite, Category = "ItemData")
+	TMap<EItemState, FItemEffectDefiniation> EffectMap;
+
+	/*
+	* All game play abilities which will be used in different state.
+	* These abilities should only be given to the owner avatar of the item
+	*/
+	UPROPERTY(BlueprintReadWrite, Category = "ItemData")
+	TMap<EItemState, FItemAbilityDefiniation> AbilityMap;
+
+	/*
+	* The attributes which will be added to the avatar owner when it is used
+	*/
+	UPROPERTY(BlueprintReadWrite, Category = "ItemData")
+	TMap<EItemState, FItemAttributeSetDefinition> AttributeSetMap;
 
 };

@@ -100,11 +100,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
 	const TSoftClassPtr<UItemRuntimeDataBase>& GetRuntimeDataClass() const { return RuntimdDataClass; }
 
-private:
+protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ItemData", meta = (AllowPrivateAccess = true))
 	TSoftClassPtr<UItemRuntimeDataBase> RuntimdDataClass;
 
+private:
 	/*
 	* The unique identification for this data.
 	* This ID should be equal in client and server.
@@ -261,9 +262,45 @@ private:
 	void ToggleItemStateChanged(EItemState NewItemState);
 
 public:
+	
+	//Copy value from item data
+	template<class ValueType>
+	void CopyValue(UItemDataBase* ItemData, const FString& ItemDataPropertyName, const FString& RuntimeDataPropertyName)
+	{
+		if (ItemData == nullptr || ItemDataPropertyName.IsEmpty() || RuntimeDataPropertyName.IsEmpty())
+		{
+			UE_LOG(LogItem, Warning, TEXT("Try to copy value from item data to runtime data with invalid parameter: ItemData:%p, ItemDataPropertyName:%s, RuntimeDataPropertyName:%s!!"), ItemData, *ItemDataPropertyName, *RuntimeDataPropertyName);
+			return;
+		}
 
-	UFUNCTION()
-	void OnRep_ItemOwner(UItemComponentBase* OldItemOnwer);
+		FProperty* ItemDataProperty = ItemData->GetClass()->FindPropertyByName(*ItemDataPropertyName);
+		FProperty* RuntimeDataProperty = ItemData->GetClass()->FindPropertyByName(*RuntimeDataPropertyName);
+
+		if (ItemDataProperty == nullptr)
+		{
+			UE_LOG(LogItem, Warning, TEXT("Try to copy inexistant value %s from Item Data:%s!!"), *ItemDataPropertyName, *ItemData->GetPathName());
+
+			return;
+		}
+
+		if (ItemDataProperty == nullptr)
+		{
+			UE_LOG(LogItem, Warning, TEXT("Try to copy value %s from Item Data to inexistant value : %s in runtime data %s!!"), *RuntimeDataPropertyName, *GetPathName());
+
+			return;
+		}
+
+		if (ItemDataProperty != nullptr && RuntimeDataProperty)
+		{
+			ValueType* ItemDataValuePtr = ItemDataProperty->ContainerPtrToValuePtr<ValueType>(ItemData);
+			ValueType* RuntimeDataValuePtr = RuntimeDataProperty->ContainerPtrToValuePtr<ValueType>(this);
+
+			if (ItemDataValuePtr != nullptr && RuntimeDataValuePtr != nullptr)
+			{
+				*RuntimeDataValuePtr = *ItemDataValuePtr;
+			}
+		}
+	}
 
 #pragma  region GET_SET_IMPLEMATION
 public:
@@ -299,6 +336,9 @@ public:
 
 	UFUNCTION()
 	void OnRep_ID();
+
+	UFUNCTION()
+	void OnRep_ItemOwner(UItemComponentBase* OldItemOnwer);
 
 public:
 	

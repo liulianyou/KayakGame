@@ -3,7 +3,7 @@
 /*
 * Author:	Liulianyou
 * Time:		2021/1/6
-* Purpose:	This is the item data that contain the default attribute for the run time data
+* Purpose:	This is the item data that contain the default attribute for the item data
 */
 
 #include "CoreMinimal.h"
@@ -45,6 +45,17 @@ public:
 	TArray<TSubclassOf<UGameplayAbility>> Abilities;
 };
 
+USTRUCT(BlueprintType)
+struct FItemAttributeSetDefinition
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TArray<TSubclassOf<UAttributeSet>> Abilities;
+};
+
+
 UCLASS(BlueprintType, Blueprintable, Category = "Item|ItemData")
 class ITEM_API UItemData : public UItemDataBase
 {
@@ -69,6 +80,6 @@ public:
 	* The attributes which will be added to the avatar owner when it is used
 	*/
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "ItemData")
-	TArray<TSubclassOf<UAttributeSet>> AttributeSets;
+	TMap<EItemState, FItemAttributeSetDefinition> AttributeSetMap;
 
 };
