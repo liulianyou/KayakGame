@@ -112,6 +112,18 @@ struct FItemScopeChangeInfo
 	GENERATED_BODY()
 
 public:
+	FItemScopeChangeInfo(){};
+	FItemScopeChangeInfo(const FLocationInfo& _TargetLocationInfo, const EItemScopeChangeType _ScopeChangeType, const FLocationInfo& _SourceLocationInfo)
+		: TargetLocationInfo(_TargetLocationInfo)
+		, ScopeChangeType(_ScopeChangeType)
+		, SourceLocationInfo(_SourceLocationInfo)
+	{}
+
+	FItemScopeChangeInfo(const EItemScopeChangeType _ScopeChangeType)
+		:ScopeChangeType(_ScopeChangeType)
+	{}
+
+public:
 
 	//The new location after the scope changed
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
@@ -124,10 +136,6 @@ public:
 	//The original location before this scope changed
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FLocationInfo SourceLocationInfo;
-
-	//The index of runtime data which will be applied this action
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	int RuntimeDataIndex;
 };
 
 /*

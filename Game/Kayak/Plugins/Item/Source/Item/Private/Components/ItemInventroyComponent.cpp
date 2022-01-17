@@ -275,6 +275,15 @@ int UItemInventoryComponent::AddNewItem(TScriptInterface<IItemInterface> NewItem
 		return INDEX_NONE;
 	}
 
+	UItemComponentBase* ItemComponent = NewItem->GetItemComponent();
+
+	if(ItemComponent == nullptr)
+		return INDEX_NONE;
+
+	ItemComponent->SetInventoryOwner(this);
+
+	ItemComponent->Gained(FItemScopeChangeInfo(), FItemRuntimeDataQueryFilter());
+
 	return ItemContainer.AddNewItem(NewItem);
 }
 
@@ -296,7 +305,7 @@ int UItemInventoryComponent::AddNewItemWithItemClass(TSubclassOf<UObject> ItemTy
 	NewItem.SetObject(NewItemObject);
 	NewItem.SetInterface( ItemType->GetInterfaceAddress(UItemInterface::StaticClass()) );
 
-	return ItemContainer.AddNewItem(NewItem);
+	return AddNewItem(NewItem);
 }
 
 int UItemInventoryComponent::RemoveItem(TScriptInterface<IItemInterface> RemovedItem, bool DestroyItem /*= false*/)
@@ -306,6 +315,15 @@ int UItemInventoryComponent::RemoveItem(TScriptInterface<IItemInterface> Removed
 		return INDEX_NONE;
 
 	int Result = ItemContainer.RemoveItem(RemovedItem);
+
+	UItemComponentBase* ItemComponent = RemovedItem->GetItemComponent();
+
+	if (ItemComponent != nullptr)
+	{
+		ItemComponent->SetInventoryOwner(nullptr);
+
+		ItemComponent->Abandoned(FItemScopeChangeInfo(DestroyItem?EItemScopeChangeType::Destroyed:EItemScopeChangeType::NoChange), FItemRuntimeDataQueryFilter());
+	}
 
 	return Result;
 }
