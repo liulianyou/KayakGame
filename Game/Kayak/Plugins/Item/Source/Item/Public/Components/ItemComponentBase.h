@@ -15,8 +15,9 @@
 #include "ItemInterface.h"
 #include "ItemContainerIterator.h"
 
-#include "ItemComponent.generated.h"
+#include "ItemComponentBase.generated.h"
 
+class AController;
 class UItemDataBase;
 class UItemRuntimeDataBase;
 class UItemInventoryComponent;
@@ -168,6 +169,7 @@ public:
 	FItemRuntimeDataQueryFilter(const TSubclassOf<UItemRuntimeDataBase>& RuntimeDataClass):ItemRuntimeDataClass(RuntimeDataClass){};
 	FItemRuntimeDataQueryFilter(const UItemRuntimeDataBase* RuntimeDataInstance):ItemRuntimeDataInstance(RuntimeDataInstance){};
 	FItemRuntimeDataQueryFilter(const TSubclassOf<UItemDataBase>& _ItemDataClass) :ItemDataClass(_ItemDataClass) {};
+	FItemRuntimeDataQueryFilter(const UItemDataBase* _ItemData) :ItemData(_ItemData) {};
 
 	FItemRuntimeDataQueryFilter(FItemRuntimeDataQueryFilter&& OtherValue)
 	{
@@ -198,18 +200,20 @@ private:
 	
 	enum EQueryParameter : uint8
 	{
-		EIndex = 1 << 0,
-		EItemRuntimeDataClass = 1 << 1,
-		EItemRunntimeDataInstance = 1 << 2,
-		EItemDataClass = 1 << 3,
+		EIndex							= 1 << 0,
+		EItemRuntimeDataClass			= 1 << 1,
+		EItemRunntimeDataInstance		= 1 << 2,
+		EItemDataClass					= 1 << 3,
+		EItemData						= 1 << 4
 	};
 
-	uint8 GenerateQueryParameter( bool IsValidIndex, bool IsValidRuntimeDataClass, bool IsValidRuntimeDataInstance, bool IsValidItemDataClass) const;
+	uint8 GenerateQueryParameter( bool IsValidIndex, bool IsValidRuntimeDataClass, bool IsValidRuntimeDataInstance, bool IsValidItemDataClass, bool IsValidItemData) const;
 
 	bool IsMatchedForIndex(const FItemRuntimeDataContainer::ConstIterator& IT) const;
 	bool IsMatchedForItemRuntimeDataClass(const FItemRuntimeDataContainer::ConstIterator& IT) const;
 	bool IsMatchedForItemRuntimeDataInstance(const FItemRuntimeDataContainer::ConstIterator& IT) const;
 	bool IsMatchedForItemDataClass(const FItemRuntimeDataContainer::ConstIterator& IT) const;
+	bool IsMatchedForItemData(const FItemRuntimeDataContainer::ConstIterator& IT) const;
 
 public:
 
@@ -224,6 +228,12 @@ public:
 	*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (ShowOnlyInnerProperties))
 	TSubclassOf<UItemDataBase> ItemDataClass = nullptr;
+
+	/*
+	* The instance of item data which is used to filter the runtime data
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (ShowOnlyInnerProperties))
+	const UItemDataBase* ItemData = nullptr;
 
 	/*
 	* The class for the runtime data in the target item component
@@ -260,8 +270,6 @@ UCLASS(BlueprintType, Blueprintable, Abstract, Category = "Item|Component")
 class ITEM_API UItemComponentBase : public UActorComponent
 {
 	GENERATED_UCLASS_BODY()
-
-	friend class UItemRuntimeDataBase;
 
 public:
 	
@@ -359,13 +367,19 @@ public:
 	* Get the avatar who own this item component, as one item should only have one item component, the avatar also own this item
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	UItemInventoryComponent* GetAvatarOwner() const { return OwnerAvatar; }
+	UItemInventoryComponent* GetInventoryOwner() const { return OwnerInventory; }
+
+	/*
+	* Get the avatar who own this item component
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	AController* GetAvatarOwner() const;
 
 	/*
 	* Set new avatar owner for this item component
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	virtual void SetAvatarOwner(UItemInventoryComponent* NewAvatar);
+	virtual void SetInventoryOwner(UItemInventoryComponent* NewAvatar);
 
 	/*
 	* Add new data to this component
@@ -415,7 +429,7 @@ public:
 	
 	//Callback when the avatar have been changed 
 	UFUNCTION()
-	void OnRep_OwnerAvatar(UItemInventoryComponent* OldAvatar);
+	void OnRep_OwnerInventory(UItemInventoryComponent* OldInventoryComponent);
 
 public:
 
@@ -440,8 +454,8 @@ private:
 	* Mostly this value is different from the ItemOwner.
 	* If this item is spawned at the world then the owner avatar is null
 	*/
-	UPROPERTY(ReplicatedUsing = OnRep_OwnerAvatar)
-	UItemInventoryComponent* OwnerAvatar = nullptr;
+	UPROPERTY(ReplicatedUsing = OnRep_OwnerInventory)
+	UItemInventoryComponent* OwnerInventory = nullptr;
 
 	/*
 	* As this component maybe treated as one item operation set in other object,

@@ -1,5 +1,5 @@
 #include "ItemInventroyComponent.h"
-#include "ItemComponent.h"
+#include "ItemComponentBase.h"
 #include "ItemDataBase.h"
 #include "Net/UnrealNetwork.h"
 #include "Templates/UnrealTemplate.h"
@@ -208,7 +208,7 @@ void UItemInventoryComponent::OnUnregister()
 {
 	for (auto IT = ItemContainer.CreateIterator(); IT; ++IT)
 	{
-		(*IT).Item->GetItemComponent()->SetAvatarOwner(nullptr);
+		(*IT).Item->GetItemComponent()->SetInventoryOwner(nullptr);
 	}
 
 	Super::OnUnregister();
@@ -227,6 +227,38 @@ void UItemInventoryComponent::SetItemOwner(UObject* NewOwner)
 	OnSetItemOwner(NewOwner);
 
 	InventoryOwner = NewOwner;
+}
+
+AController* UItemInventoryComponent::GetAvatarOwner() const
+{
+	AController* Result = GetTypedOuter<AController>();
+
+	if (Result == nullptr)
+	{
+		APawn* Pawn = GetTypedOuter<APawn>();
+
+		if (Pawn != nullptr)
+		{
+			Result = Pawn->GetController();
+		}
+	}
+
+	if (Result == nullptr)
+	{
+		Result = Cast<AController>( GetInventoryOwner());
+
+		if (Result == nullptr)
+		{
+			APawn* Pawn = Cast<APawn>(GetInventoryOwner());
+
+			if (Pawn != nullptr)
+			{
+				Result = Pawn->GetController();
+			}
+		}
+	}
+
+	return Result;
 }
 
 void UItemInventoryComponent::GetItems(TArray<TScriptInterface<IItemInterface>>& OutItems, const FItemQueryFilter& ItemQueryFilter) const

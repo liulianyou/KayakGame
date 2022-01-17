@@ -40,6 +40,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Item")
 	UItemDataBase* CreateNewItemData(TSubclassOf<UItemDataBase> ItemDataClass);
 
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	void RemoveItemData( UItemDataBase* ItemData );
+
 	/*
 	* Remove all the data with the target class
 	* 

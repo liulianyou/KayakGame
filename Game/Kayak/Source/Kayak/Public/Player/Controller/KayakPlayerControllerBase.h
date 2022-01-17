@@ -14,6 +14,7 @@
 #include "KayakPlayerControllerBase.generated.h"
 
 class UTriggerNetPlayerSupportComponent;
+class UItemNetworkSupportComponent;
 
 UCLASS(Blueprintable, BlueprintType, Abstract, Category = "Kayak|PlayerController")
 class KAYAK_API AKayakPlayerControllerBase : public APlayerController
@@ -29,4 +30,9 @@ private:
 	UPROPERTY()
 	UTriggerNetPlayerSupportComponent* TriggerNetSupport;
 
+	/*
+	* Used for item system to expand its net work while one item has no avatar owner
+	*/
+	UPROPERTY()
+	UItemNetworkSupportComponent* ItemNetSupport;
 };

@@ -1,5 +1,5 @@
 #include "ItemInterface.h"
-#include "ItemComponent.h"
+#include "ItemComponentBase.h"
 #include "ItemDefinition.h"
 
 UItemComponentBase* IItemInterface::GetItemComponent() const
@@ -34,7 +34,7 @@ void IItemInterface::SetItemOwner(UItemInventoryComponent* NewOwner)
 		return;
 	}
 
-	ItemComponent->SetAvatarOwner(NewOwner);
+	ItemComponent->SetInventoryOwner(NewOwner);
 }
 
 bool IItemInterface::HasAuthority() const

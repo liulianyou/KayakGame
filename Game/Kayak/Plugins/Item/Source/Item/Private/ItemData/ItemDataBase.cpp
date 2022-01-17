@@ -2,7 +2,8 @@
 #include "Net/UnrealNetwork.h"
 #include "ItemBlueprintLib.h"
 #include "ItemGlobal.h"
-#include "ItemComponent.h"
+#include "ItemComponentBase.h"
+#include "ItemNetworkSupportComponent.h"
 
 UItemDataBase::UItemDataBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -23,6 +24,12 @@ void UItemDataBase::Initialize()
 void UItemDataBase::Finialize()
 {
 	OnFinialize();
+
+	for (auto IT = GetReferencedItemComponents_Mutable().CreateIterator(); IT; ++IT)
+	{
+		RemoveReferencedComponent(*IT);
+	}
+	GetReferencedItemComponents_Mutable().Empty();
 }
 
 void UItemDataBase::BeginDestroy()
@@ -226,14 +233,58 @@ void UItemRuntimeDataBase::SetItemComponentOwner(UItemComponentBase* ItemCompone
 
 	if (ItemOwner != nullptr)
 	{
-		ItemOwner->RemoveItemRuntimeData(this);
+		if (GetReferencedItemData() == nullptr)
+		{
+			AController* Controller = ItemOwner->GetAvatarOwner();
+
+			if (Controller == nullptr)
+			{
+				Controller = GetWorld()->GetFirstPlayerController();
+
+				if (Controller != nullptr)
+				{
+					UItemNetworkSupportComponent* NetSupport = UItemBlueprintLib::GetItemNetworkSupportComponent(Controller);
+
+					if (NetSupport != nullptr)
+					{
+						NetSupport->Server_RemoveItemRuntimeData(this, ItemOwner);
+					}
+				}
+			}
+		}
+		else
+		{
+			ItemOwner->RemoveItemData(GetReferencedItemData());
+		}
 	}
 
 	ItemOwner = ItemComponent;
 
 	if (ItemComponent != nullptr)
 	{
-		ItemComponent->AddNewRuntimeData(this);
+		if (GetReferencedItemData() == nullptr)
+		{
+			AController* Controller = ItemOwner->GetAvatarOwner();
+
+			if (Controller == nullptr)
+			{
+				Controller = GetWorld()->GetFirstPlayerController();
+
+				if (Controller != nullptr)
+				{
+					UItemNetworkSupportComponent* NetSupport = UItemBlueprintLib::GetItemNetworkSupportComponent(Controller);
+
+					if (NetSupport != nullptr)
+					{
+						NetSupport->Server_AddItemRuntimeData(this, ItemComponent);
+					}
+				}
+			}
+		}
+		else
+		{
+			ItemComponent->AddNewItemData(GetReferencedItemData());
+		}
 	}
 }
 

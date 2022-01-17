@@ -287,6 +287,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
 	void MarkDataPrepared();
 
+	/*
+	* This variable only work at authority runtime data.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	UItemDataBase* GetReferencedItemData() const { return ReferencedItemData; }
+
 #pragma  endregion GET_SET_IMPLEMATION
 
 public:
@@ -323,6 +329,12 @@ private:
 	*/
 	UPROPERTY(ReplicatedUsing = OnRep_ItemOwner)
 	UItemComponentBase* ItemOwner = nullptr;
+
+	/*
+	* Which item data create this runtime data.
+	* This variable only work at authority runtime data.
+	*/
+	UItemDataBase* ReferencedItemData;
 
 	//The state of current item
 	EItemState ItemState;

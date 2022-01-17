@@ -9,7 +9,7 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 
-#include "EquipmentComponent.h"
+#include "ItemComponentBase.h"
 
 #include "WeaponComponent.generated.h"
 

@@ -17,6 +17,7 @@
 
 #include "ItemInventroyComponent.generated.h"
 
+class AController;
 class UItemRuntimeData;
 
 //The activation information for this task
@@ -243,6 +244,15 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemInventory")
 	UObject* GetInventoryOwner() const {return InventoryOwner;}
+
+	/*
+	* Get the controller who own this inventory\
+	* 
+	* #return	nullptr means this inventory is public in the world, just like one actor spawned in the world without owner.
+	*			At this point this inventory only can use net_muticat RPC, if you want to use Server/Client, you should transfer to ItemNetWorkSupportComponent in the target controller
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemInventory")
+	AController* GetAvatarOwner() const;
 
 	/*
 	* Get all items in this inventory according to the query rule

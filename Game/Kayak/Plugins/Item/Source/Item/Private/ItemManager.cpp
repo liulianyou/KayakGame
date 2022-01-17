@@ -1,7 +1,7 @@
 #include "ItemManager.h"
 #include "ItemDataBase.h"
 #include "ItemDefinition.h"
-#include "ItemComponent.h"
+#include "ItemComponentBase.h"
 #include "ItemInventroyComponent.h"
 #include "GameFramework/Actor.h"
 
@@ -36,16 +36,32 @@ UItemDataBase* UItemManager::CreateNewItemData(TSubclassOf<UItemDataBase> ItemDa
 
 void UItemManager::RemoveItemDataByClass(TSubclassOf<UItemDataBase> ItemDataClass, bool IgnoreChildClasses/* = false*/)
 {
+	TArray<UItemDataBase*> RemovedItems;
+
 	for (auto IT = ItemDatas.CreateIterator(); IT; ++IT)
 	{
 		if (ItemDataClass == nullptr||
 			(*IT)->GetClass() == ItemDataClass||
 			(!IgnoreChildClasses && (*IT)->GetClass()->IsChildOf(ItemDataClass)))
 		{
-			(*IT)->Finialize();
-			IT.RemoveCurrent();
+			RemovedItems.Add(*IT);
 		}
 	}
+
+	for (int i = 0; i < RemovedItems.Num(); i++)
+	{
+		RemoveItemData(RemovedItems[i]);
+	}
+}
+
+void UItemManager::RemoveItemData(UItemDataBase* ItemData)
+{
+	if(ItemData == nullptr)
+		return;
+
+	ItemData->Finialize();
+
+	ItemDatas.Remove(ItemData);
 }
 
 TScriptInterface<IItemInterface> UItemManager::CreateNewItem(TSubclassOf<UObject> ItemClass, UItemInventoryComponent* ItemOwner, UObject* WorldContent  /*= nullptr*/)

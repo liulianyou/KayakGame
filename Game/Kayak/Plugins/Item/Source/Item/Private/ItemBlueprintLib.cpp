@@ -102,3 +102,30 @@ UItemComponentBase* UItemBlueprintLib::GetItemComponent(UObject* Object)
 
 	return Result;
 }
+
+UItemNetworkSupportComponent* UItemBlueprintLib::GetItemNetworkSupportComponent(UObject* Object)
+{
+	UItemNetworkSupportComponent* Result = nullptr;
+
+	if(Object == nullptr)
+		return Result;
+
+	AActor* Actor = Cast<AActor>(Object);
+
+	if(Actor == nullptr)
+		return Result;
+
+	Result = Cast<UItemNetworkSupportComponent>(Actor->FindComponentByClass(UItemNetworkSupportComponent::StaticClass()));
+
+	if(Result != nullptr)
+		return Result;
+
+	APawn* Pawn = Cast<APawn>(Object);
+
+	if(Pawn == nullptr)
+		return Result;
+
+	Result = Cast<UItemNetworkSupportComponent>(Pawn->FindComponentByClass(UItemNetworkSupportComponent::StaticClass()));
+
+	return Result;
+}

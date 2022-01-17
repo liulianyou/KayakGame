@@ -1,13 +1,17 @@
-#include "ItemComponent.h"
+#include "ItemComponentBase.h"
 #include "ItemManager.h"
 #include "ItemBlueprintLib.h"
-#include "Net/UnrealNetwork.h"
-#include "Engine/ActorChannel.h"
 #include "ItemDataBase.h"
 #include "ItemBlueprintLib.h"
 #include "ItemDefinition.h"
 #include "ItemGlobal.h"
 #include "ItemInventroyComponent.h"
+#include "ItemNetworkSupportComponent.h"
+
+#include "Net/UnrealNetwork.h"
+#include "Engine/ActorChannel.h"
+#include "GameFramework/Controller.h"
+#include "GameFramework/Pawn.h"
 
 FRuntimeDataItem::FRuntimeDataItem()
 	: RuntimeData(nullptr)
@@ -192,7 +196,7 @@ void FItemRuntimeDataQueryFilter::GetRuntimeDatas( const UItemComponentBase* Ite
 {
 	OuterRuntimeDatas.Empty();
 
-	uint8 QueryParameter = GenerateQueryParameter( Index != INDEX_NONE, ItemRuntimeDataClass != nullptr, ItemRuntimeDataInstance != nullptr, ItemDataClass != nullptr);
+	uint8 QueryParameter = GenerateQueryParameter( Index != INDEX_NONE, ItemRuntimeDataClass != nullptr, ItemRuntimeDataInstance != nullptr, ItemDataClass != nullptr, ItemData != nullptr);
 
 	if(ItemComponent == nullptr)
 		return;
@@ -203,7 +207,8 @@ void FItemRuntimeDataQueryFilter::GetRuntimeDatas( const UItemComponentBase* Ite
 			IsMatchedForIndex(IT), 
 			IsMatchedForItemRuntimeDataClass(IT), 
 			IsMatchedForItemRuntimeDataInstance(IT),
-			IsMatchedForItemDataClass(IT));
+			IsMatchedForItemDataClass(IT),
+			IsMatchedForItemData(IT));
 
 		if (LocalParameter == QueryParameter)
 		{
@@ -212,7 +217,12 @@ void FItemRuntimeDataQueryFilter::GetRuntimeDatas( const UItemComponentBase* Ite
 	}
 }
 
-uint8 FItemRuntimeDataQueryFilter::GenerateQueryParameter(bool IsValidIndex, bool IsValidRuntimeDataClass, bool IsValidRuntimeDataInstance, bool IsValidItemDataClass) const
+uint8 FItemRuntimeDataQueryFilter::GenerateQueryParameter(
+	bool IsValidIndex, 
+	bool IsValidRuntimeDataClass, 
+	bool IsValidRuntimeDataInstance, 
+	bool IsValidItemDataClass, 
+	bool IsValidItemData) const
 {
 	uint8 Result = 0;
 
@@ -220,6 +230,7 @@ uint8 FItemRuntimeDataQueryFilter::GenerateQueryParameter(bool IsValidIndex, boo
 	Result |= !IsValidRuntimeDataClass		? ~EQueryParameter::EItemRuntimeDataClass		: EQueryParameter::EItemRuntimeDataClass;
 	Result |= !IsValidRuntimeDataInstance 	? ~EQueryParameter::EItemRunntimeDataInstance	: EQueryParameter::EItemRunntimeDataInstance;
 	Result |= !IsValidItemDataClass			? ~EQueryParameter::EItemDataClass				: EQueryParameter::EItemDataClass;
+	Result |= !IsValidItemData				? ~EQueryParameter::EItemData					: EQueryParameter::EItemData;
 
 	return Result;
 }
@@ -259,8 +270,18 @@ bool FItemRuntimeDataQueryFilter::IsMatchedForItemDataClass(const FItemRuntimeDa
 	if (IT.GetValue()->RuntimeData == nullptr)
 		return false;
 
-
 	return IT.GetValue()->RuntimeData->GetClass() == ItemDataClass->GetDefaultObject<UItemDataBase>()->GetRuntimeDataClass();
+}
+
+bool FItemRuntimeDataQueryFilter::IsMatchedForItemData(const FItemRuntimeDataContainer::ConstIterator& IT) const
+{
+	if (!IT)
+		return false;
+
+	if (IT.GetValue()->RuntimeData == nullptr)
+		return false;
+
+	return IT.GetValue()->RuntimeData->GetReferencedItemData() == ItemData;
 }
 
 UItemComponentBase::UItemComponentBase(const FObjectInitializer& ObjectInitializer)
@@ -273,7 +294,7 @@ void UItemComponentBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UItemComponentBase, OwnerAvatar);
+	DOREPLIFETIME(UItemComponentBase, OwnerInventory);
 	DOREPLIFETIME(UItemComponentBase, RuntimeDataContainer);
 }
 
@@ -529,7 +550,7 @@ bool UItemComponentBase::IsWorldOwned() const
 	if(IsPendingKill())
 		return false;
 
-	return OwnerAvatar == nullptr;
+	return GetAvatarOwner() == nullptr;
 }
 
 bool UItemComponentBase::HasAuthority() const
@@ -550,28 +571,65 @@ bool UItemComponentBase::HasAuthority() const
 	return false;
 }
 
-void UItemComponentBase::SetAvatarOwner(UItemInventoryComponent* NewAvatar)
+AController* UItemComponentBase::GetAvatarOwner() const
 {
-	UItemInventoryComponent* OldAvatarOnwer =OwnerAvatar;
+	AController* Result = nullptr;
 
-	OwnerAvatar = NewAvatar;
+	if(GetInventoryOwner() == nullptr || GetInventoryOwner()->GetOwner() == nullptr)
+		return Result;
+
+	Result = GetInventoryOwner()->GetAvatarOwner();
+
+	if (Result == nullptr)
+	{
+		Result = GetTypedOuter<AController>();
+
+		if (Result == nullptr)
+		{
+			APawn* Pawn = Cast<APawn>(GetTypedOuter<APawn>());
+
+			if (Pawn != nullptr)
+			{
+				Result = Pawn->GetController();
+			}
+		}
+	}
+
+	return Result;
+}
+
+void UItemComponentBase::SetInventoryOwner(UItemInventoryComponent* NewInventoryOwner)
+{
+	UItemInventoryComponent* OldAvatarOnwer =OwnerInventory;
+
+	if (OwnerInventory != nullptr)
+	{
+		OwnerInventory->RemoveItem(GetItemOwner());
+	}
+
+	OwnerInventory = NewInventoryOwner;
+
+	if (NewInventoryOwner != nullptr)
+	{
+		NewInventoryOwner->AddNewItem(GetItemOwner());
+	}
 
 	int RuntimeNum = RuntimeDataContainer.GetItemCount();
 
 	for (auto IT = RuntimeDataContainer.CreateIterator(0, true); IT; ++IT)
 	{
-		(*IT).RuntimeData->AvatarOwnerChanged(OldAvatarOnwer, NewAvatar);
+		(*IT).RuntimeData->AvatarOwnerChanged(OldAvatarOnwer, NewInventoryOwner);
 	}
 
-	AvatarOwnerChanged.Broadcast(this, OldAvatarOnwer, NewAvatar);
+	AvatarOwnerChanged.Broadcast(this, OldAvatarOnwer, NewInventoryOwner);
 
-	FItemNativeDelegate::AvatarOwnerChanged.Broadcast(this, OldAvatarOnwer, NewAvatar);
+	FItemNativeDelegate::AvatarOwnerChanged.Broadcast(this, OldAvatarOnwer, NewInventoryOwner);
 
 	UItemGlobal* ItemGlobal = UItemBlueprintLib::GetItemGlobal();
 
 	if (ItemGlobal)
 	{
-		ItemGlobal->AvatarOwnerChanged.Broadcast(this, OldAvatarOnwer, NewAvatar);
+		ItemGlobal->AvatarOwnerChanged.Broadcast(this, OldAvatarOnwer, NewInventoryOwner);
 	}
 }
 
@@ -580,8 +638,26 @@ void UItemComponentBase::AddNewItemData(UItemDataBase* NewData)
 	if(NewData == nullptr || !NewData->IsValidItemData())
 		return;
 
-	//Only the authority component can get the new runtime data or the runtime data will be replicated
-	check(HasAuthority());
+	if (!HasAuthority())
+	{
+		AController* AvatarOwner = GetAvatarOwner();
+
+		//If this item is spawn in the world and shared for everyone, I need to use the local player controller to notify the server to remove the data
+		if (AvatarOwner == nullptr)
+		{
+			AvatarOwner = GetWorld()->GetFirstPlayerController<APlayerController>();
+		}
+
+		if (AvatarOwner == nullptr)
+			return;
+
+		UItemNetworkSupportComponent* NetSupprot = UItemBlueprintLib::GetItemNetworkSupportComponent(AvatarOwner);
+
+		if (NetSupprot != nullptr)
+		{
+			NetSupprot->Server_AddNewItemData(NewData, this);
+		}
+	}
 
 	UItemRuntimeDataBase* NewItemRunttmeData = NewData->CreateNewRuntimeData(this);
 
@@ -595,11 +671,35 @@ void UItemComponentBase::RemoveItemData(UItemDataBase* ItemData)
 	if (ItemData == nullptr || !ItemData->IsValidItemData())
 		return;
 
+	//When this component has no authority then try to notify the server to remove the target item data
+	if (!HasAuthority())
+	{
+		AController* AvatarOwner = GetAvatarOwner();
+
+		//If this item is spawn in the world and shared for everyone, I need to use the local player controller to notify the server to remove the data
+		if (AvatarOwner == nullptr)
+		{
+			AvatarOwner = GetWorld()->GetFirstPlayerController<APlayerController>();
+		}
+		
+		if(AvatarOwner == nullptr)
+			return;
+
+		UItemNetworkSupportComponent* NetSupprot = UItemBlueprintLib::GetItemNetworkSupportComponent(AvatarOwner);
+
+		if (NetSupprot != nullptr )
+		{
+			NetSupprot->Server_RemoveItemData(ItemData, this);
+		}
+
+		return;
+	}
+
 	ItemData->RemoveReferencedComponent(this);
 
 	TArray<UItemRuntimeDataBase*> ItemRuntimeData;
 
-	GetItemRuntimeData( FItemRuntimeDataQueryFilter( TSubclassOf<UItemDataBase>(ItemData->GetClass()) ), ItemRuntimeData);
+	GetItemRuntimeData( FItemRuntimeDataQueryFilter(ItemData), ItemRuntimeData);
 
 	for (int i = 0; i < ItemRuntimeData.Num(); i++)
 	{
@@ -607,13 +707,13 @@ void UItemComponentBase::RemoveItemData(UItemDataBase* ItemData)
 	}
 }
 
-void UItemComponentBase::OnRep_OwnerAvatar(UItemInventoryComponent* OldAvatar)
+void UItemComponentBase::OnRep_OwnerInventory(UItemInventoryComponent* OldInventory)
 {
 	//At this point the the owner avatar have been changed
 	{
-		UItemInventoryComponent* NewAvatarOwner = OwnerAvatar;
-		TGuardValue< UItemInventoryComponent* > GuardValue(OwnerAvatar, OldAvatar);
-		SetAvatarOwner(NewAvatarOwner);
+		UItemInventoryComponent* NewInventoryOwner = OwnerInventory;
+		TGuardValue< UItemInventoryComponent* > GuardValue(OwnerInventory, OldInventory);
+		SetInventoryOwner(NewInventoryOwner);
 	}
 }
 

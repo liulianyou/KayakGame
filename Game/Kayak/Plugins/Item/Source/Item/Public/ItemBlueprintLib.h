@@ -48,4 +48,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Item")
 	static UItemComponentBase* GetItemComponent(UObject* Object);
 
+	/*
+	* Get component which is support for net work in the item system int the target object
+	*/
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item")
+	static UItemNetworkSupportComponent* GetItemNetworkSupportComponent( UObject* Object );
+
 };

@@ -10,7 +10,7 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 
-#include "ItemComponent.h"
+#include "ItemComponentBase.h"
 
 #include "EquipmentComponent.generated.h"
 
