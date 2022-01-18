@@ -119,13 +119,11 @@ private:
 	TArray<UItemComponentBase*> ReferencedItemComponents;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDataPreparedEvent, UItemRuntimeDataBase*, ItemRuntimeData);
-
 /*
 * The runtime data which is used by the item.
 * Runtime data is only used at runtime state, it will cashed some temporary value, and define some operations around this data
 */
-UCLASS(Blueprintable, BlueprintType, Abstract, Within="ItemComponentBase", Category = "ItemData")
+UCLASS(Blueprintable, BlueprintType, Abstract, Within="ItemComponentBase", Category = "ItemRuntimeData")
 class ITEM_API UItemRuntimeDataBase : public UObject
 {
 	GENERATED_UCLASS_BODY()
@@ -274,7 +272,7 @@ public:
 		}
 
 		FProperty* ItemDataProperty = ItemData->GetClass()->FindPropertyByName(*ItemDataPropertyName);
-		FProperty* RuntimeDataProperty = ItemData->GetClass()->FindPropertyByName(*RuntimeDataPropertyName);
+		FProperty* RuntimeDataProperty = GetClass()->FindPropertyByName(*RuntimeDataPropertyName);
 
 		if (ItemDataProperty == nullptr)
 		{
@@ -297,7 +295,11 @@ public:
 
 			if (ItemDataValuePtr != nullptr && RuntimeDataValuePtr != nullptr)
 			{
+				PropertyPreChanged.Broadcast(this, RuntimeDataPropertyName);
+
 				*RuntimeDataValuePtr = *ItemDataValuePtr;
+
+				PropertyPostChanged.Broadcast(this, RuntimeDataPropertyName);
 			}
 		}
 	}
@@ -340,19 +342,13 @@ public:
 	UFUNCTION()
 	void OnRep_ItemOwner(UItemComponentBase* OldItemOnwer);
 
-public:
-	
-	/*
-	* Give the outer one access to inspect when the state have been changed in this item
-	*/
+	//Delegate invoked before one property change
 	UPROPERTY(BlueprintAssignable)
-	FItemStateChange ItemStateChangedDelegate;
+	FItemRuntimeDataPreChanged PropertyPreChanged;
 
-	/*
-	* Delegate for the outer to know when he can use this data safely
-	*/
+	//Delegate invoked after one property have been changed
 	UPROPERTY(BlueprintAssignable)
-	FDataPreparedEvent DataPreparedEvent;
+	FItemRuntimeDataPostChanged PropertyPostChanged;
 
 private:
 
@@ -396,3 +392,27 @@ private:
 	*/
 	uint32 bNetAddressable : 1;
 };
+
+#define ITEMPROPERYREPNOTIFY(ClassType, PropertyType, PropertyName, OldValue )\
+	if(GetItemOwner() == nullptr)\
+		return;\
+	struct FProperyChangedScope\
+	{\
+		FProperyChangedScope(UItemComponentBase* _ItemComponent, UItemRuntimeDataBase* _RuntimeData, const FString& _PropertyName)\
+			: ItemComponent(_ItemComponent)\
+			, RuntimeData(_RuntimeData)\
+			, PropertyName(_PropertyName)\
+		{}\
+		~FProperyChangedScope()\
+		{\
+			if (ItemComponent == nullptr)\
+				return;\
+			ItemComponent->ItemRuntimeDataPostChanged.Broadcast(RuntimeData, PropertyName);\
+		}\
+	private:\
+		UItemComponentBase*& ItemComponent;\
+		UItemRuntimeDataBase* RuntimeData;\
+		const FString& PropertyName;\
+	} PropertyChangeScope(GetItemOwner(), this, GET_MEMBER_NAME_CHECKED(ClassType, PropertyName).ToString());\
+	TGuardValue<PropertyType>(PropertyName, OldValue);\
+	GetItemOwner()->ItemRuntimeDataPreChanged.Broadcast(this, GET_MEMBER_NAME_CHECKED(ClassType, PropertyName).ToString());

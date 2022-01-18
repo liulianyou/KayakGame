@@ -80,24 +80,40 @@ UItemComponentBase* UItemBlueprintLib::GetItemComponent(UObject* Object)
 	{
 		AActor* Actor = Cast<AActor>(Object);
 
-		Result = Cast<UItemComponentBase>(Actor->GetComponentByClass(UItemComponentBase::StaticClass()));
-
-		if (Result == nullptr)
+		if (Actor != nullptr)
 		{
-			UE_LOG(LogItem, Display, TEXT("Try to get the item component from the actor:%s which have not inventory component in it!!"), *Actor->GetPathName());
+			Result = Cast<UItemComponentBase>(Actor->GetComponentByClass(UItemComponentBase::StaticClass()));
+
+			if (Result == nullptr)
+			{
+				UE_LOG(LogItem, Display, TEXT("Try to get the item component from the actor:%s which have not item component in it!!"), *Actor->GetPathName());
+			}
+		}
+		else
+		{
+			UE_LOG(LogItem, Display, TEXT("Try to get the item component from object:%s do not inhterited IItemInterface and is not one actor!!"), *Object->GetPathName());
 		}
 	}
 	else
 	{
-		IItemInterface* Item = static_cast<IItemInterface*>(Object->GetInterfaceAddress(UItemInterface::StaticClass()));
+		IItemInterface* ItemInterface = static_cast<IItemInterface*>(Object->GetInterfaceAddress(UItemInterface::StaticClass()));
 
 		/*
 		* Should never passed
 		*/
-		if (Item == nullptr)
-			return nullptr;
-
-		Result = Item->GetItemComponent();
+		if (ItemInterface == nullptr)
+		{
+			Result = IItemInterface::Execute_OnGetItemComponent(Object);
+		}
+		else
+		{
+			Result = ItemInterface->GetItemComponent();
+		}
+		
+		if (Result == nullptr)
+		{
+			UE_LOG(LogItem, Display, TEXT("Try to get the item component from object:%s do not impelement GetItemComonent!!"), *Object->GetPathName());
+		}
 	}
 
 	return Result;

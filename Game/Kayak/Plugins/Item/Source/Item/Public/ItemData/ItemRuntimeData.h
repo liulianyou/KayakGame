@@ -21,30 +21,46 @@ class ITEM_API UItemRuntimeData : public UItemRuntimeDataBase
 	GENERATED_UCLASS_BODY()
 
 public:
+
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const;
+
+public:
 	
 	//Override ItemRuntimeDataBase
 	virtual void Initialize(UItemDataBase* ItemData) override;
 	//Override ItemRuntimeDataBase
+
 
 public:
 	
 	/*
 	* All effects which will be used in differ
 	*/
-	UPROPERTY(BlueprintReadWrite, Category = "ItemData")
-	TMap<EItemState, FItemEffectDefiniation> EffectMap;
+	UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_EffectMap, Category = "ItemData")
+	TArray<FItemEffectDefiniation> EffectMap;
 
 	/*
 	* All game play abilities which will be used in different state.
 	* These abilities should only be given to the owner avatar of the item
 	*/
-	UPROPERTY(BlueprintReadWrite, Category = "ItemData")
-	TMap<EItemState, FItemAbilityDefiniation> AbilityMap;
+	UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_AbilityMap, Category = "ItemData")
+	TArray<FItemAbilityDefiniation> AbilityMap;
 
 	/*
 	* The attributes which will be added to the avatar owner when it is used
 	*/
-	UPROPERTY(BlueprintReadWrite, Category = "ItemData")
-	TMap<EItemState, FItemAttributeSetDefinition> AttributeSetMap;
+	UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_AttributeSetMap, Category = "ItemData")
+	TArray<FItemAttributeSetDefinition> AttributeSetMap;
+
+public:
+
+	UFUNCTION()
+	void OnRep_EffectMap(const TArray<FItemEffectDefiniation>& OldValue );
+
+	UFUNCTION()
+	void OnRep_AbilityMap( const TArray<FItemAbilityDefiniation>& OldValue );
+
+	UFUNCTION()
+	void OnRep_AttributeSetMap(const TArray<FItemAttributeSetDefinition>& OldValue );
 
 };

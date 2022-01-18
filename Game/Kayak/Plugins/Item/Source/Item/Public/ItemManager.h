@@ -59,19 +59,19 @@ public:
 	*					If the item owner is null means this item is created for the world
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Item", meta = (WorldContext = "WorldContent"))
-	TScriptInterface<IItemInterface> CreateNewItem(TSubclassOf<UObject> ItemClass, UItemInventoryComponent* ItemOwner, UObject* WorldContent  = nullptr);
+	UObject* CreateNewItem(TSubclassOf<UObject> ItemClass, UItemInventoryComponent* ItemOwner, UObject* WorldContent  = nullptr);
 
 	/*
 	* Register the item to item system
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Item")
-	void RegisterItem(TScriptInterface<IItemInterface> NewItem );
+	void RegisterItem(UObject* NewItem );
 
 	/*
 	* unregister the item from item system
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Item")
-	void UnregisterItem(TScriptInterface<IItemInterface> OldItem);
+	void UnregisterItem(UObject* OldItem);
 
 	/*
 	* Get all data which is used in the item system
@@ -83,7 +83,7 @@ public:
 	* Get all items which have been spawned in the item system
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Item")
-	const TArray<TScriptInterface<IItemInterface>>& GetAllItems() const { return Items; }
+	const TArray<UObject*>& GetAllItems() const { return Items; }
 
 private:
 	
@@ -98,5 +98,5 @@ private:
 	*
 	* As the client don't have any item data I can not get items through item data
 	*/
-	TArray<TScriptInterface<IItemInterface>> Items;
+	TArray<UObject*> Items;
 };

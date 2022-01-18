@@ -168,16 +168,45 @@ void FItemRuntimeDataContainer::DecrementLock()
 	int RemoveCount = 0;
 	bool ModifiedArray = false;
 
-	for (auto IT = CreateIterator(0, false); IT; ++IT)
-	{
-		if (!(*IT))
+	FRuntimeDataItem* Start = HeadPendingElement;
+	FRuntimeDataItem* Stop = *EndPendingElementPtr;
+
+	auto RemoveInvalidItem = [](FRuntimeDataItem* Item) -> bool{
+		if(Item == nullptr)
+			return false;
+
+		if ((*Item) == false)
 		{
-			if (IT.GetValue()->RuntimeData)
+			if (Item->RuntimeData != nullptr)
 			{
-				IT.GetValue()->RuntimeData->Finialize();
+				Item->RuntimeData->Finialize();
 			}
-			
-			IT.RemoveCurrent();
+
+			return true;
+		}
+		
+		return false;
+	};
+
+	while (Start != Stop)
+	{
+		if (RemoveInvalidItem(Start))
+		{
+			Start = Start->NextElement;
+
+			if (Start->PreElement)
+			{
+				delete Start->PreElement;
+				Start->PreElement = nullptr;
+			}
+		}
+	}
+
+	for (int i = 0; i < Items.Num(); i++)
+	{
+		if (RemoveInvalidItem(&Items[i]))
+		{
+			Items.RemoveAt(i--);
 
 			ModifiedArray = true;
 		}
@@ -287,6 +316,7 @@ bool FItemRuntimeDataQueryFilter::IsMatchedForItemData(const FItemRuntimeDataCon
 UItemComponentBase::UItemComponentBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
+	SetIsReplicatedByDefault(true);
 	RuntimeDataContainer.RegiseterComponentOwner(this);
 }
 
@@ -349,17 +379,7 @@ void UItemComponentBase::Initialzie(UObject* NewItemOnwer)
 
 	OnInitialize(NewItemOnwer);
 
-	IItemInterface* Item = Cast<IItemInterface>(NewItemOnwer);
-
-	if (Item == nullptr)
-	{
-		ComponentOwner.SetInterface(NewItemOnwer->GetInterfaceAddress(UItemInterface::StaticClass()));
-		ComponentOwner.SetObject(NewItemOnwer);
-	}
-	else
-	{
-		ComponentOwner = NewItemOnwer;
-	}
+	ComponentOwner = NewItemOnwer;
 }
 
 void UItemComponentBase::Initialzie(TScriptInterface<IItemInterface> NewItemOwner)
@@ -489,9 +509,9 @@ void UItemComponentBase::Gained(const FItemScopeChangeInfo& GainedInfo, const FI
 	}
 }
 
-TScriptInterface<IItemInterface> UItemComponentBase::GetItemOwner() const
+UObject* UItemComponentBase::GetItemOwner() const
 {
-	TScriptInterface<IItemInterface> Result;
+	UObject* Result = nullptr;
 
 	//First I check my own owner
 	if (ComponentOwner)
@@ -504,15 +524,9 @@ TScriptInterface<IItemInterface> UItemComponentBase::GetItemOwner() const
 	//Second I need to check the engine owner of this component
 	if(Actor != nullptr)
 	{
-		Result = Actor;
-
-		if (!Result)
+		if (Actor->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
 		{
-			if (Actor->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
-			{
-				Result.SetInterface(Actor->GetClass()->GetInterfaceAddress(UItemInterface::StaticClass()));
-				Result.SetObject(Actor);
-			}
+			Result = Actor;
 		}
 	}
 	else
@@ -522,19 +536,14 @@ TScriptInterface<IItemInterface> UItemComponentBase::GetItemOwner() const
 
 		while (Outer)
 		{
-			Result = Outer;
-
-			if (!Result)
+			if (Outer->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
 			{
-				if (Outer->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
-				{
-					Result.SetInterface(Outer->GetClass()->GetInterfaceAddress(UItemInterface::StaticClass()));
-					Result.SetObject(Outer);
-				}
+				Result = Outer;
+				break;
 			}
 			else
 			{
-				break;
+				Outer = Outer->GetOuter();
 			}
 		}
 	}
@@ -561,7 +570,16 @@ bool UItemComponentBase::HasAuthority() const
 	}
 	else if(GetItemOwner() != nullptr)
 	{
-		return GetItemOwner()->HasAuthority();
+		IItemInterface* ItemInterface = Cast<IItemInterface>(GetItemOwner());
+
+		if (ItemInterface == nullptr)
+		{
+			return IItemInterface::Execute_OnHasAuthority(GetItemOwner());
+		}
+		else
+		{
+			return ItemInterface->HasAuthority();
+		}
 	}
 	else if (GetAvatarOwner() != nullptr && GetAvatarOwner()->GetOwner() != nullptr)
 	{
@@ -635,7 +653,7 @@ void UItemComponentBase::SetInventoryOwner(UItemInventoryComponent* NewInventory
 
 void UItemComponentBase::AddNewItemData(UItemDataBase* NewData)
 {
-	if(NewData == nullptr || !NewData->IsValidItemData())
+	if(NewData == nullptr || !NewData->IsValidItemData() || NewData->GetReferencedItemComponents().Find(this) != INDEX_NONE)
 		return;
 
 	if (!HasAuthority())

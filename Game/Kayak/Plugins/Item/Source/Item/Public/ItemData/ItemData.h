@@ -27,6 +27,12 @@ struct FItemEffectDefiniation
 
 public:
 
+	/*
+	* Which state this data will be used
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	EItemState ItemState;
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TArray<TSubclassOf<UGameplayEffect>> Effects;
 };
@@ -41,6 +47,12 @@ struct FItemAbilityDefiniation
 
 public:
 
+	/*
+	* Which state this data will be used
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	EItemState ItemState;
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TArray<TSubclassOf<UGameplayAbility>> Abilities;
 };
@@ -51,6 +63,12 @@ struct FItemAttributeSetDefinition
 	GENERATED_BODY()
 
 public:
+	/*
+	* Which state this data will be used
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	EItemState ItemState;
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TArray<TSubclassOf<UAttributeSet>> Abilities;
 };
@@ -67,19 +85,19 @@ public:
 	* All effects which will be used in differ 
 	*/
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "ItemData")
-	TMap<EItemState, FItemEffectDefiniation> EffectMap;
+	TArray<FItemEffectDefiniation> EffectMap;
 
 	/*
 	* All game play abilities which will be used in different state.
 	* These abilities should only be given to the owner avatar of the item
 	*/
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "ItemData")
-	TMap<EItemState, FItemAbilityDefiniation> AbilityMap;
+	TArray<FItemAbilityDefiniation> AbilityMap;
 
 	/*
 	* The attributes which will be added to the avatar owner when it is used
 	*/
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "ItemData")
-	TMap<EItemState, FItemAttributeSetDefinition> AttributeSetMap;
+	TArray<FItemAttributeSetDefinition> AttributeSetMap;
 
 };

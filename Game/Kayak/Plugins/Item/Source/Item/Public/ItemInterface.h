@@ -39,7 +39,7 @@ public:
 	* Get the item component which will make the inherited object to be one Item.
 	* One Item should only have one component to hand the specific item feature
 	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "Item", meta = (DisplayName="GetItemData"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "Item", meta = (DisplayName="GetItemComponent"))
 	UItemComponentBase* OnGetItemComponent() const;
 	virtual UItemComponentBase* GetItemComponent() const;
 
@@ -48,14 +48,14 @@ public:
 	* 
 	* @param InventoryOwner null means this item is created in the world
 	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Item", meta = (DisplayName = "Initialize"))
 	void OnInitialize(UItemInventoryComponent* InventoryOwner);
 	virtual void Initialize(UItemInventoryComponent* InventoryOwner);
 
 	/*
 	*	Set new owner for this item
 	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Item", meta = (DisplayName = "SetItemOwner"))
 	void OnSetItemOwner(UItemInventoryComponent* NewOwner);
 	virtual void SetItemOwner(UItemInventoryComponent* NewOwner);
 
@@ -63,7 +63,7 @@ public:
 	* Flag to check weather this item has authority.
 	* Only the authority item can create runtime data through item data
 	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Item", meta = (DisplayName = "HasAuthority"))
 	bool OnHasAuthority() const;
 	virtual bool HasAuthority() const;
 

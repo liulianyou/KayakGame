@@ -27,13 +27,13 @@ public:
 	/*
 	* Get the manager of the item system
 	*/
-	UFUNCTION(BlueprintCallable, Category = "Item")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item")
 	static UItemManager* GetItemManager();
 
 	/*
 	* Get the global set of function used in the item system
 	*/
-	UFUNCTION(BlueprintCallable, Category = "Item")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item")
 	static UItemGlobal* GetItemGlobal();
 
 	/*

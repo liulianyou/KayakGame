@@ -49,9 +49,10 @@ void UItemDataBase::AddReferencedComponent(UItemComponentBase* ItemComponent)
 
 	if (GetReferencedItemComponents().Find(ItemComponent) == INDEX_NONE)
 	{
-		ItemComponent->AddNewItemData(this);
-
+		//Add this compoment before any other operation to avoid infinity loop
 		GetReferencedItemComponents_Mutable().Add(ItemComponent);
+
+		ItemComponent->AddNewItemData(this);
 
 		OnAddReferencedComponent(ItemComponent);
 	}
@@ -210,6 +211,15 @@ UWorld* UItemRuntimeDataBase::GetWorld() const
 void UItemRuntimeDataBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	/*
+	* Make the replicator to inspect the replicated properties in the BP task
+	*/
+	UBlueprintGeneratedClass* BPClass = Cast<UBlueprintGeneratedClass>(GetClass());
+	if (BPClass != NULL)
+	{
+		BPClass->GetLifetimeBlueprintReplicationList(OutLifetimeProps);
+	}
 
 	DOREPLIFETIME(UItemRuntimeDataBase, ItemOwner);
 }
@@ -434,15 +444,6 @@ void UItemRuntimeDataBase::OnRep_ItemOwner(UItemComponentBase* OldItemOnwer)
 void UItemRuntimeDataBase::ToggleItemStateChanged(EItemState NewItemState)
 {
 	ItemState = NewItemState;
-
-	ItemStateChangedDelegate.Broadcast(this);
-
-	UItemGlobal* ItemGlobal = UItemBlueprintLib::GetItemGlobal();
-
-	if (ItemGlobal)
-	{
-		ItemGlobal->ItemStateChangedDelegate.Broadcast(this);
-	}
 }
 
 void UItemRuntimeDataBase::ItemDataChangedInItemOwner(UItemComponentBase* Item, UItemDataBase* OldData, UItemDataBase* NewData)
@@ -458,7 +459,7 @@ void UItemRuntimeDataBase::MarkDataPrepared()
 
 	bDataPrepared = true;
 
-	DataPreparedEvent.Broadcast(this);
+	GetItemOwner()->DataPreparedEvent.Broadcast(this);
 }
 
 void UItemRuntimeDataBase::OnRep_ID()

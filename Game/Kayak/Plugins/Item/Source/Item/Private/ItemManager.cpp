@@ -64,7 +64,7 @@ void UItemManager::RemoveItemData(UItemDataBase* ItemData)
 	ItemDatas.Remove(ItemData);
 }
 
-TScriptInterface<IItemInterface> UItemManager::CreateNewItem(TSubclassOf<UObject> ItemClass, UItemInventoryComponent* ItemOwner, UObject* WorldContent  /*= nullptr*/)
+UObject* UItemManager::CreateNewItem(TSubclassOf<UObject> ItemClass, UItemInventoryComponent* ItemOwner, UObject* WorldContent  /*= nullptr*/)
 {
 	if (ItemClass == nullptr)
 	{
@@ -94,7 +94,6 @@ TScriptInterface<IItemInterface> UItemManager::CreateNewItem(TSubclassOf<UObject
 		}
 	}
 
-	TScriptInterface<IItemInterface> NewItem;
 	UObject* NewItemObject = nullptr;
 
 	if (IsActor)
@@ -132,50 +131,74 @@ TScriptInterface<IItemInterface> UItemManager::CreateNewItem(TSubclassOf<UObject
 		return nullptr;
 	}
 		
-	IItemInterface* ItemInterface = static_cast<IItemInterface*>(NewItemObject->GetInterfaceAddress(UItemInterface::StaticClass()));
+	IItemInterface* ItemInterface = Cast<IItemInterface>(NewItemObject);
 
 	if (ItemInterface == nullptr)
+	{
+		IItemInterface::Execute_OnInitialize( NewItemObject, ItemOwner );
+	}
+	else
 	{
 		ItemInterface->Initialize(ItemOwner);
 	}
 
-	NewItem.SetInterface(NewItemObject->GetInterfaceAddress(UItemInterface::StaticClass()));
-	NewItem.SetObject(NewItemObject);
+	RegisterItem(NewItemObject);
 
-	Items.AddUnique(NewItem);
-
-	return NewItem;
+	return NewItemObject;
 }
 
-void UItemManager::RegisterItem(TScriptInterface<IItemInterface> NewItem)
+void UItemManager::RegisterItem(UObject* NewItem)
 {
-	if(NewItem == nullptr || Items.Find(NewItem) != INDEX_NONE)
+	if(NewItem == nullptr  
+		|| !NewItem->GetClass()->ImplementsInterface(UItemInterface::StaticClass()) 
+		|| Items.Find(NewItem) != INDEX_NONE)
 		return ;
 
-	UItemComponentBase* ItemComponent = NewItem->GetItemComponent();
+	IItemInterface* ItemInterface = Cast<IItemInterface>(NewItem);
+
+	UItemComponentBase* ItemComponent = nullptr;
+
+	if (ItemInterface == nullptr)
+	{
+		ItemComponent = IItemInterface::Execute_OnGetItemComponent(NewItem);
+	}
+	else
+	{
+		ItemComponent = ItemInterface->GetItemComponent();
+	}
 
 	if (ItemComponent == nullptr)
 	{
-		UE_LOG(LogItem, Warning, TEXT("The target item %s should have one Item component and use GetItemComponent to get it!!"), 
-				NewItem.GetObject() == nullptr ? *(static_cast<IItemInterface*>(NewItem.GetInterface()))->_getUObject()->GetName() : *NewItem.GetObject()->GetName());
+		UE_LOG(LogItem, Warning, TEXT("The target item %s should have one Item component and use GetItemComponent to get it!!"),  *NewItem->GetPathName());
 		return;
 	}
 
-	Items.AddUnique(NewItem);
+	Items.Add(NewItem);
 }
 
-void UItemManager::UnregisterItem(TScriptInterface<IItemInterface> RemovedItem)
+void UItemManager::UnregisterItem(UObject* RemovedItem)
 {
-
-	if (RemovedItem == nullptr || Items.Find(RemovedItem) != INDEX_NONE)
+	if (RemovedItem == nullptr 
+		|| RemovedItem->GetClass()->ImplementsInterface(UItemInterface::StaticClass())
+		|| Items.Find(RemovedItem) != INDEX_NONE)
 		return;
 
-	UItemComponentBase* ItemComponent = RemovedItem->GetItemComponent();
+	IItemInterface* ItemInterface = Cast<IItemInterface>(RemovedItem);
+
+	UItemComponentBase* ItemComponent = nullptr;
+
+	if (ItemInterface == nullptr)
+	{
+		ItemComponent = IItemInterface::Execute_OnGetItemComponent(RemovedItem);
+	}
+	else
+	{
+		ItemComponent = ItemInterface->GetItemComponent();
+	}
 
 	if (ItemComponent == nullptr)
 	{
-		UE_LOG(LogItem, Warning, TEXT("The target item %s should have one Item component and use GetItemComponent to get it!!"),
-			RemovedItem.GetObject() == nullptr ? *(static_cast<IItemInterface*>(RemovedItem.GetInterface()))->_getUObject()->GetName() : *RemovedItem.GetObject()->GetName());
+		UE_LOG(LogItem, Warning, TEXT("The target item %s should have one Item component and use GetItemComponent to get it!!"), *RemovedItem->GetPathName());
 		return;
 	}
 

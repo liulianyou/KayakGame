@@ -361,7 +361,7 @@ public:
 	* Get the owner of the Item
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
-	TScriptInterface<IItemInterface> GetItemOwner() const;
+	UObject* GetItemOwner() const;
 
 	/*
 	* Get the avatar who own this item component, as one item should only have one item component, the avatar also own this item
@@ -433,13 +433,23 @@ public:
 
 public:
 
-	//Invoked when the item data have been changed
-	UPROPERTY(BlueprintAssignable)
-	FItemDataChanged ItemDataChangedDelegate;
-
 	//Broadcast when the avatar owner has been changed
 	UPROPERTY(BlueprintAssignable)
 	FAvatarOwnerChanged AvatarOwnerChanged;
+
+	/*
+	* Delegate for the outer to know when he can use this data safely
+	*/
+	UPROPERTY(BlueprintAssignable)
+	FDataPreparedEvent DataPreparedEvent;
+
+	//Delegate invoked when one property will be changed in the target runtime data
+	UPROPERTY(BlueprintAssignable)
+	FItemRuntimeDataPreChanged ItemRuntimeDataPreChanged;
+
+	//Delegate invoked after one property have been changed in the target runtime data
+	UPROPERTY(BlueprintAssignable)
+	FItemRuntimeDataPostChanged ItemRuntimeDataPostChanged;
 
 private:
 
@@ -465,11 +475,9 @@ private:
 	* The component owner should be inherited from IItemInterface
 	*/
 	UPROPERTY()
-	mutable TScriptInterface<IItemInterface> ComponentOwner;
+	mutable UObject* ComponentOwner;
 
 private:
-
-
 };
 	
 #define  ItemComponentFramework()\

@@ -46,19 +46,7 @@ enum class EItemState : uint8
 
 ENUM_CLASS_FLAGS(EItemState);
 
-/*
-* The delegate event used to inspect the state changed for the target Item
-*
-* @param Item	The item which state is changed
-*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FItemStateChange, const UItemRuntimeDataBase*, Item);
-
-/*
-* The delegate event used to inspect the state changed for the target Item
-*
-* @param Item	The item which state is changed
-*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FItemDataChanged, UItemComponentBase*, TargetItem, UItemDataBase*, OldData, UItemDataBase*, NewData);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDataPreparedEvent, UItemRuntimeDataBase*, ItemRuntimeData);
 
 /*
 * This delegate will broadcast when the avatar owner have been changed in target item.
@@ -68,6 +56,15 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FItemDataChanged, UItemComponentB
 */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FAvatarOwnerChanged, UItemComponentBase*, Item, UItemInventoryComponent*, OldAvatarOwner, UItemInventoryComponent*, NewAvatarOwner);
 
+/*
+* The target property will changed in the target runtime data
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FItemRuntimeDataPreChanged, UItemRuntimeDataBase*, ItemRuntimeData, const FString&, PropertyName);
+
+/*
+* The target property have been changed in the target runtime data
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FItemRuntimeDataPostChanged, UItemRuntimeDataBase*, ItemRuntimeData, const FString&, PropertyName);
 
 USTRUCT(BlueprintType)
 struct FLocationInfo
