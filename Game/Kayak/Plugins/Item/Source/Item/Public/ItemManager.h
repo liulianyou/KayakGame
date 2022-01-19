@@ -59,7 +59,7 @@ public:
 	*					If the item owner is null means this item is created for the world
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Item", meta = (WorldContext = "WorldContent"))
-	UObject* CreateNewItem(TSubclassOf<UObject> ItemClass, UItemInventoryComponent* ItemOwner, UObject* WorldContent  = nullptr);
+	UObject* CreateNewItem(TSubclassOf<UObject> ItemClass, UItemInventoryComponent* ItemOwner = nullptr, UObject* WorldContent  = nullptr);
 
 	/*
 	* Register the item to item system

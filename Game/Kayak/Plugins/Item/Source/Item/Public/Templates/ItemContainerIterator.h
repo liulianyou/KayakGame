@@ -70,8 +70,6 @@ public:
 		if (Container.Items.IsValidIndex(index))
 		{
 			Container.Items.RemoveAt(index);
-
-			index--;
 		}
 		else
 		{
@@ -85,7 +83,7 @@ public:
 			Current = LocalPending;
 		}
 		
-		Next();
+		index--;
 	}
 
 	int GetIndex() const { return index; }

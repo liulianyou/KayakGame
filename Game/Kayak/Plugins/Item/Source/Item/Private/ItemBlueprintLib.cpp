@@ -40,24 +40,51 @@ UItemInventoryComponent* UItemBlueprintLib::GetItemInventoryComponent(UObject* O
 	{
 		AActor* Actor = Cast<AActor>(Object);
 
-		Result = Cast<UItemInventoryComponent>(Actor->GetComponentByClass(UItemInventoryComponent::StaticClass()));
+		if (Actor != nullptr)
+		{
+			Result = Cast<UItemInventoryComponent>(Actor->GetComponentByClass(UItemInventoryComponent::StaticClass()));
+
+			if (Result == nullptr)
+			{
+				UE_LOG(LogItem, Display, TEXT("Try to get the inentory component from the actor:%s which have no inventory component in it!!"), *Actor->GetPathName());
+				
+				Actor = Actor->GetOwner();
+
+				Result = GetItemInventoryComponent(Actor);
+			}
+			
+		}
+		
+		if(Result == nullptr)
+		{
+			UActorComponent* ActorComponent = Cast<UActorComponent>(Object);
+
+			if (ActorComponent != nullptr)
+			{
+				Actor = ActorComponent->GetOwner();
+
+				Result = GetItemInventoryComponent(Actor);
+			}
+		}
 
 		if (Result == nullptr)
 		{
-			UE_LOG(LogItem, Display, TEXT("Try to get the inentory component from the actor:%s which have not inventory component in it!!"), *Actor->GetPathName());
+			Result = GetItemInventoryComponent(Object->GetOuter());
 		}
 	}
 	else
 	{
 		IItemInventoryInterface* ItemInventory = static_cast<IItemInventoryInterface*>(Object->GetInterfaceAddress(UItemInventoryInterface::StaticClass()));
 
-		/*
-		* Should never passed
-		*/
-		if(ItemInventory == nullptr)
-			return nullptr;
-		
-		Result = ItemInventory->GetItemInventoryComponent();
+
+		if (ItemInventory == nullptr)
+		{
+			Result = IItemInventoryInterface::Execute_OnGetItemInventoryComponent(Object);
+		}
+		else
+		{
+			Result = ItemInventory->GetItemInventoryComponent();
+		}
 	}
 
 	return Result;
@@ -119,7 +146,7 @@ UItemComponentBase* UItemBlueprintLib::GetItemComponent(UObject* Object)
 	return Result;
 }
 
-UItemNetworkSupportComponent* UItemBlueprintLib::GetItemNetworkSupportComponent(UObject* Object)
+UItemNetworkSupportComponent* UItemBlueprintLib::GetItemNetworkSupportComponent(UObject* Object, UObject* WorldContent)
 {
 	UItemNetworkSupportComponent* Result = nullptr;
 
@@ -128,20 +155,45 @@ UItemNetworkSupportComponent* UItemBlueprintLib::GetItemNetworkSupportComponent(
 
 	AActor* Actor = Cast<AActor>(Object);
 
-	if(Actor == nullptr)
-		return Result;
-
-	Result = Cast<UItemNetworkSupportComponent>(Actor->FindComponentByClass(UItemNetworkSupportComponent::StaticClass()));
-
+	if (Actor != nullptr)
+	{
+		Result = Cast<UItemNetworkSupportComponent>(Actor->FindComponentByClass(UItemNetworkSupportComponent::StaticClass()));
+	}
+	
 	if(Result != nullptr)
 		return Result;
 
 	APawn* Pawn = Cast<APawn>(Object);
 
-	if(Pawn == nullptr)
+	if (Pawn != nullptr)
+	{
+		Result = Cast<UItemNetworkSupportComponent>(Pawn->FindComponentByClass(UItemNetworkSupportComponent::StaticClass()));
+	}
+
+	if(Result != nullptr)
 		return Result;
 
-	Result = Cast<UItemNetworkSupportComponent>(Pawn->FindComponentByClass(UItemNetworkSupportComponent::StaticClass()));
+	AController* Controller = Pawn->GetController();
+
+	if (Controller != nullptr)
+	{
+		Result = Cast<UItemNetworkSupportComponent>(Controller->FindComponentByClass(UItemNetworkSupportComponent::StaticClass()));
+	}
+
+	if(Result != nullptr)
+		return Result;
+
+	UWorld * World = GEngine->GetWorldFromContextObject(WorldContent, EGetWorldErrorMode::LogAndReturnNull);
+
+	if (World != nullptr)
+	{
+		Controller = World->GetFirstPlayerController();
+
+		if (Controller != nullptr)
+		{
+			Result = Cast<UItemNetworkSupportComponent>(Controller->FindComponentByClass(UItemNetworkSupportComponent::StaticClass()));
+		}
+	}
 
 	return Result;
 }

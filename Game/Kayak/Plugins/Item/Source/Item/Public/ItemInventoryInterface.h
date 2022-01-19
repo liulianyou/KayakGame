@@ -35,7 +35,7 @@ public:
 	* Get the inventory component in the inherited object
 	* One object should only have one component to hold all the inventory
 	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "Item", meta = (DisplayName = "GetItemData"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "Item", meta = (DisplayName = "GetItemInventoryComponent"))
 	UItemInventoryComponent* OnGetItemInventoryComponent() const;
 	virtual UItemInventoryComponent* GetItemInventoryComponent() const;
 

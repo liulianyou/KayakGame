@@ -40,6 +40,12 @@ public:
 		return !(LeftInfo == RightInfo);
 	}
 
+public:
+
+	void PreReplicatedRemove(const struct FItemContainer& InArray);
+	void PostReplicatedAdd(const struct FItemContainer& InArray);
+	void PostReplicatedChange(const struct FItemContainer& InArray);
+
 private:
 	
 	bool IsValid() const;
@@ -48,15 +54,7 @@ public:
 	
 	//The item which contain item component
 	UPROPERTY()
-	UObject* Item;
-
-	/*
-	* The index of this item in the target container
-	* As the order of element in the container is not fix due to the net replication
-	* I need to get the fixed order between server and client
-	*/
-	UPROPERTY()
-	int Index;
+	UObject* Item = nullptr;
 
 public:
 
@@ -83,6 +81,10 @@ struct ITEM_API FItemContainer : public FFastArraySerializer
 	ITERATOR_DEFINITION(FItemInfo, FItemContainer);
 
 public:
+	
+	FItemContainer();
+
+public:
 
 	//Add new item to this container, when the item have not enough space then it will be added into pending list
 	int AddNewItem(UObject* NewItem);
@@ -100,7 +102,8 @@ public:
 	int GetItemIndex( UObject* Item ) const;
 
 	//Get the item info by the index
-	FItemInfo& GetItemInfoByIndex( int Index ) const;
+	const FItemInfo& GetItemInfoByIndex( int Index ) const;
+	FItemInfo& GetItemInfoByIndex(int Index);
 
 	void RegisterInventoryComponent( UItemInventoryComponent* InventoryComponent );
 public:
@@ -234,6 +237,8 @@ public:
 	//Override UObject
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual bool ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags) override;
+	virtual void PreNetReceive() override;
+	virtual void PostNetReceive() override;
 	//Override UObject
 
 	//Override ActorComponent
@@ -242,21 +247,14 @@ public:
 	//Override ActorComponent
 
 public:
-	
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemInventory")
-	void OnInitialize();
-	UFUNCTION(BlueprintCallable, Category = "ItemInventory")
-	void Initialize();
-
-public:
 
 	/*
 	* Set the direct owner of this inventory component
 	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "ItemInventory")
-	void OnSetItemOwner(UObject* NewOwner);
+	UFUNCTION(BlueprintImplementableEvent, Category = "ItemInventory", meta = (DisplayName = "SetInventoryOwner"))
+	void OnSetInventoryOwner(UObject* NewOwner);
 	UFUNCTION(BlueprintCallable, Category = "ItemInventory")
-	void SetItemOwner( UObject* NewOwner );
+	void SetInventoryOwner( UObject* NewOwner );
 
 	/*
 	* Get the owner of the inventory.
@@ -320,12 +318,15 @@ public:
 	UFUNCTION()
 	virtual void OnRep_InventoryOwner(UObject* OldOwner);
 
+	UFUNCTION()
+	virtual void OnRep_ItemContainer(const FItemContainer& OldItemContaner);
+
 private:
 	
 	/*
 	* Hold all items in this inventory
 	*/
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_ItemContainer)
 	FItemContainer ItemContainer;
 
 	/*

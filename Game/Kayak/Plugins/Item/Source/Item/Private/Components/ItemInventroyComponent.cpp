@@ -4,6 +4,7 @@
 #include "ItemBlueprintLib.h"
 
 #include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
 #include "Templates/UnrealTemplate.h"
 
 FItemInfo FItemInfo::InvalidItemInfo;
@@ -19,6 +20,27 @@ bool FItemInfo::IsValid() const
 	return UItemBlueprintLib::GetItemComponent(Item) != nullptr;
 }
 
+void FItemInfo::PreReplicatedRemove(const struct FItemContainer& InArray)
+{
+	const_cast<FItemContainer&>(InArray).RemoveItem(Item);
+}
+
+void FItemInfo::PostReplicatedAdd(const struct FItemContainer& InArray)
+{
+	const_cast<FItemContainer&>(InArray).AddNewItem(Item);
+}
+
+void FItemInfo::PostReplicatedChange(const struct FItemContainer& InArray)
+{
+	int i = 0;
+	i++;
+}
+
+FItemContainer::FItemContainer()
+{
+	EndPendingElementPtr = &HeadPendingElement;
+}
+
 void FItemContainer::RegisterInventoryComponent(UItemInventoryComponent* _InventoryComponent)
 {
 	InventoryOwner = _InventoryComponent;
@@ -27,7 +49,7 @@ void FItemContainer::RegisterInventoryComponent(UItemInventoryComponent* _Invent
 int FItemContainer::AddNewItem(UObject* NewItem)
 {
 	if(NewItem == nullptr 
-		|| NewItem->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
+		|| !NewItem->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
 		return INDEX_NONE;
 
 	int Result = GetItemIndex(NewItem);
@@ -72,15 +94,24 @@ int FItemContainer::AddNewItem(UObject* NewItem)
 void FItemContainer::RemoveItem(UObject* RemovedItem)
 {
 	if (RemovedItem == nullptr
-		|| RemovedItem->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
+		|| !RemovedItem->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
 		return;
 
 	int Result = GetItemIndex(RemovedItem);
+
+	//When this item have been removed or marked as removed just return.
+	if(Result == INDEX_NONE)
+		return;
 
 	//When this data container is locked this final remove will occurred at the end
 	if (LockCount > 0)
 	{
 		PendingRemovedCount++;
+
+		//Just mark the target item info  removed
+		FItemInfo& ItemInfo = GetItemInfoByIndex(Result);
+
+		ItemInfo.PendingRemoved = true;
 	}
 	else
 	{
@@ -127,8 +158,29 @@ int FItemContainer::GetItemIndex(UObject* Item) const
 	return INDEX_NONE;
 }
 
-FItemInfo& FItemContainer::GetItemInfoByIndex(int Index) const
+const FItemInfo& FItemContainer::GetItemInfoByIndex(int Index) const
 {
+	for (auto IT = CreateConstIterator(0, true); IT; ++IT)
+	{
+		if (IT.GetIndex() == Index)
+		{
+			return *IT.GetValue() ;
+		}
+	}
+
+	return FItemInfo::InvalidItemInfo;
+}
+
+FItemInfo& FItemContainer::GetItemInfoByIndex(int Index)
+{
+	for (auto IT = CreateIterator(0, true); IT; ++IT)
+	{
+		if (IT.GetIndex() == Index)
+		{
+			return *IT.GetValue();
+		}
+	}
+
 	return FItemInfo::InvalidItemInfo;
 }
 
@@ -142,8 +194,50 @@ void FItemContainer::DecrementLock()
 	if(--LockCount != 0)
 		return;
 
+	FItemInfo* Start = HeadPendingElement;
+	FItemInfo* Stop = *EndPendingElementPtr;
+	bool ModifiedArray = false;
 
+	while (Start != Stop)
+	{
+		if (!Start->PendingRemoved)
+		{
+			Items.Add(MoveTemp(*Start));
+			ModifiedArray = true;
+		}
+		else
+		{
+			PendingRemovedCount--;
+		}
 
+		Start = Start->NextElement;
+	}
+
+	for (int i = 0; i < Items.Num() && PendingRemovedCount > 0; i++)
+	{
+		if (bool(Items[i]) == false)
+		{
+			PendingRemovedCount--;
+
+			Items.RemoveAt(i--);
+
+			ModifiedArray = true;
+		}
+	}
+
+	//Reset the end element so that the add and remove  operation will occurs when the the elements has been changed
+	EndPendingElementPtr = &HeadPendingElement;
+
+	if (!ensure(PendingRemovedCount == 0))
+	{
+		UE_LOG(LogItem, Error, TEXT("There are still %d elements in item container  need to be removed! which will cause memery leak"), PendingRemovedCount);
+		PendingRemovedCount = 0;
+	}
+
+	if (ModifiedArray)
+	{
+		MarkArrayDirty();
+	}
 }
 
 bool FItemQueryFilter::IsMatchedForItemClass(const FItemContainer::ConstIterator& IT) const
@@ -316,6 +410,20 @@ bool UItemInventoryComponent::ReplicateSubobjects(class UActorChannel* Channel, 
 	return WroteSomething;
 }
 
+void UItemInventoryComponent::PreNetReceive()
+{
+	Super::PreNetReceive();
+
+	ItemContainer.IncrementLock();
+}
+
+void UItemInventoryComponent::PostNetReceive()
+{
+	Super::PostNetReceive();
+
+	ItemContainer.DecrementLock();
+}
+
 void UItemInventoryComponent::OnRegister()
 {
 	Super::OnRegister();
@@ -336,19 +444,15 @@ void UItemInventoryComponent::OnUnregister()
 	Super::OnUnregister();
 }
 
-void UItemInventoryComponent::Initialize()
-{
-	OnInitialize();
-}
-
-void UItemInventoryComponent::SetItemOwner(UObject* NewOwner)
+void UItemInventoryComponent::SetInventoryOwner(UObject* NewOwner)
 {
 	if(NewOwner == InventoryOwner)
 		return;
 
-	OnSetItemOwner(NewOwner);
+	OnSetInventoryOwner(NewOwner);
 
 	InventoryOwner = NewOwner;
+	MARK_PROPERTY_DIRTY_FROM_NAME(UItemInventoryComponent, InventoryOwner, this);
 }
 
 AController* UItemInventoryComponent::GetAvatarOwner() const
@@ -392,14 +496,15 @@ void UItemInventoryComponent::GetItems(TArray<UObject*>& OutItems, const FItemQu
 
 int UItemInventoryComponent::AddNewItem(UObject* NewItem)
 {
-	if (NewItem == nullptr || NewItem->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
+	if (NewItem == nullptr 
+		|| !NewItem->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
 	{
 		return INDEX_NONE;
 	}
 
 	int Result = GetItemContainer().GetItemIndex(NewItem);
 
-	if(Result != INDEX_NONE)
+	if (Result != INDEX_NONE)
 		return Result;
 
 	UItemComponentBase* ItemComponent = UItemBlueprintLib::GetItemComponent(NewItem);
@@ -409,11 +514,11 @@ int UItemInventoryComponent::AddNewItem(UObject* NewItem)
 		return INDEX_NONE;
 	}
 		
+	Result = ItemContainer.AddNewItem(NewItem);
+
 	ItemComponent->SetInventoryOwner(this);
 
 	ItemComponent->Gained(FItemScopeChangeInfo(), FItemRuntimeDataQueryFilter());
-
-	Result = ItemContainer.AddNewItem(NewItem);
 
 	return Result;
 }
@@ -435,7 +540,7 @@ int UItemInventoryComponent::AddNewItemWithItemClass(TSubclassOf<UObject> ItemTy
 void UItemInventoryComponent::RemoveItem(UObject* RemovedItem, bool DestroyItem /*= false*/)
 {
 	//If this is invalid item then do nothing
-	if(RemovedItem == nullptr)
+	if(RemovedItem == nullptr || ItemContainer.GetItemIndex(RemovedItem) == INDEX_NONE)
 		return;
 
 	ItemContainer.RemoveItem(RemovedItem);
@@ -457,5 +562,25 @@ void UItemInventoryComponent::OnRep_InventoryOwner(UObject* OldOwner)
 
 	TGuardValue<UObject*>(InventoryOwner, OldOwner);
 
-	SetItemOwner(NewItemOwner);
+	SetInventoryOwner(NewItemOwner);
+}
+
+void UItemInventoryComponent::OnRep_ItemContainer(const FItemContainer& OldItemContaner)
+{
+	/*
+	* As some items which are actor type, they may be replicated after this inventory component replicated.
+	* At this point there are some invalid value in this item container.
+	* I need to remove them first
+	*/
+
+	for (auto IT = ItemContainer.CreateIterator(); IT; ++IT)
+	{
+		if ((*IT) == false)
+		{
+			if (IT.GetValue()->Item == nullptr || !IT.GetValue()->Item->IsValidLowLevel())
+			{
+				IT.RemoveCurrent();
+			}
+		}
+	}
 }

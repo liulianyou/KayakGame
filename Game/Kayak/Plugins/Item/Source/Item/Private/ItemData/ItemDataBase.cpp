@@ -263,7 +263,7 @@ void UItemRuntimeDataBase::SetItemComponentOwner(UItemComponentBase* ItemCompone
 
 				if (Controller != nullptr)
 				{
-					UItemNetworkSupportComponent* NetSupport = UItemBlueprintLib::GetItemNetworkSupportComponent(Controller);
+					UItemNetworkSupportComponent* NetSupport = UItemBlueprintLib::GetItemNetworkSupportComponent(Controller, GetWorld());
 
 					if (NetSupport != nullptr)
 					{
@@ -292,7 +292,7 @@ void UItemRuntimeDataBase::SetItemComponentOwner(UItemComponentBase* ItemCompone
 
 				if (Controller != nullptr)
 				{
-					UItemNetworkSupportComponent* NetSupport = UItemBlueprintLib::GetItemNetworkSupportComponent(Controller);
+					UItemNetworkSupportComponent* NetSupport = UItemBlueprintLib::GetItemNetworkSupportComponent(Controller, GetWorld());
 
 					if (NetSupport != nullptr)
 					{

@@ -39,19 +39,19 @@ public:
 	/*
 	* Get Item inventory component in the target object
 	*/
-	UFUNCTION(BlueprintCallable, Category = "Item")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item")
 	static UItemInventoryComponent* GetItemInventoryComponent( UObject* Object );
 
 	/*
 	* Get Item component in the target object.
 	*/
-	UFUNCTION(BlueprintCallable, Category = "Item")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item")
 	static UItemComponentBase* GetItemComponent(UObject* Object);
 
 	/*
 	* Get component which is support for net work in the item system int the target object
 	*/
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item")
-	static UItemNetworkSupportComponent* GetItemNetworkSupportComponent( UObject* Object );
+	UFUNCTION(BlueprintCallable, BlueprintPure, BlueprintPure, Category = "Item", meta = (WorldContent = "WorldContent"))
+	static UItemNetworkSupportComponent* GetItemNetworkSupportComponent( UObject* Object, UObject* WorldContent );
 
 };

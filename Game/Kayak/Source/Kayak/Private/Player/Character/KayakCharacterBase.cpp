@@ -13,7 +13,10 @@ void AKayakCharacterBase::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-
+	if (ItemInventoryComponent != nullptr)
+	{
+		ItemInventoryComponent->SetInventoryOwner(this);
+	}
 }
 
 void AKayakCharacterBase::MoveRight(float Val)

@@ -118,7 +118,7 @@ UObject* UItemManager::CreateNewItem(TSubclassOf<UObject> ItemClass, UItemInvent
 		if (World == nullptr)
 			return nullptr;
 
-		NewItemObject = World->SpawnActor<AActor>(ItemClass);
+		NewItemObject = World->SpawnActor<AActor>(ItemClass, Parameters);
 	}
 	else
 	{

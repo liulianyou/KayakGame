@@ -9,6 +9,7 @@
 #include "ItemNetworkSupportComponent.h"
 
 #include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
 #include "Engine/ActorChannel.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/Pawn.h"
@@ -303,7 +304,7 @@ bool FItemRuntimeDataQueryFilter::IsMatchedForItemRuntimeDataInstance(const FIte
 
 bool FItemRuntimeDataQueryFilter::IsMatchedForItemDataClass(const FItemRuntimeDataContainer::ConstIterator& IT) const
 {
-	if (!IT)
+	if (!IT || ItemDataClass == nullptr)
 		return false;
 
 	if (IT.GetValue()->RuntimeData == nullptr)
@@ -327,7 +328,6 @@ UItemComponentBase::UItemComponentBase(const FObjectInitializer& ObjectInitializ
 	:Super(ObjectInitializer)
 {
 	SetIsReplicatedByDefault(true);
-	RuntimeDataContainer.RegiseterComponentOwner(this);
 }
 
 void UItemComponentBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -399,6 +399,8 @@ void UItemComponentBase::Initialzie(TScriptInterface<IItemInterface> NewItemOwne
 
 void UItemComponentBase::OnRegister()
 {
+	RuntimeDataContainer.RegiseterComponentOwner(this);
+
 	Super::OnRegister();
 
 	RegisterComponent();
@@ -628,6 +630,9 @@ AController* UItemComponentBase::GetAvatarOwner() const
 
 void UItemComponentBase::SetInventoryOwner(UItemInventoryComponent* NewInventoryOwner)
 {
+	if(OwnerInventory == NewInventoryOwner)
+		return;
+
 	UItemInventoryComponent* OldAvatarOnwer =OwnerInventory;
 
 	if (OwnerInventory != nullptr)
@@ -636,13 +641,12 @@ void UItemComponentBase::SetInventoryOwner(UItemInventoryComponent* NewInventory
 	}
 
 	OwnerInventory = NewInventoryOwner;
+	MARK_PROPERTY_DIRTY_FROM_NAME(UItemComponentBase, OwnerInventory, this);
 
 	if (NewInventoryOwner != nullptr)
 	{
 		NewInventoryOwner->AddNewItem(GetItemOwner());
 	}
-
-	int RuntimeNum = RuntimeDataContainer.GetItemCount();
 
 	for (auto IT = RuntimeDataContainer.CreateIterator(0, true); IT; ++IT)
 	{
@@ -679,7 +683,7 @@ void UItemComponentBase::AddNewItemData(UItemDataBase* NewData)
 		if (AvatarOwner == nullptr)
 			return;
 
-		UItemNetworkSupportComponent* NetSupprot = UItemBlueprintLib::GetItemNetworkSupportComponent(AvatarOwner);
+		UItemNetworkSupportComponent* NetSupprot = UItemBlueprintLib::GetItemNetworkSupportComponent(AvatarOwner, GetWorld());
 
 		if (NetSupprot != nullptr)
 		{
@@ -713,7 +717,7 @@ void UItemComponentBase::RemoveItemData(UItemDataBase* ItemData)
 		if(AvatarOwner == nullptr)
 			return;
 
-		UItemNetworkSupportComponent* NetSupprot = UItemBlueprintLib::GetItemNetworkSupportComponent(AvatarOwner);
+		UItemNetworkSupportComponent* NetSupprot = UItemBlueprintLib::GetItemNetworkSupportComponent(AvatarOwner, GetWorld());
 
 		if (NetSupprot != nullptr )
 		{

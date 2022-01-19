@@ -31,7 +31,7 @@ public class Item : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"CoreUObject","Engine",
+				"CoreUObject","Engine","NetCore",
 				"Slate","SlateCore",
 				"GameplayAbilities","GameplayTags",
                 "DeveloperSettings"
