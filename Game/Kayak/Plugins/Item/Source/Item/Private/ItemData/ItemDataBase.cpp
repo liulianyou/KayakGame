@@ -23,12 +23,14 @@ void UItemDataBase::Initialize()
 
 void UItemDataBase::Finialize()
 {
-	OnFinialize();
+	if(!IsUnreachable())
+		OnFinialize();
 
 	for (auto IT = GetReferencedItemComponents_Mutable().CreateIterator(); IT; ++IT)
 	{
 		RemoveReferencedComponent(*IT);
 	}
+
 	GetReferencedItemComponents_Mutable().Empty();
 }
 
@@ -40,6 +42,14 @@ void UItemDataBase::BeginDestroy()
 	{
 		RemoveReferencedComponent(*It);
 	}
+
+	UItemManager* ItemManager =	UItemBlueprintLib::GetItemManager();
+
+	if (ItemManager != nullptr)
+	{
+		ItemManager->RemoveItemData(this);
+	}
+
 }
 
 void UItemDataBase::AddReferencedComponent(UItemComponentBase* ItemComponent)
@@ -72,7 +82,8 @@ void UItemDataBase::RemoveReferencedComponent(UItemComponentBase* ItemComponent)
 
 			ItemComponent->RemoveItemData(this);
 
-			OnRemoveReferencedComponent(ItemComponent);
+			if (!IsUnreachable())
+				OnRemoveReferencedComponent(ItemComponent);
 
 			break;
 		}
@@ -247,7 +258,7 @@ void UItemRuntimeDataBase::SetItemComponentOwner(UItemComponentBase* ItemCompone
 		{
 			AController* Controller = ItemOwner->GetAvatarOwner();
 
-			if (Controller == nullptr)
+			if (Controller == nullptr && GetWorld())
 			{
 				Controller = GetWorld()->GetFirstPlayerController();
 
@@ -310,7 +321,8 @@ void UItemRuntimeDataBase::Initialize(UItemDataBase* ItemData)
 
 void UItemRuntimeDataBase::Finialize()
 {
-	OnFinialize();
+	if (IsUnreachable())
+		OnFinialize();
 
 	DeactivateItem();
 

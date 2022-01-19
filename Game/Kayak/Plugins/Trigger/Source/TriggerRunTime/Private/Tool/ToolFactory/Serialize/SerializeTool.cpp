@@ -34,7 +34,7 @@ FString FSerializeToolBase::GetClassTypeString(UObject* Object)
 {
 	FString Result = ClassTypeIdentification + FString(VariableValueContent);
 
-	if (Object == nullptr)
+	if (Object == nullptr || !Object->IsValidLowLevel())
 	{
 		return TEXT("");
 	}

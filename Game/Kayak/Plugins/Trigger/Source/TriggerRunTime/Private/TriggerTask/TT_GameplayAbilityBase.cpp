@@ -221,15 +221,15 @@ UAbilitySystemComponent* UTT_GamePlayAbilityBase::GetGameplayAbilitySystem(UObje
 
 void UTT_GamePlayAbilityBase::InitializeAbilityByTriggerTask(FGameplayAbilitySpecHandle& AbilityHandle, UAbilitySystemComponent* Component)
 {
-	if(Component == nullptr)
+	if(Component == nullptr || !AbilityHandle.IsValid())
 		return;
 
 	FGameplayAbilitySpec* AbilitySpec = Component->FindAbilitySpecFromHandle(AbilityHandle);
 
-	if(AbilitySpec->Ability == nullptr)
+	if(AbilitySpec == nullptr || AbilitySpec->GetPrimaryInstance() == nullptr)
 		return;
 
-	if (AbilitySpec->Ability->GetClass()->ImplementsInterface(UGamePlayAbilitySupportInterface::StaticClass()))
+	if (AbilitySpec->GetPrimaryInstance()->GetClass()->ImplementsInterface(UGamePlayAbilitySupportInterface::StaticClass()))
 	{
 		IGamePlayAbilitySupportInterface* GameplayAbilitySupport = Cast<IGamePlayAbilitySupportInterface>(AbilitySpec->Ability);
 
@@ -285,20 +285,35 @@ void UTT_GamePlayAbilityBase::GiveAbility(UObject* Avater)
 		return;
 	}
 
-	FGameplayAbilitySpecHandle* AbilitySpaceHandle = AbilityHandles.Find(Component);
+	FGameplayAbilitySpecHandle AbilitySpaceHandle = AbilityHandles.FindRef(Component);
 
-	if (AbilitySpaceHandle == nullptr)
+	if (!AbilitySpaceHandle.IsValid())
 	{
-		FGameplayAbilitySpecHandle NewAbilitySpaceHandle = Component->GiveAbility(FGameplayAbilitySpec(AbilityClass, Level, InputID));
+		//As the ability has been removed i need to remove this map
+		AbilityHandles.Remove(Component);
 
-		AbilitySpaceHandle = &NewAbilitySpaceHandle;
+		if (AbilityClass == nullptr)
+		{
+			UE_LOG(LogTrigger, Warning, TEXT("Try to give ability to the avater with none ability class in trigger task %s"), *GetPathName());
 
-		AbilityHandles.Add(Component, *AbilitySpaceHandle);
+			return;
+		}
+
+		AbilitySpaceHandle = Component->GiveAbility(FGameplayAbilitySpec(AbilityClass, Level, InputID));
+
+		if (AbilitySpaceHandle.IsValid())
+		{
+			AbilityHandles.Add(Component, AbilitySpaceHandle);
+		}
+		else
+		{
+			UE_LOG(LogTrigger, Warning, TEXT("Can not give ability to the target avater int trigger task %s"), *GetPathName());
+		}
 	}
 
-	InitializeAbilityByTriggerTask(*AbilitySpaceHandle, Component);
+	InitializeAbilityByTriggerTask(AbilitySpaceHandle, Component);
 
-	Component->TryActivateAbility(*AbilitySpaceHandle);
+	Component->TryActivateAbility(AbilitySpaceHandle);
 
 	if (!Component->OnAbilityEnded.IsBoundToObject(this))
 	{

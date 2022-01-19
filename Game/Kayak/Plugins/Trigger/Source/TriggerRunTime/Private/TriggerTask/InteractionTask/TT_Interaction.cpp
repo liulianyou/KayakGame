@@ -364,7 +364,7 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 {
 	AActor* TargetActor = Contributor;
 
-	if(TargetActor == nullptr || *GamePlayAbilityClass == nullptr)
+	if (TargetActor == nullptr || *GamePlayAbilityClass == nullptr)
 		return true;
 
 	UAbilitySystemComponent* AbilitysSystem = Cast<UAbilitySystemComponent>(TargetActor->GetComponentByClass(UAbilitySystemComponent::StaticClass()));
@@ -376,6 +376,7 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 	}
 
 	FGameplayAbilitySpecHandle* AbilitySpaceHandlePtr = AbilityMap.Find(TargetActor);
+	FGameplayAbilitySpecHandle AbilityHandle;
 	FGameplayAbilitySpec* AS = nullptr;
 
 	bool NeedToGiveNewAbility = false;
@@ -392,21 +393,24 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 		{
 			NeedToGiveNewAbility = true;
 		}
+		else
+		{
+			AbilityHandle = *AbilitySpaceHandlePtr;
+		}
 	}
 
 	if (NeedToGiveNewAbility)
 	{
+		AbilityHandle = AbilitysSystem->GiveAbility(FGameplayAbilitySpec(GamePlayAbilityClass));
 
-		AbilitySpaceHandlePtr = new FGameplayAbilitySpecHandle(AbilitysSystem->GiveAbility(FGameplayAbilitySpec(GamePlayAbilityClass)));
-
-		AS = AbilitysSystem->FindAbilitySpecFromHandle(*AbilitySpaceHandlePtr);
+		AS = AbilitysSystem->FindAbilitySpecFromHandle(AbilityHandle);
 	}
-	
-	if(AS == nullptr)
+
+	if (AS == nullptr)
 		return true;
 
 	//If this ability is still active then do nothing else as the target actor is interacting with this trigger task
-	if(AS->GetPrimaryInstance()->IsActive())
+	if (AS->GetPrimaryInstance()->IsActive())
 		return false;
 
 	//Always remove the old data
@@ -435,19 +439,13 @@ bool UTT_Interaction::CheckGamePlayAbility(AActor* Contributor)
 	}
 
 	//Add the new ability map
-	AbilityMap.Add(TargetActor, *AbilitySpaceHandlePtr);
+	AbilityMap.Add(TargetActor, AbilityHandle);
 
-	if (!AbilitysSystem->TryActivateAbility(*AbilitySpaceHandlePtr, true))
+	if (!AbilitysSystem->TryActivateAbility(AbilityHandle, true))
 	{
 		// TODO: Failed to try activate ability, maybe the interaction should end by itself.
 		TArray<UObject*> Causers = { TargetActor };
-		AbilityTryToEndInteraction(*AbilitySpaceHandlePtr, Causers, EInteractionEndType::EInteractionEndType_Cancle, false);
-	}
-
-	if (AbilitySpaceHandlePtr)
-	{
-		delete AbilitySpaceHandlePtr;
-		AbilitySpaceHandlePtr = nullptr;
+		AbilityTryToEndInteraction(AbilityHandle, Causers, EInteractionEndType::EInteractionEndType_Cancle, false);
 	}
 
 	//Make sure the target ability should be removed when it is ended as if the player interact with the target interaction again, the interaction actor will give him new ability

@@ -123,7 +123,7 @@ private:
 * The runtime data which is used by the item.
 * Runtime data is only used at runtime state, it will cashed some temporary value, and define some operations around this data
 */
-UCLASS(Blueprintable, BlueprintType, Abstract, Within="ItemComponentBase", Category = "ItemRuntimeData")
+UCLASS(Blueprintable, BlueprintType, Abstract, Category = "ItemRuntimeData")
 class ITEM_API UItemRuntimeDataBase : public UObject
 {
 	GENERATED_UCLASS_BODY()

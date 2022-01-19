@@ -44,17 +44,17 @@ bool FRuntimeDataItem::IsValid() const
 
 void FRuntimeDataItem::PreReplicatedRemove(const struct FItemRuntimeDataContainer& InArray)
 {
-	PendingRemoved = true;
+	const_cast<FItemRuntimeDataContainer&>(InArray).RemoveItem(RuntimeData);
 }
 
 void FRuntimeDataItem::PostReplicatedAdd(const struct FItemRuntimeDataContainer& InArray)
 {
-	
+	const_cast<FItemRuntimeDataContainer&>(InArray).AddNewItem(RuntimeData);
 }
 
 void FRuntimeDataItem::PostReplicatedChange(const struct FItemRuntimeDataContainer& InArray)
 {
-	
+
 }
 
 FItemRuntimeDataContainer::FItemRuntimeDataContainer()
@@ -71,50 +71,64 @@ void FItemRuntimeDataContainer::RegiseterComponentOwner(UItemComponentBase* Comp
 	ItemOwner = ComponentOwner;
 }
 
-void FItemRuntimeDataContainer::AddNewItem(UItemRuntimeDataBase* NewItem)
+FRuntimeDataItem* FItemRuntimeDataContainer::AddNewItem(UItemRuntimeDataBase* NewItem)
 {
-	if(NewItem == nullptr)
-		return;
-	
-	bool IsExist = true;
+	FRuntimeDataItem* Result = nullptr;
 
-	for (auto IT = CreateIterator(0, false); IT; ++IT)
-	{
-		if ((*IT).RuntimeData == NewItem)
-		{
-			(*IT).PendingRemoved = false;
-			IsExist = true;
-			break;
-		}
-	}
+	if(NewItem == nullptr || GetIndexOfItem(NewItem) != INDEX_NONE )
+		return Result;
 
-	if (!IsExist)
+	if (LockCount > 0 && Items.GetSlack() <= 0)
 	{
-		//This is the first element try to added to array
-		if (EndPendingElementPtr == nullptr)
+		check(EndPendingElementPtr);
+		if (*EndPendingElementPtr == nullptr)
 		{
-			*EndPendingElementPtr = new FRuntimeDataItem(NewItem);
+			Result = new FRuntimeDataItem(NewItem);
+			*EndPendingElementPtr = Result;
 		}
 		else
 		{
 			**EndPendingElementPtr = FRuntimeDataItem(NewItem);
+			Result = *EndPendingElementPtr;
 		}
 
-		EndPendingElementPtr = &((*EndPendingElementPtr)->NextElement);
+		EndPendingElementPtr = &Result->NextElement;
 	}
+	else
+	{
+		Result = new(Items) FRuntimeDataItem(NewItem);
+	}
+
+	if (Result != nullptr)
+	{
+		MarkItemDirty(*Result);
+	}
+
+	return Result;
+
 }
 
 void FItemRuntimeDataContainer::RemoveItem(UItemRuntimeDataBase* OldItem)
 {
-	for (auto IT = CreateIterator(0, false); IT; ++IT)
+	if(OldItem == nullptr || !OldItem->IsValidLowLevel())
+		return;
+
+	//When this data container is locked this final remove will occurred at the end
+	if (LockCount > 0)
 	{
-		if ((*IT).RuntimeData == OldItem)
+		PendingRemovedCount++;
+	}
+	else
+	{
+		int Index = GetIndexOfItem(OldItem);
+
+		if (Items.IsValidIndex(Index))
 		{
-			//The actual remove action will be occurred at the DecrementLock
-			(*IT).PendingRemoved = true;
-			break;
+			Items.RemoveAtSwap(Index);
 		}
 	}
+
+	MarkArrayDirty();
 }
 
 int FItemRuntimeDataContainer::GetIndexOfItem(UItemRuntimeDataBase* RuntimeData)
@@ -164,48 +178,37 @@ void FItemRuntimeDataContainer::DecrementLock()
 {
 	if(--LockCount != 0)
 		return;
-	
-	int RemoveCount = 0;
-	bool ModifiedArray = false;
 
 	FRuntimeDataItem* Start = HeadPendingElement;
 	FRuntimeDataItem* Stop = *EndPendingElementPtr;
-
-	auto RemoveInvalidItem = [](FRuntimeDataItem* Item) -> bool{
-		if(Item == nullptr)
-			return false;
-
-		if ((*Item) == false)
-		{
-			if (Item->RuntimeData != nullptr)
-			{
-				Item->RuntimeData->Finialize();
-			}
-
-			return true;
-		}
-		
-		return false;
-	};
+	bool ModifiedArray = false;
 
 	while (Start != Stop)
 	{
-		if (RemoveInvalidItem(Start))
+		if (!Start->PendingRemoved)
 		{
-			Start = Start->NextElement;
-
-			if (Start->PreElement)
-			{
-				delete Start->PreElement;
-				Start->PreElement = nullptr;
-			}
+			Items.Add(MoveTemp(*Start));
+			ModifiedArray = true;
 		}
+		else
+		{
+			PendingRemovedCount--;
+		}
+
+		Start = Start->NextElement;
 	}
 
-	for (int i = 0; i < Items.Num(); i++)
+	for (int i = 0; i < Items.Num() && PendingRemovedCount > 0; i++)
 	{
-		if (RemoveInvalidItem(&Items[i]))
+		if (Items[i] == false)
 		{
+			if (Items[i].RuntimeData != nullptr)
+			{
+				Items[i].RuntimeData->Finialize();
+			}
+
+			PendingRemovedCount--;
+
 			Items.RemoveAt(i--);
 
 			ModifiedArray = true;
@@ -214,6 +217,12 @@ void FItemRuntimeDataContainer::DecrementLock()
 
 	//Reset the end element so that the add and remove  operation will occurs when the the elements has been changed
 	EndPendingElementPtr = &HeadPendingElement;
+
+	if (!ensure(PendingRemovedCount == 0))
+	{
+		UE_LOG(LogItem, Error, TEXT("There are still %d elements neex to be removed!!!"), PendingRemovedCount);
+		PendingRemovedCount = 0;
+	}
 
 	if (ModifiedArray)
 	{

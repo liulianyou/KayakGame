@@ -82,7 +82,7 @@ public:
 
 public:
 
-	void AddNewItem(UItemRuntimeDataBase* RuntimeData);
+	FRuntimeDataItem* AddNewItem(UItemRuntimeDataBase* RuntimeData);
 	void RemoveItem(UItemRuntimeDataBase* RuntimeData);
 	int GetIndexOfItem(UItemRuntimeDataBase* RuntimeData);
 	UItemRuntimeDataBase* GetRuntimeDataByIndex(int Index);
@@ -119,14 +119,20 @@ public:
 public:
 
 	/*
-	* As sometime the item owner will do a lot item operation in one frame if I add them to it each time,
-	* This will do a lot remove and add operations
+	* When one item component has a lot runtime data which is exceed the max number of items then I need to create new item at the heap memory.
 	*/
 
 	//The first element which want to be added to this container in this container
 	FRuntimeDataItem* HeadPendingElement = nullptr;
 	//The last element which want to be added to this container 
 	FRuntimeDataItem** EndPendingElementPtr = nullptr;
+
+private:
+	/*
+	* Simulate the safe point to release all resource safely
+	*/
+	mutable int LockCount;
+	int PendingRemovedCount = 0;
 
 private:
 	
@@ -138,11 +144,6 @@ private:
 	
 	//The owner of this container
 	UItemComponentBase* ItemOwner = nullptr;
-
-	/*
-	* Simulate the safe point to release all resource safely
-	*/
-	mutable int LockCount;
 };
 
 template<>

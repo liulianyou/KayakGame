@@ -179,8 +179,8 @@ void UItemManager::RegisterItem(UObject* NewItem)
 void UItemManager::UnregisterItem(UObject* RemovedItem)
 {
 	if (RemovedItem == nullptr 
-		|| RemovedItem->GetClass()->ImplementsInterface(UItemInterface::StaticClass())
-		|| Items.Find(RemovedItem) != INDEX_NONE)
+		|| !RemovedItem->GetClass()->ImplementsInterface(UItemInterface::StaticClass())
+		|| Items.Find(RemovedItem) == INDEX_NONE)
 		return;
 
 	IItemInterface* ItemInterface = Cast<IItemInterface>(RemovedItem);

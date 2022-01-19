@@ -27,11 +27,23 @@ private:
 
 void FItemModule::StartupModule()
 {
-	/*
-	* When this module is loaded still need to the wait the usage to determine when to use item global
-	*/
-	ItemGlobal = nullptr;
+	UClass* ItemGlobalClass = UItemGlobal::StaticClass();
 
+	TSoftClassPtr<UItemGlobal> Class = UItemConfig::StaticClass()->GetDefaultObject<UItemConfig>()->ItemGlobalClass;
+
+	if (Class.IsValid())
+	{
+		ItemGlobalClass = Class.Get();
+	}
+
+	ItemGlobal = NewObject<UItemGlobal>(GetTransientPackage(), ItemGlobalClass, TEXT("ItemGlobal"));
+
+	ItemGlobal->AddToRoot();
+
+	ItemGlobal->InitializeGlobal();
+
+	//Now the outer module can access all Item system functions safely
+	ItemModuleReadyCallback.Broadcast();
 }
 
 void FItemModule::ShutdownModule()
@@ -54,25 +66,7 @@ UItemGlobal* FItemModule::GetItemGlobal() const
 		return ItemGlobal;
 	}
 
-	UClass* ItemGlobalClass = UItemGlobal::StaticClass();
-
-	TSoftClassPtr<UItemGlobal> Class = UItemConfig::StaticClass()->GetDefaultObject<UItemConfig>()->ItemGlobalClass;
-
-	if (Class.IsValid())
-	{
-		ItemGlobalClass = Class.Get();
-	}
-
-	ItemGlobal = NewObject<UItemGlobal>(GetTransientPackage(), ItemGlobalClass, TEXT("ItemGlobal"));
-
-	ItemGlobal->AddToRoot();
-
-	ItemGlobal->InitializeGlobal();
-
-	//Now the outer module can access all Item system functions safely
-	ItemModuleReadyCallback.Broadcast();
-
-	return ItemGlobal;
+	return nullptr;
 }
 
 

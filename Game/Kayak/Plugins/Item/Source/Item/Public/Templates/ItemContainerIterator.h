@@ -18,6 +18,12 @@ public:
 	{
 		Container.IncrementLock();
 
+		if(SearchInPendingList)
+		{
+			Current = AdvancePending(const_cast<ElementType**>(&Container.HeadPendingElement));
+			index = Container.Items.Num() - 1;
+		}
+
 		UpdateCurrent();
 	}
 
@@ -108,23 +114,25 @@ private:
 	void UpdateCurrent()
 	{
 		//Interact the current pending list
-		if (SearchInPendingList)
+		if (!SearchInPendingList)
 		{
-			//Current = Pending;
-		}
-		else if (index >= Container.Items.Num())
-		{
-			// Once we get to end of the array, we start iterating on the linked list. 
-			Current = AdvancePending(const_cast<ElementType**>(&Container.HeadPendingElement));
-			SearchInPendingList = true;
-		}
-		else
-		{
-			Current = &Container.Items[index];
+			if (index >= Container.Items.Num())
+			{
+				// Once we get to end of the array, we start iterating on the linked list. 
+				Current = AdvancePending(const_cast<ElementType**>(&Container.HeadPendingElement));
+				SearchInPendingList = true;
+			}
+			else
+			{
+				if (Container.Items.IsValidIndex(index))
+				{
+					Current = &Container.Items[index];
+				}
+			}
 		}
 
 		// If the current element is pending remove, go to the next one.
-		if (SkipInvalidElement && !(*Current))
+		if (Current != nullptr && SkipInvalidElement && !(*Current))
 		{
 			Next();
 		}
