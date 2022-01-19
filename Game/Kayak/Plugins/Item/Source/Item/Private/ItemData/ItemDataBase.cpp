@@ -49,7 +49,6 @@ void UItemDataBase::BeginDestroy()
 	{
 		ItemManager->RemoveItemData(this);
 	}
-
 }
 
 void UItemDataBase::AddReferencedComponent(UItemComponentBase* ItemComponent)

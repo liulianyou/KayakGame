@@ -1,27 +1,135 @@
 #include "ItemInventroyComponent.h"
 #include "ItemComponentBase.h"
 #include "ItemDataBase.h"
+#include "ItemBlueprintLib.h"
+
 #include "Net/UnrealNetwork.h"
 #include "Templates/UnrealTemplate.h"
 
+FItemInfo FItemInfo::InvalidItemInfo;
+
 bool FItemInfo::IsValid() const
 {
-	return !!Item && !PendingRemoved && Item->GetItemComponent() != nullptr;
+	if(Item == nullptr 
+		|| !Item->IsValidLowLevel()
+		|| PendingRemoved 
+		|| !Item->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
+		return false;
+
+	return UItemBlueprintLib::GetItemComponent(Item) != nullptr;
 }
 
-int FItemContainer::AddNewItem(TScriptInterface<IItemInterface>)
+void FItemContainer::RegisterInventoryComponent(UItemInventoryComponent* _InventoryComponent)
 {
+	InventoryOwner = _InventoryComponent;
+}
+
+int FItemContainer::AddNewItem(UObject* NewItem)
+{
+	if(NewItem == nullptr 
+		|| NewItem->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
+		return INDEX_NONE;
+
+	int Result = GetItemIndex(NewItem);
+
+	if (Result != INDEX_NONE)
+	{
+		//Make the target item do not removed as it is added again
+		GetItemInfoByIndex(Result).PendingRemoved = false;
+		return Result;
+	}
+
+	FItemInfo* NewItemInfo = nullptr;
+
+	//There is no more memory to hold the new item so create ne heap memory to hold it
+	if (LockCount > 0 && Items.GetSlack() <= 0)
+	{
+		check(EndPendingElementPtr);
+		if (*EndPendingElementPtr == nullptr)
+		{
+			NewItemInfo = new FItemInfo(NewItem);
+			*EndPendingElementPtr = NewItemInfo;
+		}
+		else
+		{
+			**EndPendingElementPtr = FItemInfo(NewItem);
+			NewItemInfo = *EndPendingElementPtr;
+		}
+
+		NewItemInfo->PreElement = *EndPendingElementPtr;
+		EndPendingElementPtr = &NewItemInfo->NextElement;
+	}
+	else
+	{
+		Result = Items.Add(FItemInfo(NewItem));
+	}
+
+	MarkItemDirty(Items[Result]);
+
+	return InventoryOwner->AddNewItem(NewItem);
+}
+
+void FItemContainer::RemoveItem(UObject* RemovedItem)
+{
+	if (RemovedItem == nullptr
+		|| RemovedItem->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
+		return;
+
+	int Result = GetItemIndex(RemovedItem);
+
+	//When this data container is locked this final remove will occurred at the end
+	if (LockCount > 0)
+	{
+		PendingRemovedCount++;
+	}
+	else
+	{
+		int Index = GetItemIndex(RemovedItem);
+
+		if (Items.IsValidIndex(Index))
+		{
+			Items.RemoveAtSwap(Index);
+		}
+	}
+
+	MarkArrayDirty();
+}
+
+int FItemContainer::GetItemNum() const
+{
+	int Result = Items.Num();
+
+	FItemInfo* Start = HeadPendingElement;
+	FItemInfo* Stop = *EndPendingElementPtr;
+
+	while (Start != Stop)
+	{
+		Result++;
+		Start = Start->NextElement;
+	}
+
+	return Result;
+}
+
+int FItemContainer::GetItemIndex(UObject* Item) const
+{
+	if(Item == nullptr || !Item->IsValidLowLevel() || !Item->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
+		return INDEX_NONE;
+
+	for (auto IT = CreateConstIterator(0, true); IT; ++IT)
+	{
+		if (IT.GetValue()->Item == Item)
+		{
+			return IT.GetIndex();
+		}
+	}
+
 	return INDEX_NONE;
 }
 
-int FItemContainer::RemoveItem(TScriptInterface<IItemInterface>)
+FItemInfo& FItemContainer::GetItemInfoByIndex(int Index) const
 {
-	return INDEX_NONE;
-}
-
-int FItemContainer::GetItemNum()
-{
-	return INDEX_NONE;
+	return FItemInfo::InvalidItemInfo;
 }
 
 void FItemContainer::IncrementLock()
@@ -33,6 +141,9 @@ void FItemContainer::DecrementLock()
 {
 	if(--LockCount != 0)
 		return;
+
+
+
 }
 
 bool FItemQueryFilter::IsMatchedForItemClass(const FItemContainer::ConstIterator& IT) const
@@ -43,7 +154,7 @@ bool FItemQueryFilter::IsMatchedForItemClass(const FItemContainer::ConstIterator
 	if(!IT && !(*IT))
 		return false;
 
-	return ItemClass== nullptr || IT.GetValue()->Item.GetObject()->GetClass() == ItemClass;
+	return ItemClass== nullptr || IT.GetValue()->Item->GetClass() == ItemClass;
 }
 
 bool FItemQueryFilter::IsMatchedForItemDataClass(const FItemContainer::ConstIterator& IT) const
@@ -53,8 +164,8 @@ bool FItemQueryFilter::IsMatchedForItemDataClass(const FItemContainer::ConstIter
 
 	if (!IT && !(*IT))
 		return false;
-	
-	UItemComponentBase* ItemComponent = IT.GetValue()->Item->GetItemComponent();
+
+	UItemComponentBase* ItemComponent = UItemBlueprintLib::GetItemComponent(IT.GetValue()->Item);
 
 	if(ItemComponent == nullptr)
 		return false;
@@ -83,7 +194,7 @@ bool FItemQueryFilter::IsMatchedForItemRuntimeDataClass(const FItemContainer::Co
 	if (!IT && !(*IT))
 		return false;
 
-	UItemComponentBase* ItemComponent = IT.GetValue()->Item->GetItemComponent();
+	UItemComponentBase* ItemComponent = UItemBlueprintLib::GetItemComponent(IT.GetValue()->Item);
 
 	if(ItemComponent == nullptr)
 		return false;
@@ -114,7 +225,7 @@ bool FItemQueryFilter::IsMatchedForRuntimeDataInstance(const FItemContainer::Con
 	if (!IT && !(*IT))
 		return false;
 
-	UItemComponentBase* ItemComponent = IT.GetValue()->Item->GetItemComponent();
+	UItemComponentBase* ItemComponent = UItemBlueprintLib::GetItemComponent(IT.GetValue()->Item);
 
 	if (ItemComponent == nullptr)
 		return false;
@@ -126,7 +237,7 @@ bool FItemQueryFilter::IsMatchedForRuntimeDataInstance(const FItemContainer::Con
 	return RuntimeData.Num() != 0;
 }
 
-void FItemQueryFilter::GetItems(const UItemInventoryComponent* const InventoryComponent, TArray<TScriptInterface<IItemInterface>>& Items) const
+void FItemQueryFilter::GetItems(const UItemInventoryComponent* const InventoryComponent, TArray<UObject*>& Items) const
 {
 	Items.Empty();
 
@@ -135,7 +246,7 @@ void FItemQueryFilter::GetItems(const UItemInventoryComponent* const InventoryCo
 
 	uint32 TargetMatchGole = GenerateQueryInfo( ItemClass != nullptr, ItemDataClass != nullptr, ItemIndex != INDEX_NONE, ItemRuntimeDataInstance != nullptr, ItemRuntimeDataClass != nullptr );
 
-	for (auto IT = InventoryComponent->ItemContainer.CreateConstIterator(); IT; ++IT)
+	for (auto IT = InventoryComponent->GetItemContainer().CreateConstIterator(); IT; ++IT)
 	{
 		uint32 LocalMatchResult = GenerateQueryInfo(
 			IsMatchedForItemClass(IT),
@@ -169,7 +280,7 @@ UItemInventoryComponent::UItemInventoryComponent(const FObjectInitializer& Objec
 {
 	SetIsReplicatedByDefault(true);
 
-
+	ItemContainer.RegisterInventoryComponent(this);
 }
 
 void UItemInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -186,14 +297,20 @@ bool UItemInventoryComponent::ReplicateSubobjects(class UActorChannel* Channel, 
 
 	for (auto IT = ItemContainer.CreateIterator(); IT; ++IT)
 	{
-		if((*IT).Item.GetObject() == nullptr 
+		if((*IT).Item == nullptr 
 			//As the actor has it own channel to replicate its properties
-			|| (*IT).Item.GetObject()->GetClass()->IsChildOf(AActor::StaticClass()))
+			|| (*IT).Item->GetClass()->IsChildOf(AActor::StaticClass()))
 			continue;
 
-		WroteSomething |= (*IT).Item->ReplicateSubobjects(Channel, Bunch, RepFlags);
+		//Only replicate the native class which is inherited from IItemInterface
+		IItemInterface* ItemInterface = Cast<IItemInterface>((*IT).Item);
 
-		WroteSomething |= Channel->ReplicateSubobject((*IT).Item.GetObject(), *Bunch, *RepFlags);
+		if (ItemInterface != nullptr)
+		{
+			WroteSomething |= ItemInterface->ReplicateSubobjects(Channel, Bunch, RepFlags);
+		}
+
+		WroteSomething |= Channel->ReplicateSubobject((*IT).Item, *Bunch, *RepFlags);
 	}
 
 	return WroteSomething;
@@ -208,7 +325,12 @@ void UItemInventoryComponent::OnUnregister()
 {
 	for (auto IT = ItemContainer.CreateIterator(); IT; ++IT)
 	{
-		(*IT).Item->GetItemComponent()->SetInventoryOwner(nullptr);
+		UItemComponentBase* ItemComponent  = UItemBlueprintLib::GetItemComponent((*IT).Item);
+
+		if (ItemComponent != nullptr)
+		{
+			ItemComponent->SetInventoryOwner(nullptr);
+		}
 	}
 
 	Super::OnUnregister();
@@ -261,30 +383,39 @@ AController* UItemInventoryComponent::GetAvatarOwner() const
 	return Result;
 }
 
-void UItemInventoryComponent::GetItems(TArray<TScriptInterface<IItemInterface>>& OutItems, const FItemQueryFilter& ItemQueryFilter) const
+void UItemInventoryComponent::GetItems(TArray<UObject*>& OutItems, const FItemQueryFilter& ItemQueryFilter) const
 {
 	OutItems.Empty();
 
 	ItemQueryFilter.GetItems(this, OutItems);
 }
 
-int UItemInventoryComponent::AddNewItem(TScriptInterface<IItemInterface> NewItem)
+int UItemInventoryComponent::AddNewItem(UObject* NewItem)
 {
-	if (NewItem == nullptr)
+	if (NewItem == nullptr || NewItem->GetClass()->ImplementsInterface(UItemInterface::StaticClass()))
 	{
 		return INDEX_NONE;
 	}
 
-	UItemComponentBase* ItemComponent = NewItem->GetItemComponent();
+	int Result = GetItemContainer().GetItemIndex(NewItem);
 
-	if(ItemComponent == nullptr)
+	if(Result != INDEX_NONE)
+		return Result;
+
+	UItemComponentBase* ItemComponent = UItemBlueprintLib::GetItemComponent(NewItem);
+
+	if (ItemComponent == nullptr)
+	{
 		return INDEX_NONE;
-
+	}
+		
 	ItemComponent->SetInventoryOwner(this);
 
 	ItemComponent->Gained(FItemScopeChangeInfo(), FItemRuntimeDataQueryFilter());
 
-	return ItemContainer.AddNewItem(NewItem);
+	Result = ItemContainer.AddNewItem(NewItem);
+
+	return Result;
 }
 
 
@@ -296,27 +427,20 @@ int UItemInventoryComponent::AddNewItemWithItemClass(TSubclassOf<UObject> ItemTy
 	if (!ItemType->ImplementsInterface(UItemInterface::StaticClass()))
 		return INDEX_NONE;
 
-	UObject* NewItemObject = NewObject<UObject>( this, ItemType );
+	UObject* NewItemObject =  UItemBlueprintLib::GetItemManager()->CreateNewItem(ItemType, this, GetWorld());
 
-	if(NewItemObject == nullptr)
-		return INDEX_NONE;
-
-	TScriptInterface<IItemInterface> NewItem;
-	NewItem.SetObject(NewItemObject);
-	NewItem.SetInterface( ItemType->GetInterfaceAddress(UItemInterface::StaticClass()) );
-
-	return AddNewItem(NewItem);
+	return AddNewItem(NewItemObject);
 }
 
-int UItemInventoryComponent::RemoveItem(TScriptInterface<IItemInterface> RemovedItem, bool DestroyItem /*= false*/)
+void UItemInventoryComponent::RemoveItem(UObject* RemovedItem, bool DestroyItem /*= false*/)
 {
 	//If this is invalid item then do nothing
 	if(RemovedItem == nullptr)
-		return INDEX_NONE;
+		return;
 
-	int Result = ItemContainer.RemoveItem(RemovedItem);
+	ItemContainer.RemoveItem(RemovedItem);
 
-	UItemComponentBase* ItemComponent = RemovedItem->GetItemComponent();
+	UItemComponentBase* ItemComponent = UItemBlueprintLib::GetItemComponent(RemovedItem);
 
 	if (ItemComponent != nullptr)
 	{
@@ -324,8 +448,6 @@ int UItemInventoryComponent::RemoveItem(TScriptInterface<IItemInterface> Removed
 
 		ItemComponent->Abandoned(FItemScopeChangeInfo(DestroyItem?EItemScopeChangeType::Destroyed:EItemScopeChangeType::NoChange), FItemRuntimeDataQueryFilter());
 	}
-
-	return Result;
 }
 
 

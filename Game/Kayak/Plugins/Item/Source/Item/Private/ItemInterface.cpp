@@ -4,12 +4,19 @@
 
 UItemComponentBase* IItemInterface::GetItemComponent() const
 {
+	UItemComponentBase* Result = nullptr;
+
 	if (_getUObject()->GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(IItemInterface, OnGetItemComponent)))
 	{
-		return OnGetItemComponent();
+		Result = OnGetItemComponent();
+
+		if (Result == nullptr)
+		{
+			UE_LOG(LogItem, Warning, TEXT("Can not get item component from BP function GetItemComponent in class: %s"), *_getUObject()->GetClass()->GetName());
+		}
 	}
 
-	return nullptr;
+	return Result;
 }
 
 void IItemInterface::Initialize(UItemInventoryComponent* InventoryOwner)

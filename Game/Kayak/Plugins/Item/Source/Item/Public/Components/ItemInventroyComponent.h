@@ -26,6 +26,8 @@ struct ITEM_API FItemInfo : public FFastArraySerializerItem
 {
 	GENERATED_BODY()
 
+	FItemInfo(){}
+	FItemInfo( UObject* Object ):Item(Object){}
 public:
 
 	explicit operator bool() const { return IsValid(); }
@@ -46,7 +48,7 @@ public:
 	
 	//The item which contain item component
 	UPROPERTY()
-	TScriptInterface<IItemInterface> Item;
+	UObject* Item;
 
 	/*
 	* The index of this item in the target container
@@ -64,6 +66,9 @@ public:
 	//Double direction list
 	FItemInfo* PreElement = nullptr;
 	FItemInfo* NextElement = nullptr;
+
+public:
+	static FItemInfo InvalidItemInfo;
 };
 
 /*
@@ -79,10 +84,25 @@ struct ITEM_API FItemContainer : public FFastArraySerializer
 
 public:
 
-	int AddNewItem(TScriptInterface<IItemInterface>);
-	int RemoveItem(TScriptInterface<IItemInterface>);
-	int GetItemNum();
+	//Add new item to this container, when the item have not enough space then it will be added into pending list
+	int AddNewItem(UObject* NewItem);
 
+	//Remove the target item in the container
+	void RemoveItem(UObject* RemovedItem);
+
+	//Get the number of item in this container include pending elements
+	int GetItemNum() const;
+
+	/*
+	* Get the index of item in this container.
+	* the returned index maybe not safe as the pending list may be removed
+	*/
+	int GetItemIndex( UObject* Item ) const;
+
+	//Get the item info by the index
+	FItemInfo& GetItemInfoByIndex( int Index ) const;
+
+	void RegisterInventoryComponent( UItemInventoryComponent* InventoryComponent );
 public:
 
 	//Increment the lock count for the target attribute
@@ -113,7 +133,10 @@ private:
 	* Simulate the safe point to release all resource safely
 	*/
 	mutable int LockCount;
+	int PendingRemovedCount = 0;
 
+private:
+	UItemInventoryComponent* InventoryOwner = nullptr;
 };
 
 template<>
@@ -138,7 +161,7 @@ struct ITEM_API FItemQueryFilter
 public:
 	
 	//Get all items in the inventory component
-	void GetItems( const UItemInventoryComponent* const InventoryComponent, TArray<TScriptInterface<IItemInterface>>& Items) const;
+	void GetItems( const UItemInventoryComponent* const InventoryComponent, TArray<UObject*>& Items) const;
 
 private:
 	
@@ -206,8 +229,6 @@ class ITEM_API UItemInventoryComponent : public UActorComponent
 {
 	GENERATED_UCLASS_BODY()
 
-	friend struct FItemQueryFilter;
-
 public:
 
 	//Override UObject
@@ -260,7 +281,7 @@ public:
 	* @param ItemQueryFilter Define how to filter the items in this inventory
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemInventory")
-	void GetItems( TArray<TScriptInterface<IItemInterface>>& Items, const FItemQueryFilter& ItemQueryFilter ) const;
+	void GetItems( TArray<UObject*>& Items, const FItemQueryFilter& ItemQueryFilter ) const;
 
 	/*
 	* Add new item to this inventory
@@ -268,7 +289,7 @@ public:
 	* #return the index for the new item
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemInventory")
-	int AddNewItem(TScriptInterface<IItemInterface> NewItem);
+	int AddNewItem(UObject* NewItem);
 
 	/*
 	* Add new specific type of item to this inventory
@@ -286,7 +307,13 @@ public:
 	* #return the remain counts of items
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemInventory")
-	int RemoveItem(TScriptInterface<IItemInterface> RemovedItem, bool DestroyItem = false);
+	void RemoveItem(UObject* RemovedItem, bool DestroyItem = false);
+
+	/*
+	* Get the item container in this inventory
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemInventory")
+	const FItemContainer& GetItemContainer() const { return ItemContainer; }
 
 public:
 	

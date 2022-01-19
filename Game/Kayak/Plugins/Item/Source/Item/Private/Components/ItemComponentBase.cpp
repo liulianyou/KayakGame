@@ -92,6 +92,7 @@ FRuntimeDataItem* FItemRuntimeDataContainer::AddNewItem(UItemRuntimeDataBase* Ne
 			Result = *EndPendingElementPtr;
 		}
 
+		Result->PreElement = *EndPendingElementPtr;
 		EndPendingElementPtr = &Result->NextElement;
 	}
 	else
