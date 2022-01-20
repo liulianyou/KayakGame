@@ -11,7 +11,7 @@ UItemInventoryComponent* IItemInventoryInterface::GetItemInventoryComponent() co
 
 		if (Result == nullptr)
 		{
-			UE_LOG(LogItem, Error, TEXT("Please inplement the interface in the BP function << OnGetItemComponent >> of target object:%s!!!"), *_getUObject()->GetPathName());
+			UE_LOG(LogItem, Fatal, TEXT("Please inplement the interface in the BP function << OnGetItemComponent >> of target object:%s!!!"), *_getUObject()->GetPathName());
 		}
 	}
 

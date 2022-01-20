@@ -20,6 +20,8 @@ class ITEM_API UItemRuntimeData : public UItemRuntimeDataBase
 {
 	GENERATED_UCLASS_BODY()
 
+	ItemRuntimeDataFramework()
+
 public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const;

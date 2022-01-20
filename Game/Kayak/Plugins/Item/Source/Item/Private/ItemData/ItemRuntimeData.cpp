@@ -1,4 +1,10 @@
 #include "ItemRuntimeData.h"
+#include "ItemComponentBase.h"
+#include "ItemInventroyComponent.h"
+#include "ItemDefinition.h"
+#include "TargetGenerateRuleBase.h"
+
+#include "AbilitySystemComponent.h"
 
 UItemRuntimeData::UItemRuntimeData(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -37,4 +43,70 @@ void UItemRuntimeData::OnRep_AttributeSetMap(const TArray<FItemAttributeSetDefin
 void UItemRuntimeData::OnRep_EffectMap(const TArray<FItemEffectDefiniation>& OldValue )
 {
 	ITEMPROPERYREPNOTIFY(UItemRuntimeData, TArray<FItemEffectDefiniation>, EffectMap, OldValue);
+}
+
+void UItemRuntimeData::ActivateItem()
+{
+	Super::ActivateItem();
+
+	for (int i = 0; i < EffectMap.Num(); i++)
+	{
+		if (EffectMap[i].DataAppliedRule == nullptr)
+		{
+			UE_LOG(LogItem, Warning, TEXT("Try to get ability components by customize style wile there are no confined DataAppliedRule in runtime data: %s"), *GetPathName());
+			break;
+		}
+
+		UTargetGenerateRuleBase* DataAppliedRule = NewObject<UTargetGenerateRuleBase>(GetTransientPackage(), EffectMap[i].DataAppliedRule.Get());
+
+		if (DataAppliedRule == nullptr)
+		{
+			UE_LOG(LogItem, Warning, TEXT("There is no enough memory to create new TargetGenerateRule in runtime data: %s"), *GetPathName());
+			break;
+		}
+
+		TArray<UObject*> Targets;
+		DataAppliedRule->GetTargets(Targets, this);
+
+		TArray<UAbilitySystemComponent*> AbilitySystemComponents;
+
+		if(AbilitySystemComponents.Num() == 0)
+			continue;
+
+		for (int Index = 0; Index < AbilitySystemComponents.Num(); Index++)
+		{
+			if(AbilitySystemComponents[i] == nullptr)
+				continue;
+
+			for (int EffectIndex = 0; EffectIndex < EffectMap[i].Effects.Num(); EffectIndex)
+			{
+				AbilitySystemComponents[i]->ApplyGameplayEffectSpecToSelf(FGameplayEffectSpec(Cast<UGameplayEffect>(EffectMap[i].Effects[Index]->GetDefaultObject()), FGameplayEffectContextHandle()));
+			}
+		}
+	}
+}
+
+void UItemRuntimeData::DeactivateItem()
+{
+	Super::DeactivateItem();
+}
+
+void UItemRuntimeData::StartUse()
+{
+	Super::StartUse();
+}
+
+void UItemRuntimeData::StopUse()
+{
+	Super::StopUse();
+}
+
+void UItemRuntimeData::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
+{
+	Super::Abandoned(AbandonInfo);
+}
+
+void UItemRuntimeData::Gained(const FItemScopeChangeInfo& GainedInfo)
+{
+	Super::Gained(GainedInfo);
 }

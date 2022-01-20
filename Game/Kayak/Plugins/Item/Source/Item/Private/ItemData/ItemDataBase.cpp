@@ -148,12 +148,12 @@ bool UItemRuntimeDataBase::IsNameStableForNetworking() const
 
 int32 UItemRuntimeDataBase::GetFunctionCallspace(UFunction* Function, FFrame* Stack)
 {
-	if (GetItemOwner() == nullptr)
+	if (GetComponentOwner() == nullptr)
 	{
 		return FunctionCallspace::Local;
 	}
 
-	AActor* MyOwner = GetItemOwner()->GetOwner();
+	AActor* MyOwner = GetComponentOwner()->GetOwner();
 	return (MyOwner ? MyOwner->GetFunctionCallspace(Function, Stack) : FunctionCallspace::Local);
 }
 
@@ -161,7 +161,7 @@ bool UItemRuntimeDataBase::CallRemoteFunction(UFunction* Function, void* Parms, 
 {
 	bool bProcessed = false;
 
-	if (AActor* MyOwner = GetItemOwner()->GetOwner())
+	if (AActor* MyOwner = GetComponentOwner()->GetOwner())
 	{
 		FWorldContext* const Context = GEngine->GetWorldContextFromWorld(GetWorld());
 		if (Context != nullptr)
@@ -206,9 +206,9 @@ UWorld* UItemRuntimeDataBase::GetWorld() const
 		//When we open the defaulat object of this class then just return null to fool the UObject::ImplementsGetWorld by make the bGetWorldOverridden to be
 		return nullptr;
 	}
-	else if (GetItemOwner() != nullptr)
+	else if (GetComponentOwner() != nullptr)
 	{
-		return GetItemOwner()->GetWorld();
+		return GetComponentOwner()->GetWorld();
 	}
 	else
 	{
@@ -462,6 +462,22 @@ void UItemRuntimeDataBase::ItemDataChangedInItemOwner(UItemComponentBase* Item, 
 	OnItemDataChangedInItemOwner(Item, OldData, NewData);
 }
 
+AController* UItemRuntimeDataBase::GetAvatarOwner() const
+{
+	if(GetComponentOwner() == nullptr)
+		return nullptr;
+
+	return GetComponentOwner()->GetAvatarOwner();
+}
+
+UItemInventoryComponent* UItemRuntimeDataBase::GetInventoryOwner() const
+{
+	if (GetComponentOwner() == nullptr)
+		return nullptr;
+
+	return GetComponentOwner()->GetInventoryOwner();
+}
+
 void UItemRuntimeDataBase::MarkDataPrepared()
 {
 	//If this data have been prepared do not mark it again
@@ -470,7 +486,7 @@ void UItemRuntimeDataBase::MarkDataPrepared()
 
 	bDataPrepared = true;
 
-	GetItemOwner()->DataPreparedEvent.Broadcast(this);
+	GetComponentOwner()->DataPreparedEvent.Broadcast(this);
 }
 
 void UItemRuntimeDataBase::OnRep_ID()

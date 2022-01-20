@@ -25,6 +25,7 @@
 
 #include "ItemDataBase.generated.h"
 
+class AController;
 class UItemComponentBase;
 class UItemRuntimeDataBase;
 class UItemInventoryComponent;
@@ -311,7 +312,19 @@ public:
 	* Get the item owner of this runtime data
 	*/
 	UFUNCTION(BlueprintCallable)
-	UItemComponentBase* GetItemOwner() const { return ItemOwner; }
+	UItemComponentBase* GetComponentOwner() const { return ItemOwner; }
+
+	/*
+	* Which avatar own this data, this can be null, as this item in the world and nobody own it
+	*/
+	UFUNCTION(BlueprintCallable)
+	AController* GetAvatarOwner() const;
+
+	/*
+	* Which avatar own this data, this can be null, as this item in the world and nobody own it
+	*/
+	UFUNCTION(BlueprintCallable)
+	UItemInventoryComponent* GetInventoryOwner() const;
 
 	//Get the state of this item
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
@@ -394,7 +407,7 @@ private:
 };
 
 #define ITEMPROPERYREPNOTIFY(ClassType, PropertyType, PropertyName, OldValue )\
-	if(GetItemOwner() == nullptr)\
+	if(GetComponentOwner() == nullptr)\
 		return;\
 	struct FProperyChangedScope\
 	{\
@@ -413,6 +426,47 @@ private:
 		UItemComponentBase*& ItemComponent;\
 		UItemRuntimeDataBase* RuntimeData;\
 		const FString& PropertyName;\
-	} PropertyChangeScope(GetItemOwner(), this, GET_MEMBER_NAME_CHECKED(ClassType, PropertyName).ToString());\
+	} PropertyChangeScope(GetComponentOwner(), this, GET_MEMBER_NAME_CHECKED(ClassType, PropertyName).ToString());\
 	TGuardValue<PropertyType>(PropertyName, OldValue);\
-	GetItemOwner()->ItemRuntimeDataPreChanged.Broadcast(this, GET_MEMBER_NAME_CHECKED(ClassType, PropertyName).ToString());
+	GetComponentOwner()->ItemRuntimeDataPreChanged.Broadcast(this, GET_MEMBER_NAME_CHECKED(ClassType, PropertyName).ToString());
+
+
+#define ItemRuntimeDataFramework()\
+	virtual void ActivateItem() override;\
+	virtual void DeactivateItem() override;\
+	virtual void StartUse() override;\
+	virtual void StopUse() override;\
+	virtual void Abandoned(const FItemScopeChangeInfo& AbandonInfo) override;\
+	virtual void Gained(const FItemScopeChangeInfo& GainedInfo) override;
+
+#if 0
+	void XXX::ActivateItem() 
+	{
+		Super::ActivateItem();
+	}
+		
+	void XXX::DeactivateItem()
+	{
+		Super::DeactivateItem();
+	}
+
+	void XXX::StartUse()
+	{
+		Super::StartUse();
+	}
+
+	void XXX::StopUse()
+	{
+		Super::StopUse();
+	}
+
+	void XXX::Abandoned(const FItemScopeChangeInfo& AbandonInfo)
+	{
+		Super::Abandoned(AbandonInfo);
+	}
+
+	void XXX::Gained(const FItemScopeChangeInfo& GainedInfo)
+	{
+		Super::Gained(GainedInfo);
+	}
+#endif
