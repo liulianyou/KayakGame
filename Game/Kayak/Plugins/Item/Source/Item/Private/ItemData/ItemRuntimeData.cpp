@@ -2,7 +2,7 @@
 #include "ItemComponentBase.h"
 #include "ItemInventroyComponent.h"
 #include "ItemDefinition.h"
-#include "TargetGenerateRuleBase.h"
+#include "ApplyDataToAbilityComponent.h"
 
 #include "AbilitySystemComponent.h"
 
@@ -51,38 +51,26 @@ void UItemRuntimeData::ActivateItem()
 
 	for (int i = 0; i < EffectMap.Num(); i++)
 	{
+		if(EffectMap[i].ItemState != GetItemState())
+			continue;
+
 		if (EffectMap[i].DataAppliedRule == nullptr)
 		{
 			UE_LOG(LogItem, Warning, TEXT("Try to get ability components by customize style wile there are no confined DataAppliedRule in runtime data: %s"), *GetPathName());
-			break;
+			continue;
 		}
 
-		UTargetGenerateRuleBase* DataAppliedRule = NewObject<UTargetGenerateRuleBase>(GetTransientPackage(), EffectMap[i].DataAppliedRule.Get());
+		UDAR_AbilityComponents* DataAppliedRule = NewObject<UDAR_AbilityComponents>(GetTransientPackage(), EffectMap[i].DataAppliedRule.Get());
 
 		if (DataAppliedRule == nullptr)
 		{
 			UE_LOG(LogItem, Warning, TEXT("There is no enough memory to create new TargetGenerateRule in runtime data: %s"), *GetPathName());
-			break;
-		}
-
-		TArray<UObject*> Targets;
-		DataAppliedRule->GetTargets(Targets, this);
-
-		TArray<UAbilitySystemComponent*> AbilitySystemComponents;
-
-		if(AbilitySystemComponents.Num() == 0)
 			continue;
-
-		for (int Index = 0; Index < AbilitySystemComponents.Num(); Index++)
-		{
-			if(AbilitySystemComponents[i] == nullptr)
-				continue;
-
-			for (int EffectIndex = 0; EffectIndex < EffectMap[i].Effects.Num(); EffectIndex)
-			{
-				AbilitySystemComponents[i]->ApplyGameplayEffectSpecToSelf(FGameplayEffectSpec(Cast<UGameplayEffect>(EffectMap[i].Effects[Index]->GetDefaultObject()), FGameplayEffectContextHandle()));
-			}
 		}
+
+		DataAppliedRule->SetItemRuntimeData(this);
+		DataAppliedRule->SetEffects(EffectMap[i].Effects);
+		DataAppliedRule->ApplyData();
 	}
 }
 

@@ -16,7 +16,7 @@
 class UGameplayAbility;
 class UGameplayEffect;
 class UAttributeSet;
-class UTargetGenerateRuleBase;
+class UDataAppliedRuleBase;
 
 /*
 * The definition for the effects which is used for item
@@ -38,8 +38,8 @@ public:
 	* Defined how to generate the target rule
 	* This only worked when the DataAppliedRule is Customize
 	*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowedClasses="AbilityComponentsGenerate") )
-	TSubclassOf<UTargetGenerateRuleBase> DataAppliedRule;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowedClasses="DAR_AbilityComponents") )
+	TSubclassOf<UDataAppliedRuleBase> DataAppliedRule;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TArray<TSubclassOf<UGameplayEffect>> Effects;
@@ -66,7 +66,7 @@ public:
 	* This only worked when the DataAppliedRule is Customize
 	*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowedClasses = "AbilityComponentsGenerate"))
-	TSubclassOf<UTargetGenerateRuleBase> DataAppliedRule;
+	TSubclassOf<UDataAppliedRuleBase> DataAppliedRule;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TArray<TSubclassOf<UGameplayAbility>> Abilities;
@@ -88,7 +88,7 @@ public:
 	* Defines how to applied the ability data
 	*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowedClasses = "AbilityComponentsGenerate"))
-	TSubclassOf<UTargetGenerateRuleBase> DataAppliedRule;
+	TSubclassOf<UDataAppliedRuleBase> DataAppliedRule;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TArray<TSubclassOf<UAttributeSet>> Attributes;
