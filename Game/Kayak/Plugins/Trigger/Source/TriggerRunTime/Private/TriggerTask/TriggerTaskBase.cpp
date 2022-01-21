@@ -827,7 +827,7 @@ bool UTriggerTaskBase::ReceiveNotifyFromOthersComponent(UTriggerTaskComponentBas
 
 		if (!CanBeToggled())
 		{
-			//End the start condition when this task do not toggled to avoid crash while the start condition will be running each frame
+			//End the start condition when this task can not be toggled to avoid crash while the start condition will work once it meet its conditions
 			EndCondition(StartConditions);
 
 			return false;
@@ -839,8 +839,13 @@ bool UTriggerTaskBase::ReceiveNotifyFromOthersComponent(UTriggerTaskComponentBas
 	{
 		StartConditionEvaluator(StartConditions);
 
-		if (StartConditions != nullptr && !StartConditions->IsSwitchOn())
+		if (StartConditions != nullptr)
+		{
+			StartConditions->IsSwitchOn();
+
+			//when the start condition is not invalid then the start process should be toke control by the start condition
 			return false;
+		}
 	}
 
 	EndCondition(StartConditions);

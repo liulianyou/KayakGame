@@ -60,7 +60,7 @@ private:
 	TArray<TSubclassOf<UAttributeSet>> Attributes;
 };
 
-UCLASS(Blueprintable, BlueprintType,  Category = "Item|TargetGenerate")
+UCLASS(Blueprintable, BlueprintType,  Category = "Item|TargetGenerate", meta=(DisplayName="Ability Component in the Avatar"))
 class ITEM_API UDAR_AbilityComponentsInAvaratorOwner : public UDAR_AbilityComponents
 {
 	GENERATED_UCLASS_BODY()
@@ -72,7 +72,7 @@ public:
 
 };
 
-UCLASS(Blueprintable, BlueprintType, Category = "Item|TargetGenerate")
+UCLASS(Blueprintable, BlueprintType, Category = "Item|TargetGenerate", meta = (DisplayName = "Ability Component in the owner"))
 class ITEM_API UDAR_AbilityComponentsInInventoryOwner : public UDAR_AbilityComponents
 {
 	GENERATED_UCLASS_BODY()
@@ -84,7 +84,7 @@ public:
 
 };
 
-UCLASS(Blueprintable, BlueprintType, Category = "Item|TargetGenerate")
+UCLASS(Blueprintable, BlueprintType, Category = "Item|TargetGenerate", meta = (DisplayName = "Ability Component in the item"))
 class ITEM_API UDAR_AbilityComponentsInItemOwner : public UDAR_AbilityComponents
 {
 	GENERATED_UCLASS_BODY()
