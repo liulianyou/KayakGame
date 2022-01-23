@@ -399,8 +399,6 @@ void UItemComponentBase::Initialzie(TScriptInterface<IItemInterface> NewItemOwne
 
 void UItemComponentBase::OnRegister()
 {
-	RuntimeDataContainer.RegiseterComponentOwner(this);
-
 	Super::OnRegister();
 
 	RegisterComponent();
@@ -415,6 +413,8 @@ void UItemComponentBase::OnUnregister()
 
 void UItemComponentBase::RegisterComponent()
 {
+	RuntimeDataContainer.RegiseterComponentOwner(this);
+
 	UItemManager* ItemManager = UItemBlueprintLib::GetItemManager();
 
 	if (ItemManager != nullptr)

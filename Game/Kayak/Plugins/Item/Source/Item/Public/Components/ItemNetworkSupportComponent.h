@@ -46,4 +46,17 @@ public:
 	*/
 	UFUNCTION(Server, Reliable, Category = "Item")
 	void Server_AddItemRuntimeData(UItemRuntimeDataBase* ItemRuntimeData, UItemComponentBase* ItemComponent);
+
+	/*
+	* Invoke the server to remove data snippet in the target item runtime data
+	*/
+	UFUNCTION(Server, Reliable, Category = "Item")
+	void Server_RemoveDataSnippet( UItemRuntimeDataBase* ItemRuntimeData, UItemDataSnippetBase* DataSnippet );
+
+	/*
+	* Invoke the server to remove data snippet in the target item runtime data
+	*/
+	UFUNCTION(Server, Reliable, Category = "Item")
+	void Server_AddDataSnippet(UItemRuntimeDataBase* ItemRuntimeData, UItemDataSnippetBase* DataSnippet);
+
 };

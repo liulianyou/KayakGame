@@ -16,6 +16,7 @@
 #include "ItemDefinition.generated.h"
 
 class UItemRuntimeDataBase;
+class UItemDataSnippetBase;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogItem, Log, All);
 DECLARE_STATS_GROUP(TEXT("Tickables"), STATGROUP_Item, STATCAT_Advanced);
@@ -59,12 +60,12 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FAvatarOwnerChanged, UItemCompone
 /*
 * The target property will changed in the target runtime data
 */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FItemRuntimeDataPreChanged, UItemRuntimeDataBase*, ItemRuntimeData, const FString&, PropertyName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FItemRuntimeDataPreChanged, UItemDataSnippetBase*, ItemDataSnippet, const FString&, PropertyName);
 
 /*
 * The target property have been changed in the target runtime data
 */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FItemRuntimeDataPostChanged, UItemRuntimeDataBase*, ItemRuntimeData, const FString&, PropertyName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FItemRuntimeDataPostChanged, UItemDataSnippetBase*, ItemDataSnippet, const FString&, PropertyName);
 
 USTRUCT(BlueprintType)
 struct FLocationInfo

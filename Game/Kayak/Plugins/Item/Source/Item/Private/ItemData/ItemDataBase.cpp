@@ -4,11 +4,14 @@
 #include "ItemGlobal.h"
 #include "ItemComponentBase.h"
 #include "ItemNetworkSupportComponent.h"
+#include "ItemDataSnippetBase.h"
+
+FItemDataSnippetInfo FItemDataSnippetInfo::InvalidData;
 
 UItemDataBase::UItemDataBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
-	
+	Datas.Empty();
 }
 
 bool UItemDataBase::IsValidItemData() const
@@ -18,7 +21,24 @@ bool UItemDataBase::IsValidItemData() const
 
 void UItemDataBase::Initialize()
 {
+	if(bInitialized)
+		return;
+
 	OnInitialize();
+
+	for (int i = 0; i < DataTypes.Num(); i++)
+	{
+		if(DataTypes[i] == nullptr)
+			continue;
+
+		UItemDataSnippetBase* DataSnippet = NewObject<UItemDataSnippetBase>(this, DataTypes[i]);
+
+		DataSnippet->SetItemDataOwner(this);
+
+		Datas.Add(DataSnippet);
+	}
+
+	bInitialized = true;
 }
 
 void UItemDataBase::Finialize()
@@ -123,10 +143,108 @@ UItemRuntimeDataBase* UItemDataBase::CreateNewRuntimeData(UItemComponentBase* It
 	return Result;
 }
 
+bool FItemDataSnippetInfo::IsValid() const
+{
+	return Item != nullptr || !Item->IsValidLowLevel();
+}
+
+void FItemDataSnippetInfo::PreReplicatedRemove(const struct FItemDataSnippetContainer& InArray)
+{
+	
+}
+
+void FItemDataSnippetInfo::PostReplicatedAdd(const struct FItemDataSnippetContainer& InArray)
+{
+	
+}
+
+void FItemDataSnippetInfo::PostReplicatedChange(const struct FItemDataSnippetContainer& InArray)
+{
+	
+}
+
+void FItemDataSnippetContainer::AddNewItem(UItemDataSnippetBase* NewItem)
+{
+	if(NewItem == nullptr)
+		return;
+
+	Items.AddUnique(FItemDataSnippetInfo(NewItem));
+
+	if(GetRuntimeDataOwner() == nullptr)
+		return;
+
+	GetRuntimeDataOwner()->AddDataSnippet(NewItem);
+}
+
+void FItemDataSnippetContainer::RemoveItem(UItemDataSnippetBase* RemovedItem)
+{
+	Items.Remove(FItemDataSnippetInfo(RemovedItem));
+}
+
+void FItemDataSnippetContainer::RegisterItemRuntimeData(UItemRuntimeDataBase* ItemRuntimeDataOwner)
+{
+	ItemRuntimeData = ItemRuntimeDataOwner;
+}
+
+UItemDataSnippetBase* FItemDataSnippetContainer::GetDataSnippetByIndex( int Index ) const
+{
+	if(!Items.IsValidIndex(Index))
+		return nullptr;
+
+	return Items[Index].Item;
+}
+
+int FItemDataSnippetContainer::Num() const 
+{
+	return Items.Num();
+}
+
+const FItemDataSnippetInfo& FItemDataSnippetContainer::operator[](int index) const
+{
+	if(!Items.IsValidIndex(index))
+		return FItemDataSnippetInfo::InvalidData;
+
+	return Items[index];
+}
+
+FItemDataSnippetInfo& FItemDataSnippetContainer::operator[](int index)
+{
+	if (!Items.IsValidIndex(index))
+		return FItemDataSnippetInfo::InvalidData;
+
+	return Items[index];
+}
+
+int FItemDataSnippetContainer::GetIndex(UItemDataSnippetBase* DataSnippet) const
+{
+	return Items.Find(FItemDataSnippetInfo(DataSnippet));
+}
+
+void FItemDataSnippetContainer::Clear( bool JustEmpty /*bJustEmpty = false*/)
+{
+	if (JustEmpty)
+	{
+		Items.Empty();
+
+		return;
+	}
+
+	/*
+	* As the loop content may change the items length so I use while 
+	*/
+	while (Items.Num() > 0)
+	{
+		if (bool(Items[Items.Num()-1]))
+		{
+			Items[Items.Num() - 1].Item->SetItemRuntimeDataOwner(nullptr);
+		}
+	}
+}
+
 UItemRuntimeDataBase::UItemRuntimeDataBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
-
+	DataSnippetContainer.RegisterItemRuntimeData(this);
 }
 
 void UItemRuntimeDataBase::BeginPlay()
@@ -183,18 +301,21 @@ bool UItemRuntimeDataBase::CallRemoteFunction(UFunction* Function, void* Parms, 
 bool UItemRuntimeDataBase::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags)
 {
 	//To replicate sub objects in this data
-	/*
+
 	bool WroteSomething = false;
 
-	if (SubObject->IsSupportedForNetworking())
+	for (int i = 0; i < GetItemDataSnippetContanier().Num(); i++)
 	{
-		SubObject->ReplicateSubobjects(Channel, Bunch, RepFlags);
+		if (bool(GetItemDataSnippetContanier()[i]) != false && GetItemDataSnippetContanier().GetDataSnippetByIndex(i)->IsSupportedForNetworking())
+		{
+			WroteSomething |= GetItemDataSnippetContanier().GetDataSnippetByIndex(i)->ReplicateSubobjects(Channel, Bunch, RepFlags);
 
-		WroteSomething |= Channel->ReplicateSubobject(const_cast<SubObjectClass*>(SubObject), *Bunch, *RepFlags);
+			WroteSomething |= Channel->ReplicateSubobject(const_cast<UItemDataSnippetBase*>(GetItemDataSnippetContanier().GetDataSnippetByIndex(i)), *Bunch, *RepFlags);
+		}
 	}
 
 	return WroteSomething;
-	*/
+
 	return false;
 }
 
@@ -242,8 +363,6 @@ void UItemRuntimeDataBase::PreNetReceive()
 void UItemRuntimeDataBase::PostNetReceive()
 {
 	Super::PostNetReceive();
-
-	MarkDataPrepared();
 }
 
 void UItemRuntimeDataBase::SetItemComponentOwner(UItemComponentBase* ItemComponent)
@@ -310,12 +429,24 @@ void UItemRuntimeDataBase::SetItemComponentOwner(UItemComponentBase* ItemCompone
 
 void UItemRuntimeDataBase::Initialize(UItemDataBase* ItemData)
 {
-	if(!IsDataPrepared())
+	if(bInitialized)
 		return;
+
+	if(ItemData == nullptr)
+		return;
+
+	for (int i = 0; i < ItemData->GetDatas().Num(); i++)
+	{
+		UItemDataSnippetBase* SnippetData = DuplicateObject<UItemDataSnippetBase>(ItemData->GetDatas()[i], this);
+
+		SnippetData->SetItemRuntimeDataOwner(this);
+
+		DataSnippetContainer.AddNewItem(SnippetData);
+	}
 
 	OnInitialize(ItemData);
 
-	MarkDataPrepared();
+	bInitialized = true;
 }
 
 void UItemRuntimeDataBase::Finialize()
@@ -343,6 +474,75 @@ bool UItemRuntimeDataBase::IsUsing() const
 {
 	return EnumHasAnyFlags(ItemState, EItemState::Using);
 }
+
+bool UItemRuntimeDataBase::HasAuthority() const
+{
+	//By default this data has not authority
+	if(GetComponentOwner() == nullptr)
+		return false;
+
+	return GetComponentOwner()->HasAuthority();
+}
+
+void UItemRuntimeDataBase::RemoveDataSnippet(UItemDataSnippetBase* DataSnippet)
+{
+	if(DataSnippet == nullptr || FindDataSnippet(DataSnippet) != INDEX_NONE)
+		return;
+
+	if (HasAuthority())
+	{
+		InternalRemoveDataSnippet(DataSnippet);
+
+		return;
+	}
+
+	UItemNetworkSupportComponent* NetSupportComponent = UItemBlueprintLib::GetItemNetworkSupportComponent(this, GetWorld());
+
+	if (NetSupportComponent == nullptr)
+	{
+		UE_LOG(LogItem, Warning, TEXT("Try to remove data snippet on the chilet while there is no ItemNetworkSupprotComponent in it. You can add this component to the lacal player controller!!!"));
+		return ;
+	}
+
+	NetSupportComponent->Server_AddDataSnippet(this, DataSnippet);
+}
+
+void UItemRuntimeDataBase::AddDataSnippet(UItemDataSnippetBase* DataSnippet)
+{
+	if (DataSnippet == nullptr || FindDataSnippet(DataSnippet) != INDEX_NONE)
+		return;
+
+	if (HasAuthority())
+	{
+		InternalAddDataSnippet(DataSnippet);
+
+		return;
+	}
+
+	UItemNetworkSupportComponent* NetSupportComponent = UItemBlueprintLib::GetItemNetworkSupportComponent(this, GetWorld());
+
+	if (NetSupportComponent == nullptr)
+	{
+		UE_LOG(LogItem, Warning, TEXT("Try to add data snippet on the chilet while there is no ItemNetworkSupprotComponent in it. You can add this component to the lacal player controller!!!"));
+		return ;
+	}
+
+	NetSupportComponent->Server_AddDataSnippet(this, DataSnippet);
+}
+
+int UItemRuntimeDataBase::FindDataSnippet(UItemDataSnippetBase* DataSnippet)
+{
+	if(DataSnippet == nullptr)
+		return INDEX_NONE;
+
+	return GetItemDataSnippetContanier().GetIndex(DataSnippet);
+}
+
+bool UItemRuntimeDataBase::HasData(const FString& PropertyName, TSubclassOf<UItemDataSnippetBase> DataSnippetType/* = nullptr*/)
+{
+	return false;
+}
+
 
 void UItemRuntimeDataBase::ActivateItem()
 {
@@ -452,9 +652,36 @@ void UItemRuntimeDataBase::OnRep_ItemOwner(UItemComponentBase* OldItemOnwer)
 	SetItemComponentOwner(ItemOwner);
 }
 
+void UItemRuntimeDataBase::OnRep_DataSnippetContainer(const FItemDataSnippetContainer& OldData)
+{
+
+}
+
 void UItemRuntimeDataBase::ToggleItemStateChanged(EItemState NewItemState)
 {
 	ItemState = NewItemState;
+}
+
+void UItemRuntimeDataBase::InternalRemoveDataSnippet(UItemDataSnippetBase* DataSnippet)
+{
+	if(DataSnippet == nullptr || FindDataSnippet(DataSnippet) != INDEX_NONE)
+		return;
+
+	GetItemDataSnippetContanier_Mutable().AddNewItem(DataSnippet);
+
+	//Set the owner of the data snippet to be nullptr.
+	DataSnippet->SetItemRuntimeDataOwner(nullptr);
+}
+
+void UItemRuntimeDataBase::InternalAddDataSnippet(UItemDataSnippetBase* DataSnippet)
+{
+	if (DataSnippet == nullptr || FindDataSnippet(DataSnippet) != INDEX_NONE)
+		return;
+
+	GetItemDataSnippetContanier_Mutable().RemoveItem(DataSnippet);
+
+	//Set the owner of the data snippet to be this runtime data
+	DataSnippet->SetItemRuntimeDataOwner(this);
 }
 
 void UItemRuntimeDataBase::ItemDataChangedInItemOwner(UItemComponentBase* Item, UItemDataBase* OldData, UItemDataBase* NewData)
@@ -476,17 +703,6 @@ UItemInventoryComponent* UItemRuntimeDataBase::GetInventoryOwner() const
 		return nullptr;
 
 	return GetComponentOwner()->GetInventoryOwner();
-}
-
-void UItemRuntimeDataBase::MarkDataPrepared()
-{
-	//If this data have been prepared do not mark it again
-	if (bDataPrepared)
-		return;
-
-	bDataPrepared = true;
-
-	GetComponentOwner()->DataPreparedEvent.Broadcast(this);
 }
 
 void UItemRuntimeDataBase::OnRep_ID()

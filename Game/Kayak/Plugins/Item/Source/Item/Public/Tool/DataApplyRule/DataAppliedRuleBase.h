@@ -11,12 +11,25 @@
 
 #include "DataAppliedRuleBase.generated.h"
 
-class UItemRuntimeData;
+class UItemDataSnippetBase;
 
-UCLASS(Blueprintable, BlueprintType, Abstract, hidedropdown, Category = "Item|TargetGenerate")
+/*
+* This rule data will only exist in the runtime data on the server.
+*/
+UCLASS(Blueprintable, BlueprintType, Abstract, hidedropdown, Within="ItemRuntimeDataBase", Category = "Item|TargetGenerate")
 class ITEM_API UDataAppliedRuleBase : public UObject
 {
 	GENERATED_UCLASS_BODY()
+
+public:
+
+	/*
+	* Initialize this rule data
+	*/
+	UFUNCTION(BlueprintImplementableEvent, Category = "DataApplyRule", meta = (DisplayName = "Initialize"))
+	void OnInitialize();
+	UFUNCTION(BlueprintCallable)
+	virtual void Initialize(UItemDataSnippetBase* DataSnippet);
 
 public:
 
@@ -33,15 +46,15 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Item")
 	void ApplyData(); 
 
+	/*
+	* Get the runtime data which use this rule to apply its data
+	*/
 	UFUNCTION(BlueprintCallable, Category = "Item")
-	UItemRuntimeData* GetItemRuntimeData() const {return RuntimeData;}
-
-	UFUNCTION(BlueprintCallable, Category = "Item")
-	void SetItemRuntimeData(UItemRuntimeData* NewRuntimeData) { RuntimeData = NewRuntimeData; }
+	UItemDataSnippetBase* GetItemDataSnippet() const {return DataSnippetOwner;}
 
 private:
 
 	UPROPERTY()
-	UItemRuntimeData* RuntimeData = nullptr;
+	UItemDataSnippetBase* DataSnippetOwner = nullptr;
 
 };

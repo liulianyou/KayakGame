@@ -1,5 +1,6 @@
 #include "ApplyDataToAbilityComponent.h"
 #include "ItemComponentBase.h"
+#include "ItemDataSnippetBase.h"
 
 #include "GameFramework/Controller.h"
 #include "GameFramework/Pawn.h"
@@ -53,6 +54,28 @@ void UDAR_AbilityComponents::ApplyData_Implementation()
 		{
 			AbilitySystemComponents[Index]->ApplyGameplayEffectSpecToSelf(FGameplayEffectSpec(Cast<UGameplayEffect>(GetEffects()[Index]->GetDefaultObject()), FGameplayEffectContextHandle()));
 		}
+
+		for (int AbilityIndex = 0; AbilityIndex < GetAbilities().Num(); AbilityIndex)
+		{
+			if (GetAbilities()[AbilityIndex] == nullptr)
+				continue;
+
+		    FGameplayAbilitySpec* AbilitySpec =	AbilitySystemComponents[AbilityIndex]->FindAbilitySpecFromClass( GetAbilities()[AbilityIndex]);
+
+			if (AbilitySpec == nullptr)
+			{
+				FGameplayAbilitySpec NewAbilitySpec(GetAbilities()[AbilityIndex]);
+				FGameplayAbilitySpecHandle AbilitySpecHandle = AbilitySystemComponents[AbilityIndex]->GiveAbilityAndActivateOnce(NewAbilitySpec);
+			}
+		}
+
+		for (int AttributeIndex = 0; AttributeIndex < GetAttributes().Num(); AttributeIndex)
+		{
+			if(GetAttributes()[AttributeIndex] == nullptr)
+				continue;
+
+			AbilitySystemComponents[Index]->InitStats(GetAttributes()[AttributeIndex], nullptr);
+		}
 	}
 }
 
@@ -60,12 +83,12 @@ void UDAR_AbilityComponentsInAvaratorOwner::GetTargets_Implementation(TArray<UOb
 {
 	Targets.Empty();
 
-	if(GetItemRuntimeData() == nullptr)
+	if(GetItemDataSnippet() == nullptr || GetItemDataSnippet()->GetItemRuntimeDataOwner() == nullptr)
 		return;
 
 	AActor* Actor = nullptr;
 
-	AController* Controller = GetItemRuntimeData()->GetAvatarOwner();
+	AController* Controller = GetItemDataSnippet()->GetItemRuntimeDataOwner()->GetAvatarOwner();
 
 	if (Controller != nullptr)
 	{
@@ -92,10 +115,10 @@ void UDAR_AbilityComponentsInInventoryOwner::GetTargets_Implementation(TArray<UO
 {
 	Targets.Empty();
 
-	if (GetItemRuntimeData() == nullptr)
+	if (GetItemDataSnippet() == nullptr || GetItemDataSnippet()->GetItemRuntimeDataOwner() == nullptr)
 		return;
 
-	UItemInventoryComponent* InventoryComponent = GetItemRuntimeData()->GetInventoryOwner();
+	UItemInventoryComponent* InventoryComponent = GetItemDataSnippet()->GetItemRuntimeDataOwner()->GetInventoryOwner();
 	AActor* Actor = nullptr;
 
 	if (InventoryComponent != nullptr)
@@ -133,10 +156,10 @@ void UDAR_AbilityComponentsInItemOwner::GetTargets_Implementation(TArray<UObject
 {
 	Targets.Empty();
 
-	if (GetItemRuntimeData() == nullptr)
+	if (GetItemDataSnippet() == nullptr || GetItemDataSnippet()->GetItemRuntimeDataOwner() == nullptr)
 		return;
 
-	UItemComponentBase* ItemComponent = GetItemRuntimeData()->GetComponentOwner();
+	UItemComponentBase* ItemComponent = GetItemDataSnippet()->GetItemRuntimeDataOwner()->GetComponentOwner();
 
 	AActor* Actor = nullptr;
 

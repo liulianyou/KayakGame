@@ -373,8 +373,6 @@ UItemInventoryComponent::UItemInventoryComponent(const FObjectInitializer& Objec
 	:Super(ObjectInitializer)
 {
 	SetIsReplicatedByDefault(true);
-
-	ItemContainer.RegisterInventoryComponent(this);
 }
 
 void UItemInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -427,6 +425,8 @@ void UItemInventoryComponent::PostNetReceive()
 void UItemInventoryComponent::OnRegister()
 {
 	Super::OnRegister();
+
+	ItemContainer.RegisterInventoryComponent(this);
 }
 
 void UItemInventoryComponent::OnUnregister()

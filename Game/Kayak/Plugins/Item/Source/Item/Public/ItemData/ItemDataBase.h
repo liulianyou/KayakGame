@@ -15,6 +15,13 @@
 *			The item runtime data only respect for the behavior which is bind to the intrinsic attribute
 *			The component is used to expand the behavior for the item runtime data, but it can only use the intrinsic attribute	in the item runtime data
 *			The item data will only exist at the server, the client will use the runtime data to replicate or do some RPC function
+* 
+*			All the item data and runtime data contain several data snippet.
+*			The data snippet is the base atomic data contain the final properties.
+*								Data Snippet
+*								/		   \
+*							Item Data  -> ItemRuntimeData
+*			ItemData will according to the external resource such as excel to define how to combine data snippet, and it will create runtime data which will copy the data snippet to runtime data
 */
 
 #include "CoreMinimal.h"
@@ -29,6 +36,7 @@ class AController;
 class UItemComponentBase;
 class UItemRuntimeDataBase;
 class UItemInventoryComponent;
+class UItemDataSnippetBase;
 
 /*
 * The base class for all items used in our game
@@ -95,16 +103,23 @@ public:
 
 public:
 
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	UFUNCTION(BlueprintCallable, Category = "ItemData")
 	const FString& GetID() const { return ID; }
 
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	UFUNCTION(BlueprintCallable, Category = "ItemData")
 	const TSoftClassPtr<UItemRuntimeDataBase>& GetRuntimeDataClass() const { return RuntimdDataClass; }
+
+	UFUNCTION(BlueprintCallable, Category = "ItemData")
+	const TArray<UItemDataSnippetBase*>& GetDatas() const { return Datas; }
 
 protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ItemData", meta = (AllowPrivateAccess = true))
 	TSoftClassPtr<UItemRuntimeDataBase> RuntimdDataClass;
+
+	//The actual data this item data combines
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ItemData", meta = (AllowPrivateAccess = true))
+	TArray<TSubclassOf<UItemDataSnippetBase>> DataTypes;
 
 private:
 	/*
@@ -114,10 +129,146 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	FString ID;
 
+	UPROPERTY()
+	TArray<UItemDataSnippetBase*> Datas;
+
 private:
 
 	//All the item component  which will use this data as its original initial data
 	TArray<UItemComponentBase*> ReferencedItemComponents;
+
+	//Flag to check weather this data have been initialized
+	int32 bInitialized : 1;
+};
+
+
+//The activation information for this task
+USTRUCT(BlueprintType)
+struct ITEM_API FItemDataSnippetInfo : public FFastArraySerializerItem
+{
+	GENERATED_BODY()
+
+public:
+	FItemDataSnippetInfo(){};
+	FItemDataSnippetInfo(UItemDataSnippetBase* DataSnippet):Item(DataSnippet){}
+
+public:
+
+	explicit operator bool() const { return IsValid(); }
+	friend bool operator==(const FItemDataSnippetInfo& LeftInfo, const FItemDataSnippetInfo& RightInfo)
+	{
+		return LeftInfo.Item == RightInfo.Item;
+	}
+	friend bool operator!=(const FItemDataSnippetInfo& LeftInfo, const FItemDataSnippetInfo& RightInfo)
+	{
+		return !(LeftInfo == RightInfo);
+	}
+
+public:
+
+	void PreReplicatedRemove(const struct FItemDataSnippetContainer& InArray);
+	void PostReplicatedAdd(const struct FItemDataSnippetContainer& InArray);
+	void PostReplicatedChange(const struct FItemDataSnippetContainer& InArray);
+
+private:
+
+	bool IsValid() const;
+
+public:
+
+	//The item which contain item component
+	UPROPERTY()
+	UItemDataSnippetBase* Item = nullptr;
+
+public:
+
+	static FItemDataSnippetInfo InvalidData;
+};
+
+/*
+* As this container is used for net work, the order of elements is not fixed.
+* We can only use interaction to access the element
+*/
+USTRUCT(BlueprintType)
+struct ITEM_API FItemDataSnippetContainer : public FFastArraySerializer
+{
+	GENERATED_BODY()
+
+public:
+
+	/*
+	* Add mew data snippet to this container
+	*/
+	void AddNewItem( UItemDataSnippetBase* NewItem );
+
+	/*
+	* Remove the target data snippet from the container
+	*/
+	void RemoveItem(UItemDataSnippetBase* NewItem);
+
+	/*
+	* Register this container to the target item runtime data owner,
+	* So that this container can use the function in item runtime data
+	*/
+	void RegisterItemRuntimeData(UItemRuntimeDataBase* ItemRuntimeDataOwner);
+
+	/*
+	* Get the target data snippet by index.
+	* 
+	* #return nullptr means there no element of the index in this container
+	*/
+	UItemDataSnippetBase* GetDataSnippetByIndex(int Index) const;
+
+	/*
+	* Get the number of elements in this container
+	*/
+	int Num() const;
+
+	/*
+	* Get the index of the target data snippet in this container
+	* 
+	* #return INDEX_NONE means this container do not have this data snippet
+	*/
+	int GetIndex( UItemDataSnippetBase* DataSnippet ) const;
+	UItemRuntimeDataBase* GetRuntimeDataOwner() const { return ItemRuntimeData; }
+
+	/*
+	* clear all data snippet in this container.
+	* This will remove all effect caused by the data snippet.
+	*
+	* @param bJustEmpty true means this function will also remove all effects related to the target data snippet
+	*/
+	void Clear( bool bJustEmpty = false);
+
+public:
+
+	const FItemDataSnippetInfo& operator[](int index) const;
+	FItemDataSnippetInfo& operator[](int index);
+
+	//Used to serialize this container for net replication
+	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
+	{
+		return FFastArraySerializer::FastArrayDeltaSerialize<FItemDataSnippetInfo, FItemDataSnippetContainer>(Items, DeltaParms, *this);
+	}
+
+private:
+
+	UPROPERTY()
+	TArray<FItemDataSnippetInfo> Items;
+
+private:
+	
+	UItemRuntimeDataBase* ItemRuntimeData = nullptr;
+};
+
+template<>
+struct TStructOpsTypeTraits< FItemDataSnippetContainer > : public TStructOpsTypeTraitsBase2< FItemDataSnippetContainer >
+{
+	enum
+	{
+		WithNetDeltaSerializer = true,
+		WithCopy = false,
+	};
 };
 
 /*
@@ -173,15 +324,61 @@ public:
 	bool IsUsing() const;
 
 	/*
-	* Set the new item component owner for this runtime data
+	* Weather this data has authority
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	virtual void SetItemComponentOwner(UItemComponentBase* ItemComponent);
+	bool HasAuthority() const;
 
 	//Invoked when this item data will not be used by the item component
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemRuntimeData")
 	void OnFinialize();
 	virtual void Finialize();
+
+	/*
+	* Remove the target data snippet from this runtime data
+	* If you call this function it will invoke the server to remove data snippet.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	void RemoveDataSnippet( UItemDataSnippetBase* DataSnippet );
+
+	/*
+	* Add one data snippet to this runtime data to make this runtime data to support some features
+	* If you call this function it will invoke the server to add data snippet
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	void AddDataSnippet( UItemDataSnippetBase* DataSnippet );
+
+	/*
+	* Find the index of the target data snippet
+	* 
+	* #retur INDEX_NOEN means this runtime data have no target data snippet
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	int FindDataSnippet(UItemDataSnippetBase* DataSnippet);
+
+	/*
+	* Check weather the target data snippet has the specific property
+	* 
+	* @param PropertyName The name of the property in the target data snippet
+	* @Param DataSnippetType	nullptr means this function will check all snippet data in this runtime data
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	bool HasData( const FString& PropertyName, TSubclassOf<UItemDataSnippetBase> DataSnippetType = nullptr);
+	
+
+public:
+
+	/*
+	* Set the new item component owner for this runtime data
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	virtual void SetItemComponentOwner(UItemComponentBase* ItemComponent);
+
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	FItemDataSnippetContainer& GetItemDataSnippetContanier_Mutable() { return DataSnippetContainer; }
+
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	const FItemDataSnippetContainer& GetItemDataSnippetContanier() const { return DataSnippetContainer; }
 
 protected:
 
@@ -246,6 +443,10 @@ protected:
 
 public:
 
+	/*
+	* As the object has no default function to hook the begin play event
+	* I add it when the owner component bengin play
+	*/
 	virtual void BeginPlay();
 
 protected:
@@ -260,50 +461,15 @@ private:
 	*/
 	void ToggleItemStateChanged(EItemState NewItemState);
 
-public:
-	
-	//Copy value from item data
-	template<class ValueType>
-	void CopyValue(UItemDataBase* ItemData, const FString& ItemDataPropertyName, const FString& RuntimeDataPropertyName)
-	{
-		if (ItemData == nullptr || ItemDataPropertyName.IsEmpty() || RuntimeDataPropertyName.IsEmpty())
-		{
-			UE_LOG(LogItem, Warning, TEXT("Try to copy value from item data to runtime data with invalid parameter: ItemData:%p, ItemDataPropertyName:%s, RuntimeDataPropertyName:%s!!"), ItemData, *ItemDataPropertyName, *RuntimeDataPropertyName);
-			return;
-		}
+	/*
+	* The actual point to remove data snippet
+	*/
+	void InternalRemoveDataSnippet( UItemDataSnippetBase* DataSnippet );
 
-		FProperty* ItemDataProperty = ItemData->GetClass()->FindPropertyByName(*ItemDataPropertyName);
-		FProperty* RuntimeDataProperty = GetClass()->FindPropertyByName(*RuntimeDataPropertyName);
-
-		if (ItemDataProperty == nullptr)
-		{
-			UE_LOG(LogItem, Warning, TEXT("Try to copy inexistant value %s from Item Data:%s!!"), *ItemDataPropertyName, *ItemData->GetPathName());
-
-			return;
-		}
-
-		if (ItemDataProperty == nullptr)
-		{
-			UE_LOG(LogItem, Warning, TEXT("Try to copy value %s from Item Data to inexistant value : %s in runtime data %s!!"), *RuntimeDataPropertyName, *GetPathName());
-
-			return;
-		}
-
-		if (ItemDataProperty != nullptr && RuntimeDataProperty)
-		{
-			ValueType* ItemDataValuePtr = ItemDataProperty->ContainerPtrToValuePtr<ValueType>(ItemData);
-			ValueType* RuntimeDataValuePtr = RuntimeDataProperty->ContainerPtrToValuePtr<ValueType>(this);
-
-			if (ItemDataValuePtr != nullptr && RuntimeDataValuePtr != nullptr)
-			{
-				PropertyPreChanged.Broadcast(this, RuntimeDataPropertyName);
-
-				*RuntimeDataValuePtr = *ItemDataValuePtr;
-
-				PropertyPostChanged.Broadcast(this, RuntimeDataPropertyName);
-			}
-		}
-	}
+	/*
+	* Te actual point to add data snippet
+	*/
+	void InternalAddDataSnippet( UItemDataSnippetBase* DataSnippet );
 
 #pragma  region GET_SET_IMPLEMATION
 public:
@@ -333,12 +499,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
 	const FGuid& GetID() const { return ID; }
 
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	bool IsDataPrepared() const { return !!bDataPrepared; }
-
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	void MarkDataPrepared();
-
 	/*
 	* This variable only work at authority runtime data.
 	*/
@@ -354,6 +514,11 @@ public:
 
 	UFUNCTION()
 	void OnRep_ItemOwner(UItemComponentBase* OldItemOnwer);
+	
+	UFUNCTION()
+	void OnRep_DataSnippetContainer( const FItemDataSnippetContainer& OldData );
+
+public:
 
 	//Delegate invoked before one property change
 	UPROPERTY(BlueprintAssignable)
@@ -380,6 +545,13 @@ private:
 	UItemComponentBase* ItemOwner = nullptr;
 
 	/*
+	* Hold all data snippet in this runtime data
+	*/
+	UPROPERTY(ReplicatedUsing = OnRep_DataSnippetContainer)
+	FItemDataSnippetContainer DataSnippetContainer;
+
+private:
+	/*
 	* Which item data create this runtime data.
 	* This variable only work at authority runtime data.
 	*/
@@ -389,14 +561,6 @@ private:
 	EItemState ItemState;
 
 	/*
-	* Flag to inspect weather this runtime data can be used by the item owner
-	* When this data is created on the server and replicated to the client,
-	* maybe some of the properties have not been replicated due to the network limitation.
-	* I need to generated weather all the properties have been assigned valid value.
-	*/
-	uint32 bDataPrepared : 1;
-
-	/*
 	* Flag to check weather this data is net addressed
 	* As default the net addressable is only worked when the
 	*	1:)Object From package, such as map
@@ -404,32 +568,10 @@ private:
 	* I need use this member to add external way to set this data is addressable
 	*/
 	uint32 bNetAddressable : 1;
+
+	//Flag to check weather this data have been initialized to forbid initialize repeatedly
+	uint32 bInitialized : 1;
 };
-
-#define ITEMPROPERYREPNOTIFY(ClassType, PropertyType, PropertyName, OldValue )\
-	if(GetComponentOwner() == nullptr)\
-		return;\
-	struct FProperyChangedScope\
-	{\
-		FProperyChangedScope(UItemComponentBase* _ItemComponent, UItemRuntimeDataBase* _RuntimeData, const FString& _PropertyName)\
-			: ItemComponent(_ItemComponent)\
-			, RuntimeData(_RuntimeData)\
-			, PropertyName(_PropertyName)\
-		{}\
-		~FProperyChangedScope()\
-		{\
-			if (ItemComponent == nullptr)\
-				return;\
-			ItemComponent->ItemRuntimeDataPostChanged.Broadcast(RuntimeData, PropertyName);\
-		}\
-	private:\
-		UItemComponentBase*& ItemComponent;\
-		UItemRuntimeDataBase* RuntimeData;\
-		const FString& PropertyName;\
-	} PropertyChangeScope(GetComponentOwner(), this, GET_MEMBER_NAME_CHECKED(ClassType, PropertyName).ToString());\
-	TGuardValue<PropertyType>(PropertyName, OldValue);\
-	GetComponentOwner()->ItemRuntimeDataPreChanged.Broadcast(this, GET_MEMBER_NAME_CHECKED(ClassType, PropertyName).ToString());
-
 
 #define ItemRuntimeDataFramework()\
 	virtual void ActivateItem() override;\

@@ -1,6 +1,7 @@
 #include "ItemNetworkSupportComponent.h"
 #include "ItemDataBase.h"
 #include "ItemComponentBase.h"
+#include "ItemDataSnippetBase.h"
 #include "ItemDefinition.h"
 
 UItemNetworkSupportComponent::UItemNetworkSupportComponent(const FObjectInitializer& ObjectInitializer)
@@ -63,4 +64,27 @@ void UItemNetworkSupportComponent::Server_AddItemRuntimeData_Implementation(UIte
 	}
 
 	ItemComponent->AddNewItemData(ItemRuntimeData->GetReferencedItemData());
+}
+
+void UItemNetworkSupportComponent::Server_RemoveDataSnippet_Implementation(UItemRuntimeDataBase* ItemRuntimeData, UItemDataSnippetBase* DataSnippet)
+{
+	if (ItemRuntimeData == nullptr
+		|| !ItemRuntimeData->IsValidLowLevel()
+		|| DataSnippet == nullptr
+		|| !DataSnippet->IsValidLowLevel())
+		return;
+
+	ItemRuntimeData->RemoveDataSnippet(DataSnippet);
+
+}
+
+void UItemNetworkSupportComponent::Server_AddDataSnippet_Implementation(UItemRuntimeDataBase* ItemRuntimeData, UItemDataSnippetBase* DataSnippet)
+{
+	if (ItemRuntimeData == nullptr
+		|| !ItemRuntimeData->IsValidLowLevel()
+		|| DataSnippet == nullptr
+		|| !DataSnippet->IsValidLowLevel())
+		return;
+
+	ItemRuntimeData->AddDataSnippet(DataSnippet);
 }

@@ -13,87 +13,7 @@
 
 #include "ItemData.generated.h"
 
-class UGameplayAbility;
-class UGameplayEffect;
-class UAttributeSet;
 class UDataAppliedRuleBase;
-
-/*
-* The definition for the effects which is used for item
-*/
-USTRUCT(BlueprintType)
-struct FItemEffectDefiniation
-{
-	GENERATED_BODY()
-
-public:
-
-	/*
-	* Which state this data will be used
-	*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	EItemState ItemState;
-
-	/*
-	* Defined how to generate the target rule
-	* This only worked when the DataAppliedRule is Customize
-	*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowedClasses="DAR_AbilityComponents") )
-	TSubclassOf<UDataAppliedRuleBase> DataAppliedRule;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	TArray<TSubclassOf<UGameplayEffect>> Effects;
-};
-
-/*
-* The definition for the abilities which is used for item
-*/
-USTRUCT(BlueprintType)
-struct FItemAbilityDefiniation
-{
-	GENERATED_BODY()
-
-public:
-
-	/*
-	* Which state this data will be used
-	*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	EItemState ItemState;
-
-	/*
-	* Defined how to generate the target rule
-	* This only worked when the DataAppliedRule is Customize
-	*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowedClasses = "AbilityComponentsGenerate"))
-	TSubclassOf<UDataAppliedRuleBase> DataAppliedRule;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	TArray<TSubclassOf<UGameplayAbility>> Abilities;
-};
-
-USTRUCT(BlueprintType)
-struct FItemAttributeSetDefinition
-{
-	GENERATED_BODY()
-
-public:
-	/*
-	* Which state this data will be used
-	*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	EItemState ItemState;
-
-	/*
-	* Defines how to applied the ability data
-	*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowedClasses = "AbilityComponentsGenerate"))
-	TSubclassOf<UDataAppliedRuleBase> DataAppliedRule;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	TArray<TSubclassOf<UAttributeSet>> Attributes;
-};
-
 
 UCLASS(BlueprintType, Blueprintable, Category = "Item|ItemData")
 class ITEM_API UItemData : public UItemDataBase
@@ -102,23 +22,5 @@ class ITEM_API UItemData : public UItemDataBase
 
 public:
 	
-	/*
-	* All effects which will be used in differ 
-	*/
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "ItemData")
-	TArray<FItemEffectDefiniation> EffectMap;
-
-	/*
-	* All game play abilities which will be used in different state.
-	* These abilities should only be given to the owner avatar of the item
-	*/
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "ItemData")
-	TArray<FItemAbilityDefiniation> AbilityMap;
-
-	/*
-	* The attributes which will be added to the avatar owner when it is used
-	*/
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "ItemData")
-	TArray<FItemAttributeSetDefinition> AttributeSetMap;
 
 };

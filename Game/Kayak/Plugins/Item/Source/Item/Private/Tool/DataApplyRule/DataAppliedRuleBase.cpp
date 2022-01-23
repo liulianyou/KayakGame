@@ -18,3 +18,8 @@ void UDataAppliedRuleBase::ApplyData_Implementation()
 {
 	UE_LOG(LogItem, Warning, TEXT("Please implement ApplyData in the child class %s."), *GetClass()->GetName());
 }
+
+void UDataAppliedRuleBase::Initialize(UItemDataSnippetBase* DataSnippet)
+{
+	DataSnippetOwner = DataSnippet;
+}
