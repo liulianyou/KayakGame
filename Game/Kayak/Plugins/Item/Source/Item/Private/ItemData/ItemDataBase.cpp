@@ -150,12 +150,12 @@ bool FItemDataSnippetInfo::IsValid() const
 
 void FItemDataSnippetInfo::PreReplicatedRemove(const struct FItemDataSnippetContainer& InArray)
 {
-	
+	const_cast<FItemDataSnippetContainer&>(InArray).RemoveItem(Item);
 }
 
 void FItemDataSnippetInfo::PostReplicatedAdd(const struct FItemDataSnippetContainer& InArray)
 {
-	
+	const_cast<FItemDataSnippetContainer&>(InArray).AddNewItem(Item);
 }
 
 void FItemDataSnippetInfo::PostReplicatedChange(const struct FItemDataSnippetContainer& InArray)
@@ -163,22 +163,82 @@ void FItemDataSnippetInfo::PostReplicatedChange(const struct FItemDataSnippetCon
 	
 }
 
+FItemDataSnippetContainer::FItemDataSnippetContainer()
+{
+	EndPendingElementPtr = &HeadPendingElement;
+}
+
 void FItemDataSnippetContainer::AddNewItem(UItemDataSnippetBase* NewItem)
 {
 	if(NewItem == nullptr)
 		return;
 
-	Items.AddUnique(FItemDataSnippetInfo(NewItem));
+	//First try to check weather this new item have exist
+	for (auto IT = CreateConstIterator(0, true); IT; ++IT)
+	{
+		if (IT.GetValue()->Item == NewItem)
+		{
+			return;
+		}
+	}
 
-	if(GetRuntimeDataOwner() == nullptr)
-		return;
+	FItemDataSnippetInfo* NewItemInfo = nullptr;
 
-	GetRuntimeDataOwner()->AddDataSnippet(NewItem);
+	//There is no more memory to hold the new item so create ne heap memory to hold it
+	if (LockCount > 0 && Items.GetSlack() <= 0)
+	{
+		check(EndPendingElementPtr);
+		if (*EndPendingElementPtr == nullptr)
+		{
+			NewItemInfo = new FItemDataSnippetInfo(NewItem);
+			*EndPendingElementPtr = NewItemInfo;
+		}
+		else
+		{
+			**EndPendingElementPtr = FItemDataSnippetInfo(NewItem);
+			NewItemInfo = *EndPendingElementPtr;
+		}
+
+		NewItemInfo->PreElement = *EndPendingElementPtr;
+		EndPendingElementPtr = &NewItemInfo->NextElement;
+	}
+	else
+	{
+		Items.Add(FItemDataSnippetInfo(NewItem));
+	}
+
+	MarkArrayDirty();
 }
 
 void FItemDataSnippetContainer::RemoveItem(UItemDataSnippetBase* RemovedItem)
 {
-	Items.Remove(FItemDataSnippetInfo(RemovedItem));
+	if (RemovedItem == nullptr)
+		return;
+
+	for (auto IT = CreateIterator(0, true); IT; ++IT)
+	{
+		if (IT.GetValue()->Item == RemovedItem)
+		{
+			//When this data container is locked this final remove will occurred at the end
+			if (LockCount > 0)
+			{
+				PendingRemovedCount++;
+
+				IT.GetValue()->PendingRemoved = true;
+			}
+			else
+			{
+				if (Items.IsValidIndex(IT.GetIndex()))
+				{
+					Items.RemoveAtSwap(IT.GetIndex());
+				}
+			}
+
+			MarkArrayDirty();
+
+			break;
+		}
+	}
 }
 
 void FItemDataSnippetContainer::RegisterItemRuntimeData(UItemRuntimeDataBase* ItemRuntimeDataOwner)
@@ -186,58 +246,60 @@ void FItemDataSnippetContainer::RegisterItemRuntimeData(UItemRuntimeDataBase* It
 	ItemRuntimeData = ItemRuntimeDataOwner;
 }
 
-UItemDataSnippetBase* FItemDataSnippetContainer::GetDataSnippetByIndex( int Index ) const
-{
-	if(!Items.IsValidIndex(Index))
-		return nullptr;
 
-	return Items[Index].Item;
+void FItemDataSnippetContainer::IncrementLock()
+{
+	LockCount++;
 }
 
-int FItemDataSnippetContainer::Num() const 
+void FItemDataSnippetContainer::DecrementLock()
 {
-	return Items.Num();
-}
-
-const FItemDataSnippetInfo& FItemDataSnippetContainer::operator[](int index) const
-{
-	if(!Items.IsValidIndex(index))
-		return FItemDataSnippetInfo::InvalidData;
-
-	return Items[index];
-}
-
-FItemDataSnippetInfo& FItemDataSnippetContainer::operator[](int index)
-{
-	if (!Items.IsValidIndex(index))
-		return FItemDataSnippetInfo::InvalidData;
-
-	return Items[index];
-}
-
-int FItemDataSnippetContainer::GetIndex(UItemDataSnippetBase* DataSnippet) const
-{
-	return Items.Find(FItemDataSnippetInfo(DataSnippet));
-}
-
-void FItemDataSnippetContainer::Clear( bool JustEmpty /*bJustEmpty = false*/)
-{
-	if (JustEmpty)
-	{
-		Items.Empty();
-
+	if (--LockCount != 0)
 		return;
+
+	FItemDataSnippetInfo* Start = HeadPendingElement;
+	FItemDataSnippetInfo* Stop = *EndPendingElementPtr;
+	bool ModifiedArray = false;
+
+	while (Start != Stop)
+	{
+		if (!Start->PendingRemoved)
+		{
+			Items.Add(MoveTemp(*Start));
+			ModifiedArray = true;
+		}
+		else
+		{
+			PendingRemovedCount--;
+		}
+
+		Start = Start->NextElement;
 	}
 
-	/*
-	* As the loop content may change the items length so I use while 
-	*/
-	while (Items.Num() > 0)
+	for (int i = 0; i < Items.Num() && PendingRemovedCount > 0; i++)
 	{
-		if (bool(Items[Items.Num()-1]))
+		if (bool(Items[i]) == false)
 		{
-			Items[Items.Num() - 1].Item->SetItemRuntimeDataOwner(nullptr);
+			PendingRemovedCount--;
+
+			Items.RemoveAt(i--);
+
+			ModifiedArray = true;
 		}
+	}
+
+	//Reset the end element so that the add and remove  operation will occurs when the the elements has been changed
+	EndPendingElementPtr = &HeadPendingElement;
+
+	if (!ensure(PendingRemovedCount == 0))
+	{
+		UE_LOG(LogItem, Error, TEXT("There are still %d elements in  container  need to be removed! which will cause memery leak"), PendingRemovedCount);
+		PendingRemovedCount = 0;
+	}
+
+	if (ModifiedArray)
+	{
+		MarkArrayDirty();
 	}
 }
 
@@ -304,19 +366,18 @@ bool UItemRuntimeDataBase::ReplicateSubobjects(class UActorChannel* Channel, cla
 
 	bool WroteSomething = false;
 
-	for (int i = 0; i < GetItemDataSnippetContanier().Num(); i++)
+	for (auto IT = GetItemDataSnippetContanier().CreateConstIterator(0, true); IT; ++IT)
 	{
-		if (bool(GetItemDataSnippetContanier()[i]) != false && GetItemDataSnippetContanier().GetDataSnippetByIndex(i)->IsSupportedForNetworking())
+		if (IT.GetValue()->Item->IsSupportedForNetworking())
 		{
-			WroteSomething |= GetItemDataSnippetContanier().GetDataSnippetByIndex(i)->ReplicateSubobjects(Channel, Bunch, RepFlags);
+			WroteSomething |= IT.GetValue()->Item->ReplicateSubobjects(Channel, Bunch, RepFlags);
 
-			WroteSomething |= Channel->ReplicateSubobject(const_cast<UItemDataSnippetBase*>(GetItemDataSnippetContanier().GetDataSnippetByIndex(i)), *Bunch, *RepFlags);
+			WroteSomething |= Channel->ReplicateSubobject(IT.GetValue()->Item, *Bunch, *RepFlags);
 		}
 	}
 
 	return WroteSomething;
 
-	return false;
 }
 
 //Make sure the BP can use the global functions
@@ -353,11 +414,14 @@ void UItemRuntimeDataBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProp
 	}
 
 	DOREPLIFETIME(UItemRuntimeDataBase, ItemOwner);
+	DOREPLIFETIME(UItemRuntimeDataBase, DataSnippetContainer);
 }
 
 void UItemRuntimeDataBase::PreNetReceive()
 {
 	Super::PreNetReceive();
+
+	DataSnippetContainer.IncrementLock();
 }
 
 void UItemRuntimeDataBase::PostNetReceive()
@@ -486,8 +550,21 @@ bool UItemRuntimeDataBase::HasAuthority() const
 
 void UItemRuntimeDataBase::RemoveDataSnippet(UItemDataSnippetBase* DataSnippet)
 {
-	if(DataSnippet == nullptr || FindDataSnippet(DataSnippet) != INDEX_NONE)
+	if(DataSnippet == nullptr)
 		return;
+
+	int Index = FindDataSnippet(DataSnippet);
+
+	if(Index == INDEX_NONE)
+		return;
+
+	/*
+	* Make all data snippet info to be pending removed
+	*/
+	for (auto IT = GetItemDataSnippetContanier_Mutable().CreateIterator(); IT; ++IT)
+	{
+		IT.GetValue()->PendingRemoved = true;
+	}
 
 	if (HasAuthority())
 	{
@@ -504,7 +581,7 @@ void UItemRuntimeDataBase::RemoveDataSnippet(UItemDataSnippetBase* DataSnippet)
 		return ;
 	}
 
-	NetSupportComponent->Server_AddDataSnippet(this, DataSnippet);
+	NetSupportComponent->Server_RemoveDataSnippet(this, DataSnippet);
 }
 
 void UItemRuntimeDataBase::AddDataSnippet(UItemDataSnippetBase* DataSnippet)
@@ -523,7 +600,7 @@ void UItemRuntimeDataBase::AddDataSnippet(UItemDataSnippetBase* DataSnippet)
 
 	if (NetSupportComponent == nullptr)
 	{
-		UE_LOG(LogItem, Warning, TEXT("Try to add data snippet on the chilet while there is no ItemNetworkSupprotComponent in it. You can add this component to the lacal player controller!!!"));
+		UE_LOG(LogItem, Warning, TEXT("Try to add data snippet on the client while there is no ItemNetworkSupprotComponent in it. You can add this component to the lacal player controller!!!"));
 		return ;
 	}
 
@@ -532,10 +609,18 @@ void UItemRuntimeDataBase::AddDataSnippet(UItemDataSnippetBase* DataSnippet)
 
 int UItemRuntimeDataBase::FindDataSnippet(UItemDataSnippetBase* DataSnippet)
 {
-	if(DataSnippet == nullptr)
-		return INDEX_NONE;
+	int Result = INDEX_NONE;
 
-	return GetItemDataSnippetContanier().GetIndex(DataSnippet);
+	for (auto IT = GetItemDataSnippetContanier().CreateConstIterator(0, true); IT; ++IT)
+	{
+		if (IT.GetValue()->Item == DataSnippet)
+		{
+			Result = IT.GetIndex();
+			break;
+		}
+	}
+
+	return Result;
 }
 
 bool UItemRuntimeDataBase::HasData(const FString& PropertyName, TSubclassOf<UItemDataSnippetBase> DataSnippetType/* = nullptr*/)
@@ -654,7 +739,8 @@ void UItemRuntimeDataBase::OnRep_ItemOwner(UItemComponentBase* OldItemOnwer)
 
 void UItemRuntimeDataBase::OnRep_DataSnippetContainer(const FItemDataSnippetContainer& OldData)
 {
-
+	int i = 0; 
+	i++;
 }
 
 void UItemRuntimeDataBase::ToggleItemStateChanged(EItemState NewItemState)
@@ -664,10 +750,10 @@ void UItemRuntimeDataBase::ToggleItemStateChanged(EItemState NewItemState)
 
 void UItemRuntimeDataBase::InternalRemoveDataSnippet(UItemDataSnippetBase* DataSnippet)
 {
-	if(DataSnippet == nullptr || FindDataSnippet(DataSnippet) != INDEX_NONE)
+	if(DataSnippet == nullptr || FindDataSnippet(DataSnippet) == INDEX_NONE)
 		return;
 
-	GetItemDataSnippetContanier_Mutable().AddNewItem(DataSnippet);
+	GetItemDataSnippetContanier_Mutable().RemoveItem(DataSnippet);
 
 	//Set the owner of the data snippet to be nullptr.
 	DataSnippet->SetItemRuntimeDataOwner(nullptr);
@@ -678,7 +764,7 @@ void UItemRuntimeDataBase::InternalAddDataSnippet(UItemDataSnippetBase* DataSnip
 	if (DataSnippet == nullptr || FindDataSnippet(DataSnippet) != INDEX_NONE)
 		return;
 
-	GetItemDataSnippetContanier_Mutable().RemoveItem(DataSnippet);
+	GetItemDataSnippetContanier_Mutable().AddNewItem(DataSnippet);
 
 	//Set the owner of the data snippet to be this runtime data
 	DataSnippet->SetItemRuntimeDataOwner(this);

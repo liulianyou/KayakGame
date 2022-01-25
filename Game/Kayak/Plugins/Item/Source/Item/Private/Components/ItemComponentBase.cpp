@@ -689,6 +689,8 @@ void UItemComponentBase::AddNewItemData(UItemDataBase* NewData)
 		{
 			NetSupprot->Server_AddNewItemData(NewData, this);
 		}
+
+		return;
 	}
 
 	UItemRuntimeDataBase* NewItemRunttmeData = NewData->CreateNewRuntimeData(this);
@@ -751,9 +753,9 @@ void UItemComponentBase::OnRep_OwnerInventory(UItemInventoryComponent* OldInvent
 
 void UItemComponentBase::AddNewRuntimeData(UItemRuntimeDataBase* NewRuntimeData)
 {
-	NewRuntimeData->SetItemComponentOwner(this);
-
 	RuntimeDataContainer.AddNewItem(NewRuntimeData);
+
+	NewRuntimeData->SetItemComponentOwner(this);
 }
 
 void UItemComponentBase::RemoveItemRuntimeData(UItemRuntimeDataBase* ItemRuntimeData)

@@ -162,7 +162,8 @@ void UItemDataSnippetBase::SetItemDataOwner(UItemDataBase* ItemData)
 
 	ItemDataOwner = ItemData;
 
-	OnSetItemRuntimeDataOwner(RuntimeDataOwner);
+	if(!IsUnreachable())
+		OnSetItemRuntimeDataOwner(RuntimeDataOwner);
 }
 
 void UItemDataSnippetBase::SetItemRuntimeDataOwner(UItemRuntimeDataBase* ItemRuntimeData)
@@ -182,7 +183,8 @@ void UItemDataSnippetBase::SetItemRuntimeDataOwner(UItemRuntimeDataBase* ItemRun
 		ItemRuntimeData->AddDataSnippet(this);
 	}
 
-	OnSetItemRuntimeDataOwner(RuntimeDataOwner);
+	if (!IsUnreachable())
+		OnSetItemRuntimeDataOwner(RuntimeDataOwner);
 }
 
 void UItemDataSnippetBase::Activate()
@@ -203,4 +205,13 @@ void UItemDataSnippetBase::Initialized()
 	OnInitialized();
 
 	MarkDataPrepared();
+}
+
+void UItemDataSnippetBase::OnRep_RuntimeDataOwner(UItemRuntimeDataBase* OldValue)
+{
+	UItemRuntimeDataBase* NewRuntimeDataValue = RuntimeDataOwner;
+
+	TGuardValue<UItemRuntimeDataBase*> GuardValue( RuntimeDataOwner, OldValue );
+
+	SetItemRuntimeDataOwner(NewRuntimeDataValue);
 }

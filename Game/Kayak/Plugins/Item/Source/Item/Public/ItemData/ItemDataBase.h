@@ -29,6 +29,7 @@
 
 #include "ItemDefinition.h"
 #include "Engine/EngineTypes.h"
+#include "ItemContainerIterator.h"
 
 #include "ItemDataBase.generated.h"
 
@@ -141,7 +142,6 @@ private:
 	int32 bInitialized : 1;
 };
 
-
 //The activation information for this task
 USTRUCT(BlueprintType)
 struct ITEM_API FItemDataSnippetInfo : public FFastArraySerializerItem
@@ -152,12 +152,10 @@ public:
 	FItemDataSnippetInfo(){};
 	FItemDataSnippetInfo(UItemDataSnippetBase* DataSnippet):Item(DataSnippet){}
 
-public:
-
 	explicit operator bool() const { return IsValid(); }
 	friend bool operator==(const FItemDataSnippetInfo& LeftInfo, const FItemDataSnippetInfo& RightInfo)
 	{
-		return LeftInfo.Item == RightInfo.Item;
+		return LeftInfo.Item == RightInfo.Item && LeftInfo.PendingRemoved == RightInfo.PendingRemoved;
 	}
 	friend bool operator!=(const FItemDataSnippetInfo& LeftInfo, const FItemDataSnippetInfo& RightInfo)
 	{
@@ -182,6 +180,15 @@ public:
 
 public:
 
+	//Flag to check weather this item will be removed at the next safe frame
+	bool PendingRemoved = false;
+
+	//Double direction list
+	FItemDataSnippetInfo* PreElement = nullptr;
+	FItemDataSnippetInfo* NextElement = nullptr;
+
+public:
+
 	static FItemDataSnippetInfo InvalidData;
 };
 
@@ -194,6 +201,11 @@ struct ITEM_API FItemDataSnippetContainer : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
+	ITERATOR_DEFINITION(FItemDataSnippetInfo, FItemDataSnippetContainer);
+
+public:
+	
+	FItemDataSnippetContainer();
 public:
 
 	/*
@@ -212,38 +224,9 @@ public:
 	*/
 	void RegisterItemRuntimeData(UItemRuntimeDataBase* ItemRuntimeDataOwner);
 
-	/*
-	* Get the target data snippet by index.
-	* 
-	* #return nullptr means there no element of the index in this container
-	*/
-	UItemDataSnippetBase* GetDataSnippetByIndex(int Index) const;
-
-	/*
-	* Get the number of elements in this container
-	*/
-	int Num() const;
-
-	/*
-	* Get the index of the target data snippet in this container
-	* 
-	* #return INDEX_NONE means this container do not have this data snippet
-	*/
-	int GetIndex( UItemDataSnippetBase* DataSnippet ) const;
 	UItemRuntimeDataBase* GetRuntimeDataOwner() const { return ItemRuntimeData; }
 
-	/*
-	* clear all data snippet in this container.
-	* This will remove all effect caused by the data snippet.
-	*
-	* @param bJustEmpty true means this function will also remove all effects related to the target data snippet
-	*/
-	void Clear( bool bJustEmpty = false);
-
 public:
-
-	const FItemDataSnippetInfo& operator[](int index) const;
-	FItemDataSnippetInfo& operator[](int index);
 
 	//Used to serialize this container for net replication
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
@@ -256,8 +239,29 @@ private:
 	UPROPERTY()
 	TArray<FItemDataSnippetInfo> Items;
 
+public:
+
+	//Increment the lock count for the target attribute
+	void IncrementLock();
+
+	//Decrement the lock count if the lock count come into zero then I can release the resource safely
+	void DecrementLock();
+
+public:
+
+	//The first element which want to be added to this container in this container
+	FItemDataSnippetInfo* HeadPendingElement = nullptr;
+	//The last element which want to be added to this container 
+	FItemDataSnippetInfo** EndPendingElementPtr = nullptr;
+
 private:
-	
+
+	/*
+	* Simulate the safe point to release all resource safely
+	*/
+	mutable int LockCount;
+	int PendingRemovedCount = 0;
+
 	UItemRuntimeDataBase* ItemRuntimeData = nullptr;
 };
 
@@ -547,7 +551,7 @@ private:
 	/*
 	* Hold all data snippet in this runtime data
 	*/
-	UPROPERTY(ReplicatedUsing = OnRep_DataSnippetContainer)
+	UPROPERTY( Transient, ReplicatedUsing = OnRep_DataSnippetContainer)
 	FItemDataSnippetContainer DataSnippetContainer;
 
 private:

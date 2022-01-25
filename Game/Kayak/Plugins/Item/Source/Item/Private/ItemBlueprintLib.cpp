@@ -173,11 +173,16 @@ UItemNetworkSupportComponent* UItemBlueprintLib::GetItemNetworkSupportComponent(
 	if(Result != nullptr)
 		return Result;
 
-	AController* Controller = Pawn->GetController();
+	AController* Controller = nullptr;
 
-	if (Controller != nullptr)
+	if (Pawn != nullptr)
 	{
-		Result = Cast<UItemNetworkSupportComponent>(Controller->FindComponentByClass(UItemNetworkSupportComponent::StaticClass()));
+		Controller = Pawn->GetController();
+
+		if (Controller != nullptr)
+		{
+			Result = Cast<UItemNetworkSupportComponent>(Controller->FindComponentByClass(UItemNetworkSupportComponent::StaticClass()));
+		}
 	}
 
 	if(Result != nullptr)

@@ -113,6 +113,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
 	bool HasAuthority() const;
 
+protected:
+
+	UFUNCTION()
+	virtual void OnRep_RuntimeDataOwner(UItemRuntimeDataBase* OldValue);
+
 public:
 
 	//Define how to apply this snippet to the target in runtime data
@@ -125,7 +130,7 @@ private:
 	UPROPERTY(Transient)
 	UDataAppliedRuleBase* DataApplyRuleInstance = nullptr;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_RuntimeDataOwner)
 	UItemRuntimeDataBase* RuntimeDataOwner;
 
 	/*

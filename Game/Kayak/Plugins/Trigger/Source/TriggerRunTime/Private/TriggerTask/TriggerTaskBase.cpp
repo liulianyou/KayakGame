@@ -841,10 +841,17 @@ bool UTriggerTaskBase::ReceiveNotifyFromOthersComponent(UTriggerTaskComponentBas
 
 		if (StartConditions != nullptr)
 		{
-			StartConditions->IsSwitchOn();
+			//When this start condition have not valid conditions then just skip it
+			TArray<UEvaluatorBase*> Conditions;
+			StartConditions->GetAllConditions(Conditions);
 
-			//when the start condition is not invalid then the start process should be toke control by the start condition
-			return false;
+			if (Conditions.Num() != 0)
+			{
+				StartConditions->IsSwitchOn();
+
+				//when the start condition is not invalid then the start process should be toke control by the start condition
+				return false;
+			}
 		}
 	}
 

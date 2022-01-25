@@ -146,6 +146,7 @@ private:
 	bool SearchInPendingList = false;
 };
 
+
 #define  ITERATOR_DEFINITION( ItemClass, CotanierClass )\
 public:\
 	friend class FItemContainerIterator<const ItemClass, CotanierClass>;\
@@ -158,4 +159,5 @@ public:\
 	FORCEINLINE friend Iterator end(CotanierClass* Container) { return Iterator(*Container, -1); }\
 	FORCEINLINE friend ConstIterator begin(const CotanierClass* Container) { return Container->CreateConstIterator(); }\
 	FORCEINLINE friend ConstIterator end(const CotanierClass* Container) { return ConstIterator(*Container, -1); }
+
 
