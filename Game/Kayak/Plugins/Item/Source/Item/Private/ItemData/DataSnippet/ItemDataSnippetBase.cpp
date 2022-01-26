@@ -5,7 +5,7 @@
 UItemDataSnippetBase::UItemDataSnippetBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
-
+	
 }
 
 void UItemDataSnippetBase::BeginDestroy()
@@ -214,4 +214,8 @@ void UItemDataSnippetBase::OnRep_RuntimeDataOwner(UItemRuntimeDataBase* OldValue
 	TGuardValue<UItemRuntimeDataBase*> GuardValue( RuntimeDataOwner, OldValue );
 
 	SetItemRuntimeDataOwner(NewRuntimeDataValue);
+}
+
+void UItemDataSnippetBase::OnRep_DataApplyRule(const TSubclassOf<UDataAppliedRuleBase>& OldValue)
+{
 }

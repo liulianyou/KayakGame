@@ -19,6 +19,11 @@
 			"Name": "Item",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "ItemEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
 		}
 	],
 

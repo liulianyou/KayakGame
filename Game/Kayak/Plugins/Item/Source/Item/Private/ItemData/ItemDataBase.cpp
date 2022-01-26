@@ -145,7 +145,7 @@ UItemRuntimeDataBase* UItemDataBase::CreateNewRuntimeData(UItemComponentBase* It
 
 bool FItemDataSnippetInfo::IsValid() const
 {
-	return Item != nullptr || !Item->IsValidLowLevel();
+	return Item != nullptr && Item->IsValidLowLevel() && PendingRemoved == false ;
 }
 
 void FItemDataSnippetInfo::PreReplicatedRemove(const struct FItemDataSnippetContainer& InArray)
@@ -555,7 +555,7 @@ void UItemRuntimeDataBase::RemoveDataSnippet(UItemDataSnippetBase* DataSnippet)
 	if(DataSnippet == nullptr)
 		return;
 
-	int Index = FindDataSnippet(DataSnippet);
+	int Index = FindDataSnippet(DataSnippet, true);
 
 	if(Index == INDEX_NONE)
 		return;
@@ -627,7 +627,7 @@ int UItemRuntimeDataBase::FindDataSnippet(UItemDataSnippetBase* DataSnippet, boo
 {
 	int Result = INDEX_NONE;
 
-	for (auto IT = GetItemDataSnippetContanier().CreateConstIterator(0, IncludeInvalidDataSnippet); IT; ++IT)
+	for (auto IT = GetItemDataSnippetContanier().CreateConstIterator(0, !IncludeInvalidDataSnippet); IT; ++IT)
 	{
 		if (IT.GetValue()->Item == DataSnippet)
 		{
@@ -643,7 +643,7 @@ UItemDataSnippetBase* UItemRuntimeDataBase::GetItemDataSnippetByIndex(int Index,
 {
 	UItemDataSnippetBase* Result = nullptr;
 
-	for (auto IT = GetItemDataSnippetContanier().CreateConstIterator(0, IncludeInvalidDataSnippet); IT; ++IT)
+	for (auto IT = GetItemDataSnippetContanier().CreateConstIterator(0, !IncludeInvalidDataSnippet); IT; ++IT)
 	{
 		if (IT.GetIndex() == Index)
 		{

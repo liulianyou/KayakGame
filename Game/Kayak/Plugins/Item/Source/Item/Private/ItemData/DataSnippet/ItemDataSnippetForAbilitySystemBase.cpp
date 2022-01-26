@@ -4,7 +4,7 @@
 UItemDataSnippetForAbilitySystemBase::UItemDataSnippetForAbilitySystemBase(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
-
+	
 }
 
 void UItemDataSnippetForAbilitySystemBase::BeginDestroy()

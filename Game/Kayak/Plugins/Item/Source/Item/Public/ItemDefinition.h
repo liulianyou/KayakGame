@@ -22,6 +22,45 @@ DECLARE_LOG_CATEGORY_EXTERN(LogItem, Log, All);
 DECLARE_STATS_GROUP(TEXT("Tickables"), STATGROUP_Item, STATCAT_Advanced);
 
 /*
+* used to describe which property in the item data snippet
+*/
+USTRUCT(BlueprintType)
+struct ITEM_API FItemDataSnippetProperty
+{
+	GENERATED_BODY()
+
+public:
+
+	FItemDataSnippetProperty() : Property(nullptr), Owner(nullptr) {}
+
+	explicit FItemDataSnippetProperty(FProperty* MemberProperty, UItemDataSnippetBase* DataOwner) : Property(MemberProperty), Owner(DataOwner) {}
+
+public:
+
+	template<class PropertyType>
+	PropertyType* GetPropertyValue()
+	{
+		if (Owner == nullptr || Property == nullptr)
+			return nullptr;
+
+		return Property->ContainerPtrToValuePtr<PropertyType>(Owner);
+	}
+
+private:
+
+	/*
+	* Which property in the data snippet
+	*/
+	UPROPERTY(Category = GameplayAttribute, EditAnywhere)
+	TFieldPath<FProperty> Property = nullptr;
+
+	/*
+	* which data snippet instance own this property.
+	*/
+	UItemDataSnippetBase* Owner = nullptr;
+};
+
+/*
 * The state for one item
 */
 UENUM( BlueprintType )
@@ -60,12 +99,12 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FAvatarOwnerChanged, UItemCompone
 /*
 * The target property will changed in the target runtime data
 */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FItemRuntimeDataPreChanged, UItemDataSnippetBase*, ItemDataSnippet, const FString&, PropertyName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FItemRuntimeDataPreChanged, FItemDataSnippetProperty, Property);
 
 /*
 * The target property have been changed in the target runtime data
 */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FItemRuntimeDataPostChanged, UItemDataSnippetBase*, ItemDataSnippet, const FString&, PropertyName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FItemRuntimeDataPostChanged, FItemDataSnippetProperty, Property);
 
 USTRUCT(BlueprintType)
 struct FLocationInfo

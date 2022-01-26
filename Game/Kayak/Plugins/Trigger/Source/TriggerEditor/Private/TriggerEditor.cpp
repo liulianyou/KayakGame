@@ -104,7 +104,7 @@ void FTriggerEditorModule::RegisterTriggerEditorEngine()
 {
 	if (TriggerEditorEngine.IsValid() == false)
 	{
-		TriggerEditorEngine = MakeShareable(new FTriggerEditorEngine());
+		TriggerEditorEngine = MakeShareable( new FTriggerEditorEngine() );
 	}
 
 	TriggerEditorEngine->Initialize();

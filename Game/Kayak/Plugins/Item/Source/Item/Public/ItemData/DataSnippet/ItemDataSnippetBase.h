@@ -12,11 +12,14 @@
 #include "Templates/SubclassOf.h"
 #include "Engine/EngineTypes.h"
 
+#include "ItemDefinition.h"
+
 #include "ItemDataSnippetBase.generated.h"
 
 class UItemDataBase;
 class UItemRuntimeDataBase;
 class UDataAppliedRuleBase;
+
 
 /*
 * This is the snippet of used in the data
@@ -113,15 +116,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
 	bool HasAuthority() const;
 
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	TSubclassOf<UDataAppliedRuleBase> GetDataApplyRuleClass() const { return DataApplyRule; }
+
 protected:
 
 	UFUNCTION()
 	virtual void OnRep_RuntimeDataOwner(UItemRuntimeDataBase* OldValue);
 
-public:
+	UFUNCTION()
+	virtual void OnRep_DataApplyRule( const TSubclassOf<UDataAppliedRuleBase>& OldValue);
+
+protected:
 
 	//Define how to apply this snippet to the target in runtime data
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "SnippetData")
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_DataApplyRule, Category = "SnippetData")
 	TSubclassOf<UDataAppliedRuleBase> DataApplyRule;
 
 private:
@@ -166,29 +175,44 @@ private:
 
 };
 
-#define ITEMPROPERYREPNOTIFY(ClassType, PropertyType, PropertyName, OldValue )\
+#define ITEMPROPERYREPNOTIFY(ClassType, PropertyType, Property, OldValue )\
 	if(GetItemRuntimeDataOwner() == nullptr || GetItemRuntimeDataOwner()->GetComponentOwner() == nullptr)\
 		return;\
 	struct FProperyChangedScope\
 	{\
-		FProperyChangedScope(UItemComponentBase* _ItemComponent, UItemDataSnippetBase* _DataSnippet, const FString& _PropertyName)\
+		FProperyChangedScope(UItemComponentBase* _ItemComponent, const FString& _PropertyName)\
 			: ItemComponent(_ItemComponent)\
-			, DataSnippet(_DataSnippet)\
 			, PropertyName(_PropertyName)\
 		{}\
 		~FProperyChangedScope()\
 		{\
 			if (ItemComponent == nullptr)\
 				return;\
-			ItemComponent->ItemRuntimeDataPostChanged.Broadcast(DataSnippet, PropertyName);\
+			ItemComponent->ItemRuntimeDataPostChanged.Broadcast(Property);\
 		}\
 	private:\
 		UItemComponentBase*& ItemComponent;\
-		UItemDataSnippetBase* DataSnippet;\
-		const FString& PropertyName;\
+		const FItemDataSnippetProperty& Property;\
 	} PropertyChangeScope(GetItemRuntimeDataOwner()->GetComponentOwner(), this, GET_MEMBER_NAME_CHECKED(ClassType, PropertyName).ToString());\
-	TGuardValue<PropertyType>(PropertyName, OldValue);\
-	GetItemRuntimeDataOwner()->GetComponentOwner()->ItemRuntimeDataPreChanged.Broadcast(this, GET_MEMBER_NAME_CHECKED(ClassType, PropertyName).ToString());
+	TGuardValue<PropertyType>(*Property.GetPropertyValue<PropertyType>(), OldValue);\
+	GetItemRuntimeDataOwner()->GetComponentOwner()->ItemRuntimeDataPreChanged.Broadcast(Property);
 
+#define ITEMDATASNIPPET_PROPERTY_GET( ClassType, PropertyName )	\
+	FItemDataSnippetProperty Get##PropertyName##Property()\
+	{\
+		static FProperty* Prop = FindFieldChecked<FProperty>(ClassName::StaticClass(), GET_MEMBER_NAME_CHECKED(ClassName, PropertyName)); \
+		return FItemDataSnippetProperty(Prop, this); \
+	}
 
+#define ITEMDATASNIPPET_PROPERTY_VALUE_GET( ClassType, PropertyType, PropertyName )	\
+	template<class PropertyType>\
+	PropertyType* Get##PropertyName##Value()\
+	{\
+		FItemDataSnippetProperty Property = Get##PropertyName##Property();\
+		return Property.GetPropertyValue<PropertyType>();\
+	}
+
+	#define ITEMDATASNIPPET_PROPERTY_DEFINITION(ClassType, PropertyType, PropertyName)\
+		ITEMDATASNIPPET_PROPERTY_GET(ClassType, PropertyName)\
+		ITEMDATASNIPPET_PROPERTY_VALUE_GET(ClassType, PropertyType, PropertyName)
 
