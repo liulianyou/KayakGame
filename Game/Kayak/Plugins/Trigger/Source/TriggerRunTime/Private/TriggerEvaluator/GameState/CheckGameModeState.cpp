@@ -21,9 +21,9 @@ void UCheckGameModeState::NativeInitialize(UObject* OwnerObject)
 	}
 }
 
-bool UCheckGameModeState::NativeEvaluator()
+bool UCheckGameModeState::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
-	bool Result = Super::NativeEvaluator();
+	bool Result = Super::NativeEvaluator(DoLocalCheck);
 
 	if (InspectData != nullptr)
 	{

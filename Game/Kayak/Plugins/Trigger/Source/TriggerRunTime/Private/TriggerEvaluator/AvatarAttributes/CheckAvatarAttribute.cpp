@@ -8,7 +8,7 @@ UCheckAvatarAttribute::UCheckAvatarAttribute(const FObjectInitializer& ObjectIni
 
 }
 
-bool UCheckAvatarAttribute::NativeEvaluator()
+bool UCheckAvatarAttribute::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	bool Result = true;
 

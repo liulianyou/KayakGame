@@ -26,7 +26,7 @@ class TRIGGERRUNTIME_API UTriggerEvaluator_OR : public UEvaluatorOperation
 
 public:
 
-	virtual bool NativeEvaluator() override;
+	virtual bool NativeEvaluator(bool DoLocalCheck = false) override;
 
 protected:
 

@@ -8,7 +8,7 @@ UTriggerEvaluator_OR::UTriggerEvaluator_OR(const FObjectInitializer& ObjectIniti
 
 }
 
-bool UTriggerEvaluator_OR::NativeEvaluator()
+bool UTriggerEvaluator_OR::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	if (Operators.Num() == 0 && Condtions.Num() == 0)
 	{

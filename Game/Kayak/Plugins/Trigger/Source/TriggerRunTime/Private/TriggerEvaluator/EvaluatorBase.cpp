@@ -16,7 +16,7 @@ bool UEvaluatorBase::Evaluator(bool DoLocalCheck /*= false*/)
 	if(CashedValue)
 		return true;
 
-	CashedValue = InverseResult ? !BP_Evaluator() : BP_Evaluator();
+	CashedValue = InverseResult ? !BP_Evaluator(DoLocalCheck) : BP_Evaluator(DoLocalCheck);
 
 	EvaluateCount++;
 
@@ -50,12 +50,12 @@ bool UEvaluatorBase::Evaluator(bool DoLocalCheck /*= false*/)
 	return CashedValue;
 }
 
-bool UEvaluatorBase::BP_Evaluator_Implementation()
+bool UEvaluatorBase::BP_Evaluator_Implementation(bool DoLocalCheck /*= false*/)
 {
-	return NativeEvaluator();
+	return NativeEvaluator(DoLocalCheck);
 }
 
-bool UEvaluatorBase::NativeEvaluator()
+bool UEvaluatorBase::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	return  true;
 }

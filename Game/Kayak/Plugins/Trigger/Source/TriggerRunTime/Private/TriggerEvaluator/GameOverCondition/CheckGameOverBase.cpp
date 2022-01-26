@@ -55,9 +55,9 @@ bool UCheckGameOverBase::Evaluator(bool DoLocalCheck)
 	return Result;
 }
 
-bool UCheckGameOverBase::NativeEvaluator()
+bool UCheckGameOverBase::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
-	return Super::NativeEvaluator();
+	return Super::NativeEvaluator(DoLocalCheck);
 }
 
 void UCheckGameOverBase::NativeInitialize(UObject* OwnerObject)
@@ -152,7 +152,7 @@ void UCheckGameOverBase::GameOverConditionPassCallback(UCheckGameOverBase* Other
 	}
 }
 
-bool UCheckGameOverFailed_ForwardCondition::NativeEvaluator()
+bool UCheckGameOverFailed_ForwardCondition::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	if (ForwardedCondition != nullptr && ForwardedCondition->Evaluator())
 	{

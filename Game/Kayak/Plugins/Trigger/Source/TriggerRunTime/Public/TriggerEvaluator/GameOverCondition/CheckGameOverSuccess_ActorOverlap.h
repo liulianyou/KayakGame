@@ -26,7 +26,7 @@ class TRIGGERRUNTIME_API UCheckGameOverSuccess_ActorOverlap : public UCheckGameO
 public:
 
 	//Override Evaluator Base
-	virtual bool NativeEvaluator() override;
+	virtual bool NativeEvaluator(bool DoLocalCheck = false) override;
 	virtual void NativeInitialize(UObject* OwnerObject) override;
 	virtual void NativeReset() override;
 	//Override Evaluator Base

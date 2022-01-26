@@ -17,7 +17,7 @@ bool FExistPlayerInfo::operator==(const FExistPlayerInfo& OtherData)
 		return false;
 }
 
-bool UCheckGameOver_Exist::NativeEvaluator()
+bool UCheckGameOver_Exist::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	bool Result = false;
 

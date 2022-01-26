@@ -13,7 +13,7 @@ void UTriggerEvaluator_AND::NativeInitialize(UObject* OwnerObject)
 	Super::NativeInitialize(OwnerObject);
 }
 
-bool UTriggerEvaluator_AND::NativeEvaluator()
+bool UTriggerEvaluator_AND::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	if (Operators.Num() == 0 && Condtions.Num() == 0)
 	{

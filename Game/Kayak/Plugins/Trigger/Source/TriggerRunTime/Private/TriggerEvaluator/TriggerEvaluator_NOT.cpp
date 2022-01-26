@@ -10,7 +10,7 @@ UTriggerEvaluator_NOT::UTriggerEvaluator_NOT(const FObjectInitializer& ObjectIni
 
 }
 
-bool UTriggerEvaluator_NOT::NativeEvaluator()
+bool UTriggerEvaluator_NOT::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	if (Operators.Num() == 0 && Condtions.Num() == 0)
 	{

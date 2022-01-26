@@ -23,7 +23,7 @@ class TRIGGERRUNTIME_API UAIFinisheConditionBase : public UEvaluatorCondition
 public:
 	virtual void NativeReset();
 	virtual void NativeInitialize(UObject* OwnerObject);
-	virtual bool NativeEvaluator();
+	virtual bool NativeEvaluator(bool DoLocalCheck = false);
 private:
 	
 	

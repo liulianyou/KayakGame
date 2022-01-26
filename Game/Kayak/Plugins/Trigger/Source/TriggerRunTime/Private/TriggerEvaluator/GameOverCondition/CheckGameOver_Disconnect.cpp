@@ -10,7 +10,7 @@ UCheckGameOver_Disconnect::UCheckGameOver_Disconnect(const FObjectInitializer& O
 
 }
 
-bool UCheckGameOver_Disconnect::NativeEvaluator()
+bool UCheckGameOver_Disconnect::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	bool Result = false;
 

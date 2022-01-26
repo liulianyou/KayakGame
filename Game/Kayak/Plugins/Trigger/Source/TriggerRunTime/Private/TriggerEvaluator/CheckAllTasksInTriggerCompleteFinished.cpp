@@ -11,7 +11,7 @@ UCheckAllTasksInTriggerCompleteFinished::UCheckAllTasksInTriggerCompleteFinished
 }
 
 
-bool UCheckAllTasksInTriggerCompleteFinished::NativeEvaluator()
+bool UCheckAllTasksInTriggerCompleteFinished::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	bool Result = true;
 

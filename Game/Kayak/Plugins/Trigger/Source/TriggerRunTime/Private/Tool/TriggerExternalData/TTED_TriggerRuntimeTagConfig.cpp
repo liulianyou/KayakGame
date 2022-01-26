@@ -196,7 +196,7 @@ void UCheckTriggerTag::BeginDestroy()
 	}
 }
 
-bool UCheckTriggerTag::NativeEvaluator()
+bool UCheckTriggerTag::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	return HasMeetCondition;
 }

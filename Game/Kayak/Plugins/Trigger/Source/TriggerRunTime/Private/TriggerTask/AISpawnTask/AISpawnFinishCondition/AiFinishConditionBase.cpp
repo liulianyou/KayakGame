@@ -16,7 +16,7 @@ void UAIFinisheConditionBase::NativeReset()
 	Super::NativeReset();
 }
 
-bool UAIFinisheConditionBase::NativeEvaluator()
+bool UAIFinisheConditionBase::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	return false;
 }

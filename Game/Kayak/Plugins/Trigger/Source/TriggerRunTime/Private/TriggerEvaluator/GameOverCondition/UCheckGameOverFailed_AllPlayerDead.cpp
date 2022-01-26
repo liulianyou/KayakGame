@@ -35,7 +35,7 @@ void FPlayerGameOverFalidInfo::Reset()
 }
 
 
-bool UCheckGameOverFailed_AllPlayerDead::NativeEvaluator()
+bool UCheckGameOverFailed_AllPlayerDead::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	bool Result = false;
 

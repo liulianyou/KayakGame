@@ -174,10 +174,12 @@ void FItemDataSnippetContainer::AddNewItem(UItemDataSnippetBase* NewItem)
 		return;
 
 	//First try to check weather this new item have exist
-	for (auto IT = CreateConstIterator(0, true); IT; ++IT)
+	for (auto IT = CreateIterator(); IT; ++IT)
 	{
 		if (IT.GetValue()->Item == NewItem)
 		{
+			IT.GetValue()->PendingRemoved = false;
+
 			return;
 		}
 	}
@@ -231,10 +233,10 @@ void FItemDataSnippetContainer::RemoveItem(UItemDataSnippetBase* RemovedItem)
 				if (Items.IsValidIndex(IT.GetIndex()))
 				{
 					Items.RemoveAtSwap(IT.GetIndex());
+
+					MarkArrayDirty();
 				}
 			}
-
-			MarkArrayDirty();
 
 			break;
 		}
@@ -558,19 +560,22 @@ void UItemRuntimeDataBase::RemoveDataSnippet(UItemDataSnippetBase* DataSnippet)
 	if(Index == INDEX_NONE)
 		return;
 
-	/*
-	* Make all data snippet info to be pending removed
-	*/
-	for (auto IT = GetItemDataSnippetContanier_Mutable().CreateIterator(); IT; ++IT)
-	{
-		IT.GetValue()->PendingRemoved = true;
-	}
-
 	if (HasAuthority())
 	{
 		InternalRemoveDataSnippet(DataSnippet);
 
 		return;
+	}
+
+	/*
+	* Make all data snippet info to be pending removed
+	*/
+	for (auto IT = GetItemDataSnippetContanier_Mutable().CreateIterator(); IT; ++IT)
+	{
+		if (IT.GetValue()->Item == DataSnippet)
+		{
+			IT.GetValue()->PendingRemoved = true;
+		}
 	}
 
 	UItemNetworkSupportComponent* NetSupportComponent = UItemBlueprintLib::GetItemNetworkSupportComponent(this, GetWorld());
@@ -596,6 +601,17 @@ void UItemRuntimeDataBase::AddDataSnippet(UItemDataSnippetBase* DataSnippet)
 		return;
 	}
 
+	/*
+	* Make the target data info valid
+	*/
+	for (auto IT = GetItemDataSnippetContanier_Mutable().CreateIterator(); IT; ++IT)
+	{
+		if (IT.GetValue()->Item == DataSnippet)
+		{
+			IT.GetValue()->PendingRemoved = false;
+		}
+	}
+
 	UItemNetworkSupportComponent* NetSupportComponent = UItemBlueprintLib::GetItemNetworkSupportComponent(this, GetWorld());
 
 	if (NetSupportComponent == nullptr)
@@ -607,11 +623,11 @@ void UItemRuntimeDataBase::AddDataSnippet(UItemDataSnippetBase* DataSnippet)
 	NetSupportComponent->Server_AddDataSnippet(this, DataSnippet);
 }
 
-int UItemRuntimeDataBase::FindDataSnippet(UItemDataSnippetBase* DataSnippet)
+int UItemRuntimeDataBase::FindDataSnippet(UItemDataSnippetBase* DataSnippet, bool IncludeInvalidDataSnippet /*= false*/)
 {
 	int Result = INDEX_NONE;
 
-	for (auto IT = GetItemDataSnippetContanier().CreateConstIterator(0, true); IT; ++IT)
+	for (auto IT = GetItemDataSnippetContanier().CreateConstIterator(0, IncludeInvalidDataSnippet); IT; ++IT)
 	{
 		if (IT.GetValue()->Item == DataSnippet)
 		{
@@ -621,6 +637,51 @@ int UItemRuntimeDataBase::FindDataSnippet(UItemDataSnippetBase* DataSnippet)
 	}
 
 	return Result;
+}
+
+UItemDataSnippetBase* UItemRuntimeDataBase::GetItemDataSnippetByIndex(int Index, bool IncludeInvalidDataSnippet /*= false*/)
+{
+	UItemDataSnippetBase* Result = nullptr;
+
+	for (auto IT = GetItemDataSnippetContanier().CreateConstIterator(0, IncludeInvalidDataSnippet); IT; ++IT)
+	{
+		if (IT.GetIndex() == Index)
+		{
+			Result = IT.GetValue()->Item;
+			break;
+		}
+	}
+
+	return Result;
+}
+
+bool UItemRuntimeDataBase::IsDataSnipeetPendingRemoved(UItemDataSnippetBase* DataSnippet)
+{
+	if(DataSnippet == nullptr)
+		return false;
+
+	for (auto IT = GetItemDataSnippetContanier().CreateConstIterator(); IT; ++IT)
+	{
+		if (IT.GetValue()->Item == DataSnippet)
+		{
+			return IT.GetValue()->PendingRemoved;
+		}
+	}
+
+	return false;
+}
+
+const FItemDataSnippetInfo& UItemRuntimeDataBase::GetItemDataSnippetInfo(int Index) const
+{
+	for (auto IT = GetItemDataSnippetContanier().CreateConstIterator(); IT; ++IT)
+	{
+		if (IT.GetIndex() == Index)
+		{
+			return *IT;
+		}
+	}
+
+	return FItemDataSnippetInfo::InvalidData;
 }
 
 bool UItemRuntimeDataBase::HasData(const FString& PropertyName, TSubclassOf<UItemDataSnippetBase> DataSnippetType/* = nullptr*/)

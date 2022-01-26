@@ -9,7 +9,7 @@ UCheckKilledNumberOfAIInTargetTask::UCheckKilledNumberOfAIInTargetTask(const FOb
 	AIDeadDelegateHandles.Empty();
 }
 
-bool UCheckKilledNumberOfAIInTargetTask::NativeEvaluator()
+bool UCheckKilledNumberOfAIInTargetTask::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	bool Result = true;
 

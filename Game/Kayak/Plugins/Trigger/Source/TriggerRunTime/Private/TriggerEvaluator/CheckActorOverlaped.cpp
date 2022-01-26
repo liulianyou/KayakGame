@@ -7,7 +7,7 @@ UCheckActorOverlaped::UCheckActorOverlaped(const FObjectInitializer& ObjectIniti
 	
 }
 
-bool UCheckActorOverlaped::NativeEvaluator()
+bool UCheckActorOverlaped::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	bool Result = false;
 

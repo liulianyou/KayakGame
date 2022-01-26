@@ -41,14 +41,14 @@ public:
 	* Allow one chance to the BP to override the native implementation
 	*/
 	UFUNCTION(BlueprintNativeEvent, Category = "TriggerRuntime|Evaluator")
-	bool BP_Evaluator();
+	bool BP_Evaluator(bool DoLocalCheck = false);
 
 	/*
 	* Let the sub class to override this function to implement final evaluator implementation
 	*
 	* Try to evaluate the triggers (can be Trigger or Trigger tasks) to determine weather the current trigger should be toggled
 	*/
-	virtual bool NativeEvaluator();
+	virtual bool NativeEvaluator(bool DoLocalCheck = false);
 
 	UFUNCTION(BlueprintNativeEvent, Category = "TriggerRuntime|Evaluator")
 	void BP_Reset();
@@ -149,7 +149,7 @@ private:
 };
 
 #define EvaluatorFramement()	\
-	virtual bool NativeEvaluator();\
+	virtual bool NativeEvaluator(bool DoLocalCheck = false);\
 	virtual void NativeReset();\
 	virtual void NativeInitialize(UObject* OwnerObject);\
 	virtual void BeginDestroy() override;

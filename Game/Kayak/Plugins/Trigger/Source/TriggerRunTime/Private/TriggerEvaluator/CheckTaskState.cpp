@@ -30,7 +30,7 @@ void UCheckTaskState::NativeInitialize(UObject* OwnerObject)
 	}
 }
 
-bool UCheckTaskState::NativeEvaluator()
+bool UCheckTaskState::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	//If there is no data in this state then just make this condition always true, But its value should not be empty!!!
 	if (TaskDatas.Num() == 0)

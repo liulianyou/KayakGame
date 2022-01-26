@@ -24,7 +24,7 @@ class TRIGGERRUNTIME_API UCheckActorOverlaped : public UEvaluatorCondition
 
 public:
 	virtual void NativeInitialize( UObject* OwnerObject ) override;
-	virtual bool NativeEvaluator() override;
+	virtual bool NativeEvaluator(bool DoLocalCheck = false) override;
 	virtual void NativeReset() override;
 	virtual void BeginDestroy() override;
 

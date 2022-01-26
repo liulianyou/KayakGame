@@ -44,7 +44,7 @@ class TRIGGERRUNTIME_API UCheckKilledNumberOfAIInTargetTask : public UEvaluatorC
 
 public:
 	//Override Evaluator Base
-	virtual bool NativeEvaluator() override;
+	virtual bool NativeEvaluator(bool DoLocalCheck = false) override;
 	virtual void NativeInitialize(UObject* OwnerObject) override;
 	virtual void NativeReset() override;
 	virtual void BeginDestroy() override;

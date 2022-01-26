@@ -354,11 +354,33 @@ public:
 
 	/*
 	* Find the index of the target data snippet
+	* @param IncludeInvalidDataSnippet flat to check weather try to search all elements in the data snippet container include invalid data snippet which is pending to removed
 	* 
 	* #retur INDEX_NOEN means this runtime data have no target data snippet
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	int FindDataSnippet(UItemDataSnippetBase* DataSnippet);
+	int FindDataSnippet(UItemDataSnippetBase* DataSnippet, bool IncludeInvalidDataSnippet = false);
+
+	/*
+	* Get the data snippet from the index
+	* 
+	* @param Index the index of the data snippet in the container
+	* @param IncludeInvalidDataSnippet flat to check weather try to search all elements in the data snippet container include invalid data snippet which is pending to removed
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	UItemDataSnippetBase* GetItemDataSnippetByIndex( int Index, bool IncludeInvalidDataSnippet = false );
+
+	/*
+	* Try to check weather the target data snippet is pending to be removed
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	bool IsDataSnipeetPendingRemoved(UItemDataSnippetBase* DataSnippet);
+
+	/*
+	* Get the target data snippet info in the container with the index
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	const FItemDataSnippetInfo& GetItemDataSnippetInfo(int Index) const;
 
 	/*
 	* Check weather the target data snippet has the specific property

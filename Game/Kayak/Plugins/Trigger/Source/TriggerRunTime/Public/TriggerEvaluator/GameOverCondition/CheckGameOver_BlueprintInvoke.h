@@ -25,7 +25,7 @@ public:
 
 	//Override EvaluatorBase
 	virtual void NativeInitialize(UObject* OwnerObject) override;
-	virtual bool NativeEvaluator() override;
+	virtual bool NativeEvaluator(bool DoLocalCheck = false) override;
 	//Override EvaluatorBase
 
 };

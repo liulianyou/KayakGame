@@ -7,7 +7,7 @@ UCheckTaskRepeatWithNum::UCheckTaskRepeatWithNum(const FObjectInitializer& Objec
 
 }
 
-bool UCheckTaskRepeatWithNum::NativeEvaluator()
+bool UCheckTaskRepeatWithNum::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	bool Result = true;
 

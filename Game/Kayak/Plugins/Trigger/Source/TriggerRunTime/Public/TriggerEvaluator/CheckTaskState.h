@@ -70,7 +70,7 @@ public:
 	UTriggerTaskBase* GetTriggerTask( int Index );
 
 	//Override Evaluator Base
-	virtual bool NativeEvaluator() override;
+	virtual bool NativeEvaluator(bool DoLocalCheck = false) override;
 	virtual void NativeInitialize(UObject* OwnerObject) override;
 	virtual void NativeReset() override;
 	//Override Evaluator Base

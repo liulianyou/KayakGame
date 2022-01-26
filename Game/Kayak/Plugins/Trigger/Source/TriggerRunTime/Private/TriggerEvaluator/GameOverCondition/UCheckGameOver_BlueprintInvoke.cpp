@@ -11,7 +11,7 @@ void UCheckGameOver_BlueprintInvoke::NativeInitialize(UObject* OwnerObject)
 	Super::NativeInitialize(OwnerObject);
 }
 
-bool UCheckGameOver_BlueprintInvoke::NativeEvaluator()
+bool UCheckGameOver_BlueprintInvoke::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	return true;
 }

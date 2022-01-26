@@ -27,7 +27,7 @@ class UCheckAllTasksInTriggerCompleteFinished : public UEvaluatorCondition
 public:
 
 	//Override Evaluator Base
-	virtual bool NativeEvaluator() override;
+	virtual bool NativeEvaluator(bool DoLocalCheck = false) override;
 	virtual void NativeInitialize(UObject* OwnerObject) override;
 	virtual void NativeReset() override;
 	//Override Evaluator Base

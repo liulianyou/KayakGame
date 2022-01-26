@@ -29,7 +29,7 @@ void UCheckGameOverSuccess_ActorOverlap::GetOverlapingActorArrayData(TArray<AAct
 	}
 }
 
-bool UCheckGameOverSuccess_ActorOverlap::NativeEvaluator()
+bool UCheckGameOverSuccess_ActorOverlap::NativeEvaluator(bool DoLocalCheck /*= false*/)
 {
 	bool Result = false;
 	
