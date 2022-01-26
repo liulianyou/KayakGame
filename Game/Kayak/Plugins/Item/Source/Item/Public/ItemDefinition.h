@@ -13,6 +13,8 @@
 #include "UObject/ObjectMacros.h"
 #include "Misc/EnumClassFlags.h"
 
+#include "ItemDataSnippetProperty.h"
+
 #include "ItemDefinition.generated.h"
 
 class UItemRuntimeDataBase;
@@ -20,45 +22,6 @@ class UItemDataSnippetBase;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogItem, Log, All);
 DECLARE_STATS_GROUP(TEXT("Tickables"), STATGROUP_Item, STATCAT_Advanced);
-
-/*
-* used to describe which property in the item data snippet
-*/
-USTRUCT(BlueprintType)
-struct ITEM_API FItemDataSnippetProperty
-{
-	GENERATED_BODY()
-
-public:
-
-	FItemDataSnippetProperty() : Property(nullptr), Owner(nullptr) {}
-
-	explicit FItemDataSnippetProperty(FProperty* MemberProperty, UItemDataSnippetBase* DataOwner) : Property(MemberProperty), Owner(DataOwner) {}
-
-public:
-
-	template<class PropertyType>
-	PropertyType* GetPropertyValue()
-	{
-		if (Owner == nullptr || Property == nullptr)
-			return nullptr;
-
-		return Property->ContainerPtrToValuePtr<PropertyType>(Owner);
-	}
-
-private:
-
-	/*
-	* Which property in the data snippet
-	*/
-	UPROPERTY(Category = GameplayAttribute, EditAnywhere)
-	TFieldPath<FProperty> Property = nullptr;
-
-	/*
-	* which data snippet instance own this property.
-	*/
-	UItemDataSnippetBase* Owner = nullptr;
-};
 
 /*
 * The state for one item

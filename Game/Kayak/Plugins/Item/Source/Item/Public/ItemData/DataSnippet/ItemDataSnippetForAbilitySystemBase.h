@@ -46,10 +46,14 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, ReplicatedUsing = OnRep_Effects, Category = "SnippetData")
 	TArray<TSubclassOf<UGameplayEffect>> Effects;
+	ITEMDATASNIPPET_PROPERTY_DEFINITION(UItemDataSnippetForAbilitySystemBase, TArray<TSubclassOf<UGameplayEffect>>, Effects);
+	
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, ReplicatedUsing = OnRep_Abilities, Category = "SnippetData")
 	TArray<TSubclassOf<UGameplayAbility>> Abilities;
+	ITEMDATASNIPPET_PROPERTY_DEFINITION(UItemDataSnippetForAbilitySystemBase, TArray<TSubclassOf<UGameplayAbility>>, Abilities);
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, ReplicatedUsing = OnRep_Attributes, Category = "SnippetData")
 	TArray<TSubclassOf<UAttributeSet>> Attributes;
+	ITEMDATASNIPPET_PROPERTY_DEFINITION(UItemDataSnippetForAbilitySystemBase, TArray<TSubclassOf<UAttributeSet>>, Attributes);
 };

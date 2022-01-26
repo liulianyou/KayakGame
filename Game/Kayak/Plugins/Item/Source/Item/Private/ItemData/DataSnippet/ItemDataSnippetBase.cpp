@@ -155,6 +155,19 @@ bool UItemDataSnippetBase::HasAuthority() const
 		return true;
 }
 
+bool UItemDataSnippetBase::HasProperty(const FItemDataSnippetProperty& Property) const
+{
+	return Property.IsValid() && 
+	(GetClass()->IsChildOf(CastChecked<UClass>(Property.GetProperty()->GetOwner<UObject>())) ||
+		CastChecked<UClass>(Property.GetProperty()->GetOwner<UObject>())->IsChildOf(GetClass()));
+}
+
+FItemDataSnippetProperty UItemDataSnippetBase::GetItemDataSnippetPropertyByName(const FString& PropertyName) const
+{
+	FProperty* Prop = FindFieldChecked<FProperty>(GetClass(), *PropertyName);
+	return FItemDataSnippetProperty(Prop, const_cast<UItemDataSnippetBase*>(this));
+}
+
 void UItemDataSnippetBase::SetItemDataOwner(UItemDataBase* ItemData)
 {
 	if(ItemDataOwner == ItemData)

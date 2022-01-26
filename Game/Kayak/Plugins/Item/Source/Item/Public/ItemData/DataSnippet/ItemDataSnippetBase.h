@@ -116,8 +116,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
 	bool HasAuthority() const;
 
+	/*
+	* Check weather this data snippet have the target property
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	bool HasProperty(const FItemDataSnippetProperty& Property ) const;
+
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
 	TSubclassOf<UDataAppliedRuleBase> GetDataApplyRuleClass() const { return DataApplyRule; }
+
+	/*
+	* Get the property with the target property name in this data
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	FItemDataSnippetProperty GetItemDataSnippetPropertyByName( const FString& PropertyName ) const;
 
 protected:
 
@@ -175,37 +187,14 @@ private:
 
 };
 
-#define ITEMPROPERYREPNOTIFY(ClassType, PropertyType, Property, OldValue )\
-	if(GetItemRuntimeDataOwner() == nullptr || GetItemRuntimeDataOwner()->GetComponentOwner() == nullptr)\
-		return;\
-	struct FProperyChangedScope\
-	{\
-		FProperyChangedScope(UItemComponentBase* _ItemComponent, const FString& _PropertyName)\
-			: ItemComponent(_ItemComponent)\
-			, PropertyName(_PropertyName)\
-		{}\
-		~FProperyChangedScope()\
-		{\
-			if (ItemComponent == nullptr)\
-				return;\
-			ItemComponent->ItemRuntimeDataPostChanged.Broadcast(Property);\
-		}\
-	private:\
-		UItemComponentBase*& ItemComponent;\
-		const FItemDataSnippetProperty& Property;\
-	} PropertyChangeScope(GetItemRuntimeDataOwner()->GetComponentOwner(), this, GET_MEMBER_NAME_CHECKED(ClassType, PropertyName).ToString());\
-	TGuardValue<PropertyType>(*Property.GetPropertyValue<PropertyType>(), OldValue);\
-	GetItemRuntimeDataOwner()->GetComponentOwner()->ItemRuntimeDataPreChanged.Broadcast(Property);
-
 #define ITEMDATASNIPPET_PROPERTY_GET( ClassType, PropertyName )	\
 	FItemDataSnippetProperty Get##PropertyName##Property()\
 	{\
-		static FProperty* Prop = FindFieldChecked<FProperty>(ClassName::StaticClass(), GET_MEMBER_NAME_CHECKED(ClassName, PropertyName)); \
+		static FProperty* Prop = FindFieldChecked<FProperty>(ClassType::StaticClass(), GET_MEMBER_NAME_CHECKED(ClassType, PropertyName)); \
 		return FItemDataSnippetProperty(Prop, this); \
 	}
 
 #define ITEMDATASNIPPET_PROPERTY_VALUE_GET( ClassType, PropertyType, PropertyName )	\
-	template<class PropertyType>\
 	PropertyType* Get##PropertyName##Value()\
 	{\
 		FItemDataSnippetProperty Property = Get##PropertyName##Property();\
@@ -216,3 +205,31 @@ private:
 		ITEMDATASNIPPET_PROPERTY_GET(ClassType, PropertyName)\
 		ITEMDATASNIPPET_PROPERTY_VALUE_GET(ClassType, PropertyType, PropertyName)
 
+
+#define ITEMPROPERYREPNOTIFY(ClassType, PropertyType, PropertyName, OldValue )\
+	if(GetItemRuntimeDataOwner() == nullptr || GetItemRuntimeDataOwner()->GetComponentOwner() == nullptr)\
+		return;\
+	FItemDataSnippetProperty Property = Get##PropertyName##Property();\
+	if (Property.GetPropertyValue<PropertyType>() == nullptr)\
+	{\
+		UE_LOG(LogItem, Error, TEXT("Try to get property value in %s which have no target property %s!"), *GetClass()->GetName(), #PropertyName);\
+		return; \
+	}\
+	struct FProperyChangedScope\
+	{\
+		FProperyChangedScope(UItemComponentBase* _ItemComponent, const FItemDataSnippetProperty& _Property)\
+			: ItemComponent(_ItemComponent)\
+			, Property(_Property)\
+		{}\
+		~FProperyChangedScope()\
+		{\
+			if (ItemComponent == nullptr)\
+				return;\
+			ItemComponent->ItemRuntimeDataPostChanged.Broadcast(Property);\
+		}\
+	private:\
+		UItemComponentBase*& ItemComponent;\
+		const FItemDataSnippetProperty& Property;\
+	} PropertyChangeScope(GetItemRuntimeDataOwner()->GetComponentOwner(), Property);\
+	TGuardValue<PropertyType>(*Property.GetPropertyValue<PropertyType>(), OldValue);\
+	GetItemRuntimeDataOwner()->GetComponentOwner()->ItemRuntimeDataPreChanged.Broadcast(Property);
