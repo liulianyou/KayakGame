@@ -389,7 +389,7 @@ public:
 	* @Param DataSnippetType	nullptr means this function will check all snippet data in this runtime data
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	bool HasData( const FString& PropertyName, TSubclassOf<UItemDataSnippetBase> DataSnippetType = nullptr);
+	bool HasProperty( const FItemDataSnippetProperty& Property ) const;
 	
 
 public:

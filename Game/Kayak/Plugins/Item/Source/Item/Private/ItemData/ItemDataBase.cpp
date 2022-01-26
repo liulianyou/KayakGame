@@ -684,8 +684,14 @@ const FItemDataSnippetInfo& UItemRuntimeDataBase::GetItemDataSnippetInfo(int Ind
 	return FItemDataSnippetInfo::InvalidData;
 }
 
-bool UItemRuntimeDataBase::HasData(const FString& PropertyName, TSubclassOf<UItemDataSnippetBase> DataSnippetType/* = nullptr*/)
+bool UItemRuntimeDataBase::HasProperty(const FItemDataSnippetProperty& Property) const
 {
+	for (auto IT = GetItemDataSnippetContanier().CreateConstIterator(0, true); IT; ++IT)
+	{
+		if(IT.GetValue()->Item->HasProperty(Property))
+			return true;
+	}
+
 	return false;
 }
 

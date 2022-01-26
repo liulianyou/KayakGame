@@ -27,7 +27,7 @@ class UDataAppliedRuleBase;
 * The snippet data will define when and how to apply the data to the target object from item runtime data.
 * The snippet data will define how to generate the actual default value form resources
 */
-UCLASS(Blueprintable, BlueprintType, Abstract, Category = "Item|SnippetData")
+UCLASS(BlueprintType, Abstract, Category = "Item|SnippetData")
 class ITEM_API UItemDataSnippetBase : public UObject
 {
 	GENERATED_UCLASS_BODY()
