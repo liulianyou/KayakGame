@@ -202,3 +202,26 @@ UItemNetworkSupportComponent* UItemBlueprintLib::GetItemNetworkSupportComponent(
 
 	return Result;
 }
+
+bool  UItemBlueprintLib::IsPropertyValid(const FItemDataSnippetProperty& Property)
+{
+	return Property.IsValid();
+}
+
+bool  UItemBlueprintLib::IsPropertyComplete(const FItemDataSnippetProperty& Property)
+{
+	return Property.IsComplete();
+}
+
+FItemDataSnippetProperty UItemBlueprintLib::MakeNewItemDataSnippetProperty(const FString& PropertyName, TSubclassOf<UItemDataSnippetBase> DataSnippetClass)
+{
+	if(PropertyName.IsEmpty() || DataSnippetClass == nullptr)
+		return FItemDataSnippetProperty();
+
+	FProperty* Prop = FindFieldChecked<FProperty>(DataSnippetClass, *PropertyName);
+
+	if(Prop == nullptr)
+		return FItemDataSnippetProperty();
+
+	return FItemDataSnippetProperty(Prop, nullptr); 
+}

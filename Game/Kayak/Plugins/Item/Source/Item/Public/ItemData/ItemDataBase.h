@@ -388,10 +388,24 @@ public:
 	* @param PropertyName The name of the property in the target data snippet
 	* @Param DataSnippetType	nullptr means this function will check all snippet data in this runtime data
 	*/
-	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ItemRuntimeData")
 	bool HasProperty( const FItemDataSnippetProperty& Property ) const;
 	
+	/*
+	* Get the property from the property name in the target data snippet class
+	* 
+	* #return If the result property is valid the it is complete property
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	FItemDataSnippetProperty GetPropertyByName(const FString& PropertyName) const;
 
+	/*
+	* Transfer the target property to complete, so that we can use the result property to get some information of property directly 
+	* 
+	* #return 
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	FItemDataSnippetProperty TryToGetCompleteProperty(const FItemDataSnippetProperty& Property) const;
 public:
 
 	/*

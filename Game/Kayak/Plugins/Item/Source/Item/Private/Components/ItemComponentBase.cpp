@@ -741,6 +741,58 @@ void UItemComponentBase::RemoveItemData(UItemDataBase* ItemData)
 	}
 }
 
+bool UItemComponentBase::HasProperty(const FItemDataSnippetProperty& Property) const
+{
+	for (auto IT = GetItemRuntimeDataContainer().CreateConstIterator(0, true); IT; ++IT)
+	{
+		if(IT.GetValue()->RuntimeData->HasProperty(Property))
+			return true;
+	}
+
+	return false;
+}
+
+FItemDataSnippetProperty UItemComponentBase::GetPropertyByName(const FString& PropertyName, TSubclassOf<UItemDataSnippetBase> DataSnippetClass) const
+{
+	for (auto IT = GetItemRuntimeDataContainer().CreateConstIterator(0, true); IT; ++IT)
+	{
+		if (DataSnippetClass == nullptr || IT.GetValue()->RuntimeData->IsA(DataSnippetClass))
+		{
+			FItemDataSnippetProperty Property = IT.GetValue()->RuntimeData->GetPropertyByName(PropertyName);
+			
+			if (Property.IsValid())
+			{
+				return Property;
+			}
+			else
+			{
+				continue;
+			}
+		}
+	}
+
+	return FItemDataSnippetProperty();
+}
+
+FItemDataSnippetProperty UItemComponentBase::TryToGetCompleteProperty(const FItemDataSnippetProperty& Property) const
+{
+	for (auto IT = GetItemRuntimeDataContainer().CreateConstIterator(0, true); IT; ++IT)
+	{
+		FItemDataSnippetProperty LocalProperty = IT.GetValue()->RuntimeData->TryToGetCompleteProperty(Property);
+
+		if (LocalProperty.IsValid())
+		{
+			return LocalProperty;
+		}
+		else
+		{
+			continue;
+		}
+	}
+
+	return FItemDataSnippetProperty();
+}
+
 void UItemComponentBase::OnRep_OwnerInventory(UItemInventoryComponent* OldInventory)
 {
 	//At this point the the owner avatar have been changed

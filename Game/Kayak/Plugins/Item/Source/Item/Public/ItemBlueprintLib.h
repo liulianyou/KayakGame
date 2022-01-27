@@ -16,6 +16,7 @@
 class UItemManager;
 class UItemComponentBase;
 class UItemInventoryComponent;
+class UItemDataSnippetBase;
 
 UCLASS()
 class ITEM_API UItemBlueprintLib : public UBlueprintFunctionLibrary
@@ -51,7 +52,21 @@ public:
 	/*
 	* Get component which is support for net work in the item system int the target object
 	*/
-	UFUNCTION(BlueprintCallable, BlueprintPure, BlueprintPure, Category = "Item", meta = (WorldContent = "WorldContent"))
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item", meta = (WorldContent = "WorldContent"))
 	static UItemNetworkSupportComponent* GetItemNetworkSupportComponent( UObject* Object, UObject* WorldContent );
 
+	/*
+	* Weather the target property is valid
+	*/
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item")
+	static bool IsPropertyValid( const FItemDataSnippetProperty& Property);
+
+	/*
+	* Weather the target property complete
+	*/
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item")
+	static bool IsPropertyComplete(const FItemDataSnippetProperty& Property);
+
+	UFUNCTION(BlueprintPure, Category = "Item", meta = (BlueprintThreadSafe, NativeMakeFunc))
+	static FItemDataSnippetProperty MakeNewItemDataSnippetProperty( const FString& PropertyName, TSubclassOf<UItemDataSnippetBase> DataSnippetClass );
 };

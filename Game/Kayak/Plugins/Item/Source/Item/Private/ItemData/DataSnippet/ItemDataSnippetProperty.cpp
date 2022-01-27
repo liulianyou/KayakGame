@@ -1,4 +1,5 @@
 #include "ItemDataSnippetProperty.h"
+#include "ItemDataSnippetBase.h"
 
 FItemDataSnippetProperty::FItemDataSnippetProperty(const FItemDataSnippetProperty& OtherValue)
 {
@@ -22,6 +23,11 @@ FItemDataSnippetProperty& FItemDataSnippetProperty::operator =(const FItemDataSn
 bool FItemDataSnippetProperty::IsValid() const
 {
 	return Property != nullptr;
+}
+
+bool FItemDataSnippetProperty::IsComplete() const
+{
+	return IsValid() && Owner != nullptr && Owner->IsValidLowLevel();
 }
 
 void FItemDataSnippetProperty::SetProperty(FProperty* InProperty)

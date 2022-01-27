@@ -398,6 +398,24 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ItemComponent")
 	const FItemRuntimeDataContainer& GetItemRuntimeDataContainer() const { return RuntimeDataContainer; }
 
+	/*
+	* Check weather this item have the property data
+	*/
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ItemComponent")
+	bool HasProperty( const FItemDataSnippetProperty& Property ) const;
+
+	/*
+	* Get the property in the target data snippet which name is PropertyName
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemComponent")
+	FItemDataSnippetProperty GetPropertyByName( const FString& PropertyName, TSubclassOf<UItemDataSnippetBase> DataSnippetClass ) const;
+
+	/*
+	* Get the property in this item component which has the target property type
+	*/
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ItemComponent")
+	FItemDataSnippetProperty TryToGetCompleteProperty(const FItemDataSnippetProperty& Property ) const;
+
 protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "ItemComponent")

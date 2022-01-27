@@ -695,6 +695,39 @@ bool UItemRuntimeDataBase::HasProperty(const FItemDataSnippetProperty& Property)
 	return false;
 }
 
+FItemDataSnippetProperty UItemRuntimeDataBase::GetPropertyByName(const FString& PropertyName) const
+{
+	for (auto IT = GetItemDataSnippetContanier().CreateConstIterator(0, true); IT; ++IT)
+	{
+		FProperty* Prop = FindFieldChecked<FProperty>(IT.GetValue()->Item->GetClass(), *PropertyName);
+
+		if(Prop == nullptr)
+			continue;
+
+		return FItemDataSnippetProperty(Prop, IT.GetValue()->Item);
+	}
+
+	return FItemDataSnippetProperty();
+}
+
+FItemDataSnippetProperty UItemRuntimeDataBase::TryToGetCompleteProperty(const FItemDataSnippetProperty& Property) const
+{
+	check(Property.IsValid() && HasProperty(Property));
+
+	if(Property.IsComplete())
+		return Property;
+
+	for (auto IT = GetItemDataSnippetContanier().CreateConstIterator(0, true); IT; ++IT)
+	{
+		if (IT.GetValue()->Item->GetClass()->IsChildOf(CastChecked<UClass>(Property.GetProperty()->GetOwner<UObject>()))
+			|| CastChecked<UClass>(Property.GetProperty()->GetOwner<UObject>())->IsChildOf(IT.GetValue()->Item->GetClass()))
+		{
+			return FItemDataSnippetProperty(Property.GetProperty(), IT.GetValue()->Item);
+		}
+	}
+
+	return FItemDataSnippetProperty();
+}
 
 void UItemRuntimeDataBase::ActivateItem()
 {
