@@ -10,7 +10,7 @@ UTriggerRepeatStyleBase::UTriggerRepeatStyleBase(const FObjectInitializer& Objec
 
 void UTriggerRepeatStyleBase::Execute()
 {
-	TryToRepeat(GetOwner());
+	TryToRepeat(GetRepeatedTriggerTask());
 }
 
 bool UTriggerRepeatStyleBase::TryToRepeat_Implementation(UObject* Object)
@@ -31,6 +31,6 @@ void UTriggerRepeatStyleBase::InitializeStyle(UObject* OwnerObject)
 
 UTriggerTaskBase* UTriggerRepeatStyleBase::GetRepeatedTriggerTask()
 {
-	return RepeatedTask.GetTriggerTask();
+	return RepeatedTask.GetTriggerTask() == nullptr ? Cast<UTriggerTaskBase>(GetOwner()) : RepeatedTask.GetTriggerTask();
 }
 

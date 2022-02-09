@@ -81,7 +81,7 @@ void URS_RepeatTaskWhenReachTargetStateBase::TriggerTaskStateCallbackForLoop(UEv
 {
 	if (EvaluatorResult)
 	{
-		TryToRepeatTaskInternal();
+		Execute();
 	}
 }
 
