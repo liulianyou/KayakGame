@@ -19,11 +19,6 @@ FTriggerDelegate::FInteractionEndNativeDelegate			FTriggerDelegate::InteractionE
 FTriggerDelegate::FGameOverNativeDelegate				FTriggerDelegate::GameOverNativeDelegate;
 FTriggerDelegate::FTriggerTaskStateNativeEvent			FTriggerDelegate::TriggerTaskStateNativeEvent;
 FTriggerDelegate::FNewCheckPointActivatedNativeEvent	FTriggerDelegate::NewCheckPointActivatedNativeEvent;
-FTriggerDelegate::FEvaluatorNativeEvent					FTriggerDelegate::EvaluatorNativeEvent;
-
-FTriggerNeededDelegate::FreExistCurrentMapNativeEvent	FTriggerNeededDelegate::ExitCurrentMapNativeEvent;
-FTriggerNeededDelegate::FDisconnectNativeEvent			FTriggerNeededDelegate::DisconnectNativeEvent;
-FTriggerNeededDelegate::FGameFailedEvent				FTriggerNeededDelegate::GameFailedEvent;
 
 FTriggerTaskRuntimeInfo::FTriggerTaskRuntimeInfo(const UTriggerTaskComponentBase* SenderComponent, const UTriggerTaskBase* SenderTask, const UTriggerTaskComponentBase* TargetComponent, const UTriggerTaskBase* TargetTask, const UOperationInformationBase* ToggleInfo)
 {

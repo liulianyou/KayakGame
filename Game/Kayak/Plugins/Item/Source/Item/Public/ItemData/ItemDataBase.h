@@ -568,6 +568,10 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FItemRuntimeDataPostChanged PropertyPostChanged;
 
+	//Delegate invoked after the state have been changed in this runtime data
+	UPROPERTY(BlueprintAssignable)
+	FItemRuntimeDataStateChanged DataStateChanged;
+
 private:
 
 	/*

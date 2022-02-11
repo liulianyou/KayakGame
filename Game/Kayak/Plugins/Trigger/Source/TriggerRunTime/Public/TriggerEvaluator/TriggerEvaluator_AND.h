@@ -9,7 +9,7 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 
-#include "EvaluatorOperation.h"
+#include "Evaluator_AND.h"
 
 #include "TriggerEvaluator_AND.generated.h"
 
@@ -19,28 +19,9 @@
 * than they can notify or affect other triggers
 */
 UCLASS( BlueprintType, meta = (DisplayName = "AND"))
-class TRIGGERRUNTIME_API UTriggerEvaluator_AND : public UEvaluatorOperation
+class TRIGGERRUNTIME_API UTriggerEvaluator_AND : public UEvaluator_AND
 {
 	GENERATED_UCLASS_BODY()
-
-public:
-	
-	//Override EvaluatorBase
-	virtual void NativeInitialize(UObject* OwnerObject) override;
-	virtual bool NativeEvaluator(bool DoLocalCheck = false) override;
-	virtual void NativeReset() override;
-	//Override EvaluatorBase
-
-	//Override UObject
-	virtual void BeginDestroy() override ;
-	//Override UObject
-
-protected:
-
-	//Check weather the cashed value have been passed
-	bool IsPassed() const;
-
-
 };
 
 

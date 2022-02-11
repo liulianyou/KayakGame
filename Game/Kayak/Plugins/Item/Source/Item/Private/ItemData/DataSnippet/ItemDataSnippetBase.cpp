@@ -229,6 +229,6 @@ void UItemDataSnippetBase::OnRep_RuntimeDataOwner(UItemRuntimeDataBase* OldValue
 	SetItemRuntimeDataOwner(NewRuntimeDataValue);
 }
 
-void UItemDataSnippetBase::OnRep_DataApplyRule(const TSubclassOf<UDataAppliedRuleBase>& OldValue)
+void UItemDataSnippetBase::OnRep_DataApplyRule(const TSubclassOf<UDataSnippetAppliedRuleBase>& OldValue)
 {
 }

@@ -6,7 +6,7 @@
 #include "TriggerEvaluator/CheckTaskState.h"
 #include "TriggerTaskComponent/TriggerTaskComponentBase.h"
 #include "TriggerTaskComponent/Category/TriggerCategory.h"
-#include "TriggerEvaluator/EvaluatorOperation.h"
+#include "EvaluatorOperation.h"
 #include "Widget/TriggerTreeViewObject.h"
 #include "TriggerTaskComponent/EventChain/TriggerEventChainBase.h"
 #include "TriggerTaskStateSwitch/TTSS_AnyConditionMeet.h"

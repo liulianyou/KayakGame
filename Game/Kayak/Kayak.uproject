@@ -20,6 +20,10 @@
 			"Enabled": true
 		},
 		{
+			"Name": "Evaluator",
+			"Enabled": true
+		},
+		{
 			"Name": "Item",
 			"Enabled": true
 		}

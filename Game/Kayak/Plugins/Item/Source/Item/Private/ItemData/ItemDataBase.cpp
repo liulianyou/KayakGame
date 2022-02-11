@@ -735,6 +735,11 @@ void UItemRuntimeDataBase::ActivateItem()
 	if (IsActivated())
 		return;
 
+	for (auto IT = DataSnippetContainer.CreateConstIterator(0, true); IT; ++IT)
+	{
+		IT.GetValue()->Item->Activate();
+	}
+
 	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemRuntimeDataBase, OnActivateItem)))
 	{
 		OnActivateItem();
@@ -754,6 +759,11 @@ void UItemRuntimeDataBase::DeactivateItem()
 	//When this item have never been activated then do not need to deactivate it
 	if (!IsActivated())
 		return;
+
+	for (auto IT = DataSnippetContainer.CreateConstIterator(0, true); IT; ++IT)
+	{
+		IT.GetValue()->Item->Deactivate();
+	}
 
 	if (GetClass()->IsFunctionImplementedInScript(GET_FUNCTION_NAME_CHECKED(UItemRuntimeDataBase, OnDeactivateItem)))
 	{
@@ -845,7 +855,12 @@ void UItemRuntimeDataBase::OnRep_DataSnippetContainer(const FItemDataSnippetCont
 
 void UItemRuntimeDataBase::ToggleItemStateChanged(EItemState NewItemState)
 {
+	if(ItemState == NewItemState)
+		return;
+
 	ItemState = NewItemState;
+
+	DataStateChanged.Broadcast(this);
 }
 
 void UItemRuntimeDataBase::InternalRemoveDataSnippet(UItemDataSnippetBase* DataSnippet)

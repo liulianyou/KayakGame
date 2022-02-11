@@ -15,7 +15,7 @@ public class Kayak : ModuleRules
             "SlateCore", "Slate", "UMG",
             "AIModule",
             "GameplayAbilities", "GameplayTags", "GameplayTasks",
-            "TriggerRuntime", "Item"});
+            "TriggerRuntime", "Item", "Evaluator"});
 
         PublicIncludePaths.AddRange(GetPublicIncludePath());
 

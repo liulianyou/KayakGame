@@ -30,7 +30,8 @@ public class TriggerRunTime : ModuleRules
 				"LevelSequence",
 				"GameplayAbilities",
 				"GameplayTags",
-				"DeveloperSettings"
+				"DeveloperSettings",
+				"Evaluator"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

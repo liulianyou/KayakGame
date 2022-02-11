@@ -18,7 +18,7 @@
 
 class UItemDataBase;
 class UItemRuntimeDataBase;
-class UDataAppliedRuleBase;
+class UDataSnippetAppliedRuleBase;
 
 
 /*
@@ -105,7 +105,7 @@ public:
 	* As the data apply rule only exist on the server, the return value can be none on the client
 	*/
 	UFUNCTION(BlueprintCallable, Category="SnippetNata")
-	UDataAppliedRuleBase* GetDataApplyRule() const { return DataApplyRuleInstance; }
+	UDataSnippetAppliedRuleBase* GetDataApplyRule() const { return DataApplyRuleInstance; }
 
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
 	bool IsDataPrepared() const { return !!bDataPrepared; }
@@ -117,13 +117,19 @@ public:
 	bool HasAuthority() const;
 
 	/*
+	* check weather this data snippet have been activated
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
+	bool IsActivated() const { return !!bActivated; }
+
+	/*
 	* Check weather this data snippet have the target property
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
 	bool HasProperty(const FItemDataSnippetProperty& Property ) const;
 
 	UFUNCTION(BlueprintCallable, Category = "ItemRuntimeData")
-	TSubclassOf<UDataAppliedRuleBase> GetDataApplyRuleClass() const { return DataApplyRule; }
+	TSubclassOf<UDataSnippetAppliedRuleBase> GetDataApplyRuleClass() const { return DataApplyRule; }
 
 	/*
 	* Get the property with the target property name in this data
@@ -137,19 +143,22 @@ protected:
 	virtual void OnRep_RuntimeDataOwner(UItemRuntimeDataBase* OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_DataApplyRule( const TSubclassOf<UDataAppliedRuleBase>& OldValue);
+	virtual void OnRep_DataApplyRule( const TSubclassOf<UDataSnippetAppliedRuleBase>& OldValue);
 
 protected:
 
 	//Define how to apply this snippet to the target in runtime data
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_DataApplyRule, Category = "SnippetData")
-	TSubclassOf<UDataAppliedRuleBase> DataApplyRule;
+	TSubclassOf<UDataSnippetAppliedRuleBase> DataApplyRule;
 
 private:
 
-	//The instance of the data apply rule which only exist on the server
+	/*
+	* The instance of the data apply rule which only exist on the server
+	* Only the server can apply the data in this snippet to the target
+	*/
 	UPROPERTY(Transient)
-	UDataAppliedRuleBase* DataApplyRuleInstance = nullptr;
+	UDataSnippetAppliedRuleBase* DataApplyRuleInstance = nullptr;
 
 	UPROPERTY(ReplicatedUsing = OnRep_RuntimeDataOwner)
 	UItemRuntimeDataBase* RuntimeDataOwner;
@@ -185,6 +194,10 @@ private:
 	*/
 	uint32 bInitialized : 1;
 
+	/*
+	* Flag to check weather this data snippet has been activated and the runtime data can operate this data snippet
+	*/
+	uint32 bActivated : 1;
 };
 
 #define ITEMDATASNIPPET_PROPERTY_GET( ClassType, PropertyName )	\

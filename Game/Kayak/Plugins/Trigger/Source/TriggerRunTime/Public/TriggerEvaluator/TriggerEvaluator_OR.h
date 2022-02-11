@@ -11,7 +11,7 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 
-#include "EvaluatorOperation.h"
+#include "Evaluator_OR.h"
 
 #include "TriggerEvaluator_OR.generated.h"
 
@@ -20,17 +20,8 @@
 * than they can notify or affect other triggers
 */
 UCLASS( BlueprintType, meta = (DisplayName = "OR"))
-class TRIGGERRUNTIME_API UTriggerEvaluator_OR : public UEvaluatorOperation
+class TRIGGERRUNTIME_API UTriggerEvaluator_OR : public UEvaluator_OR
 {
 	GENERATED_UCLASS_BODY()
-
-public:
-
-	virtual bool NativeEvaluator(bool DoLocalCheck = false) override;
-
-protected:
-
-	//Check weather the cashed value have been passed
-	bool IsPassed() const;
 
 };

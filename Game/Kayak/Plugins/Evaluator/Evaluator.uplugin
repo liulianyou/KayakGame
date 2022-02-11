@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Evaluator",
+	"Description": "Used to combine different conditions to support customized feature",
+	"Category": "Other",
+	"CreatedBy": "Liulianyou",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": true,
+	"Modules": [
+		{
+			"Name": "Evaluator",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}

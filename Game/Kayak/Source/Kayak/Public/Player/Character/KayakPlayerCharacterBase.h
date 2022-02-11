@@ -11,7 +11,7 @@
 
 #include "KayakCharacterBase.h"
 #include "TriggerDefinition.h"
-
+#include "EvaluatorDefinition.h"
 #include "KayakPlayerCharacterBase.generated.h"
 
 /*

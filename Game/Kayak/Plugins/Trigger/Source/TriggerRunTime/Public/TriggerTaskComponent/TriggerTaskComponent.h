@@ -44,19 +44,4 @@ public:
 	//Override UTriggerTaskComponentBase
 	virtual void RegisterTaskComponent() override;
 	//Override UTriggerTaskComponentBase
-
-
-protected:
-	UE_DEPRECATED(4.26, "This function will be remove at the feature as it only move the old data to new data!!")
-	void PopulateOldDataToNewData();
-
-public:
-
-	UE_DEPRECATED(4.26, "Please replace ChildNodes with ChildNodeInfos, As it will be removed at feature!!")
-	UPROPERTY()
-	TArray<ANewTriggerBase*> ChildNodes;
-
-	UE_DEPRECATED(4.26, "Please replace ParentNodes with ParentNodeInfos, As it will be removed at feature!!")
-	UPROPERTY()
-	TArray<ANewTriggerBase*>ParentNodes;
 };

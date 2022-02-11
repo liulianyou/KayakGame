@@ -44,16 +44,26 @@ protected:
 
 public:
 
+	/*
+	* The game play effect which will be applied when this data snippet has been activated
+	*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, ReplicatedUsing = OnRep_Effects, Category = "SnippetData")
 	TArray<TSubclassOf<UGameplayEffect>> Effects;
 	ITEMDATASNIPPET_PROPERTY_DEFINITION(UItemDataSnippetForAbilitySystemBase, TArray<TSubclassOf<UGameplayEffect>>, Effects);
 	
-
+	/*
+	* The game play abilities which will be applied when this data snippet has been activated
+	*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, ReplicatedUsing = OnRep_Abilities, Category = "SnippetData")
 	TArray<TSubclassOf<UGameplayAbility>> Abilities;
 	ITEMDATASNIPPET_PROPERTY_DEFINITION(UItemDataSnippetForAbilitySystemBase, TArray<TSubclassOf<UGameplayAbility>>, Abilities);
 
+	/*
+	* The attribute which will be applied when this data snippet has been activated
+	*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, ReplicatedUsing = OnRep_Attributes, Category = "SnippetData")
 	TArray<TSubclassOf<UAttributeSet>> Attributes;
 	ITEMDATASNIPPET_PROPERTY_DEFINITION(UItemDataSnippetForAbilitySystemBase, TArray<TSubclassOf<UAttributeSet>>, Attributes);
+
+
 };

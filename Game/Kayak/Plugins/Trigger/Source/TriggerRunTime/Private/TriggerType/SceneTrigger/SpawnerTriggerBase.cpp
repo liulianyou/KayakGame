@@ -4,7 +4,7 @@
 #include "TriggerTaskComponent/TriggerTaskComponentBase.h"
 #include "TriggerRunTime/Public/Tool/AISpawnerTemplate.h"
 #include "TriggerEvaluator/TriggerEvaluator_AND.h"
-#include "TriggerEvaluator/CheckActorOverlaped.h"
+#include "CheckActorOverlaped.h"
 #include "Tool/Filter/TriggerFilter_Actor.h"
 #include "TriggerEvaluator/CheckKilledNumberOfAIInTargetTask.h"
 #include "TriggerEvaluator/TriggerEvaluator_OR.h"

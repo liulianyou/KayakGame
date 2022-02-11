@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "AIModule/Classes/AIController.h"
 #include "TriggerDefinition.h"
+#include "EvaluatorDefinition.h"
 #include "TriggerTaskStartInformationBase.h"
 #include "EvaluatorOperation.h"
 #include "EvaluatorDataForRespawnPoint.h"
@@ -908,7 +909,6 @@ void UTT_Respawn::CheckPawnDeadHandCallBack(APawn* Pawn)
 			if (!SpawnInterface->OnCharacterConfirmDead.IsBoundToObject(this))
 			{
 				PawnInfo->ConfirmedDeadHandle = SpawnInterface->OnCharacterConfirmDead.AddUObject(this, &UTT_Respawn::PawnDeadEvent);
-				SpawnInterface->RepawnTask = this;
 			}
 		}
 	}

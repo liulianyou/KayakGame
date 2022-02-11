@@ -3,6 +3,7 @@
 #include "GameFramework//Character.h"
 
 #include "TriggerDefinition.h"
+#include "EvaluatorDefinition.h"
 #include "TriggerManager.h"
 #include "TriggerTaskManager.h"
 #include "Record/TriggerRecordBase.h"

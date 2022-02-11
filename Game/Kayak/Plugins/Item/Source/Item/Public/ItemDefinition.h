@@ -69,6 +69,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FItemRuntimeDataPreChanged, FItemDat
 */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FItemRuntimeDataPostChanged, FItemDataSnippetProperty, Property);
 
+/*
+* Broadcast when the state have been changed in the target runtime data
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FItemRuntimeDataStateChanged, UItemRuntimeDataBase*, ItemRuntimeData);
+
 USTRUCT(BlueprintType)
 struct FLocationInfo
 {
