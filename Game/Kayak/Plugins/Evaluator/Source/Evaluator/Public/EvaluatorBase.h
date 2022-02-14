@@ -40,7 +40,7 @@ public:
 	/*
 	* Allow one chance to the BP to override the native implementation
 	*/
-	UFUNCTION(BlueprintNativeEvent, Category = "TriggerRuntime|Evaluator")
+	UFUNCTION(BlueprintNativeEvent, Category = "Evaluator")
 	bool BP_Evaluator(bool DoLocalCheck = false);
 
 	/*
@@ -50,38 +50,38 @@ public:
 	*/
 	virtual bool NativeEvaluator(bool DoLocalCheck = false);
 
-	UFUNCTION(BlueprintNativeEvent, Category = "TriggerRuntime|Evaluator")
+	UFUNCTION(BlueprintNativeEvent, Category = "Evaluator")
 	void BP_Reset();
 
 	//Reset all the local variables
 	virtual void NativeReset();
 
 	//Initialize the local variables this function only be called in the BeginPlaye stage
-	UFUNCTION(BlueprintImplementableEvent, Category = "TriggerRuntime|Evaluator")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Evaluator")
 	void BP_Initialize(UObject* OwnerObject);
 	virtual void NativeInitialize(UObject* OwnerObject);
 
-	//UFUNCTION(BlueprintImplementableEvent, Category = "TriggerRuntime")
+	//UFUNCTION(BlueprintImplementableEvent, Category = "Evaluator")
 	void BP_Destroyed(){};
 	virtual void BeginDestroy() override;
 
 	//Get the last result of evaluator
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Evaluator")
+	UFUNCTION(BlueprintCallable, Category = "Evaluator")
 	bool GetLastEvaluatorResult() const { return CashedValue; };
 
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Evaluator")
+	UFUNCTION(BlueprintCallable, Category = "Evaluator")
 	int GetEvaluateCount() const { return EvaluateCount; };
 
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Evaluator")
+	UFUNCTION(BlueprintCallable, Category = "Evaluator")
 	UEvaluatorDataBase* GetExternalData() const { return ExternalData; }
 
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Evaluator")
+	UFUNCTION(BlueprintCallable, Category = "Evaluator")
 	virtual void SetExternalData(UEvaluatorDataBase* NewData) { ExternalData = NewData;}
 
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Evaluator")
+	UFUNCTION(BlueprintCallable, Category = "Evaluator")
 	UEvaluatorDataBase* CreateNewExternalData(TSubclassOf<UEvaluatorDataBase> EvaluatorClass);
 
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Evaluator")
+	UFUNCTION(BlueprintCallable, Category = "Evaluator")
 	UObject* GetOwner() { return Owner; }
 
 	/*
@@ -89,14 +89,14 @@ public:
 	* Make the evaluator can be evaluate again.
 	* As when this evaluator is passed the result will be cashed, and when I invoke evaluate function it will only return the last cashed value
 	*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "TriggerRuntime|Evaluator")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Evaluator")
 	void OnMarkEvaluateable();
 
 	/*
 	* Make the evaluator can be evaluate again.
 	* As when this evaluator is passed the result will be cashed, and when I invoke evaluate function it will only return the last cashed value
 	*/
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Evaluator")
+	UFUNCTION(BlueprintCallable, Category = "Evaluator")
 	virtual void MarkEvaluateable();
 
 protected:
@@ -107,7 +107,7 @@ protected:
 	* 
 	* #return the result for current evaluate
 	*/
-	UFUNCTION(BlueprintCallable, Category = "TriggerRuntime|Evaluator")
+	UFUNCTION(BlueprintCallable, Category = "Evaluator")
 	bool NotifyToEvaluate();
 
 public:

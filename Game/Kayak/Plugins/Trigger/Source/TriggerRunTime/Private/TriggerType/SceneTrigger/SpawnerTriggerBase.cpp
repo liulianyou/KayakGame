@@ -885,7 +885,7 @@ void ASpawnerTriggerBase::SyncConditionToData()
 		{
 			Condition = NewObject<UCheckActorOverlaped>(this);
 			PrerequestOp->Condtions.Add(Condition);
-			Condition->TargetActor = this;
+			Condition->SetTargetActor(this);
 		}
 		else
 		{

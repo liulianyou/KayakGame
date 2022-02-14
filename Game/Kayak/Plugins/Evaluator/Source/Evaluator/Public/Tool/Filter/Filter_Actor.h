@@ -33,7 +33,7 @@ public:
 	/*
 	* If the actor is one of these classes this filter will pass
 	*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "TriggerRuntime")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Filter")
 	TArray<TSubclassOf<AActor>> ActorClasses;
 };
 

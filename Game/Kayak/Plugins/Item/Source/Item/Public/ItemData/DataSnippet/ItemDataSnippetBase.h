@@ -11,7 +11,7 @@
 #include "UObject/ObjectMacros.h"
 #include "Templates/SubclassOf.h"
 #include "Engine/EngineTypes.h"
-
+#include "EvaluatorOperation.h"
 #include "ItemDefinition.h"
 
 #include "ItemDataSnippetBase.generated.h"
@@ -145,11 +145,29 @@ protected:
 	UFUNCTION()
 	virtual void OnRep_DataApplyRule( const TSubclassOf<UDataSnippetAppliedRuleBase>& OldValue);
 
+	UFUNCTION()
+	virtual void OnActivateDataSnippet( UEvaluatorBase* Evaluator, bool EvaluatorResult);
+
+	UFUNCTION()
+	virtual void OnDeactivateDataSnippet(UEvaluatorBase* Evaluator, bool EvaluatorResult);
+
 protected:
 
 	//Define how to apply this snippet to the target in runtime data
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_DataApplyRule, Category = "SnippetData")
 	TSubclassOf<UDataSnippetAppliedRuleBase> DataApplyRule;
+
+	/*
+	* The condition to check when to activate this data snippet
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "SnippetData")
+	UEvaluatorOperation* ActivateCondition = nullptr;
+
+	/*
+	* When to deactivate this data snippet
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "SnippetData")
+	UEvaluatorOperation* DeactivateCondition = nullptr;
 
 private:
 

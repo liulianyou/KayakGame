@@ -36,7 +36,7 @@ public:
 public:
 
 	//The data that this condition need to inspect the game mode
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Instanced, Category = "TriggerRuntime")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Instanced, Category = "GameModeState")
 	UTriggerGameModeDataBase* InspectData;
 
 };

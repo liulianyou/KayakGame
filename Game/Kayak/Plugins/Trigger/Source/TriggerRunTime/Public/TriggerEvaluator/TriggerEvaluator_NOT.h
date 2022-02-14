@@ -19,7 +19,7 @@ class UEvaluatorCondition;
 /*
 * This operation only work when its child is false
 */
-UCLASS( BlueprintType, meta = (DisplayName = "NOT"))
+UCLASS(hidedropdown)
 class TRIGGERRUNTIME_API UTriggerEvaluator_NOT : public UEvaluator_NOT
 {
 	GENERATED_UCLASS_BODY()

@@ -18,7 +18,7 @@
 * The operation just like &&, which means all the sub triggers toggled the condition,
 * than they can notify or affect other triggers
 */
-UCLASS( BlueprintType, meta = (DisplayName = "AND"))
+UCLASS(hidedropdown)
 class TRIGGERRUNTIME_API UTriggerEvaluator_AND : public UEvaluator_AND
 {
 	GENERATED_UCLASS_BODY()

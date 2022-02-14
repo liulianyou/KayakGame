@@ -29,20 +29,41 @@ public:
 	virtual void BeginDestroy() override;
 
 public:
+
+	UFUNCTION(BlueprintCallable, Category = "Overlap")
+	AActor* GetTargetActor() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Overlap")
+	void SetTargetActor( AActor* NewActor );
+
+public:
 	UFUNCTION()
 	void OnActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
 	UFUNCTION()
 	void OnActorEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
-
+	UFUNCTION()
+	void OnActorDestroyed(AActor* DestroyedActor);
 public:
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Instanced, Category = "TriggerRuntime")
+	/*
+	* Try to inspect which actor overlap the target actor
+	*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Instanced, Category = "Overlaped")
 	TArray<UFilterBase*> OverlapFilters;
+
+private:
 
 	/*
 	* The target actor which we should check weather it have been overlapped
 	* If this value is none I will try to find the actor who contain this task immediately
     */
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Export, Category = "TriggerRuntime")
-	AActor* TargetActor;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Export, Category = "Overlaped", meta = (AllowPrivateAccess = true))
+	TSoftObjectPtr<AActor> TargetActor;
+
+private:
+	
+	/*
+	* As the target  actor is on soft object ptr and which means 
+	*/
+	AActor* PrivateActor;
 };

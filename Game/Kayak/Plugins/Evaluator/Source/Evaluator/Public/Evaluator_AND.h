@@ -15,8 +15,7 @@
 
 
 /*
-* The operation just like &&, which means all the sub triggers toggled the condition,
-* than they can notify or affect other triggers
+* The operation just like &&
 */
 UCLASS( BlueprintType, meta = (DisplayName = "AND"))
 class EVALUATOR_API UEvaluator_AND : public UEvaluatorOperation

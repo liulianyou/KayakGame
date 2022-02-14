@@ -24,6 +24,7 @@ public class Item : ModuleRules
 			{
 				"Core",
 				// ... add other public dependencies that you statically link with here ...
+				 "Evaluator",
 			}
 			);
 			
@@ -31,9 +32,9 @@ public class Item : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"CoreUObject","Engine","NetCore",
-				"Slate","SlateCore",
-				"GameplayAbilities","GameplayTags",
+                "CoreUObject","Engine","NetCore",
+                "Slate","SlateCore",
+                "GameplayAbilities","GameplayTags",
                 "DeveloperSettings"
 				// ... add private dependencies that you statically link with here ...	
 			}

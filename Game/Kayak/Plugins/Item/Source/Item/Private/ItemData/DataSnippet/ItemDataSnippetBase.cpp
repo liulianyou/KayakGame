@@ -202,12 +202,43 @@ void UItemDataSnippetBase::SetItemRuntimeDataOwner(UItemRuntimeDataBase* ItemRun
 
 void UItemDataSnippetBase::Activate()
 {
+	//Only the server can activate this data snippet
+	if(IsActivated() && !HasAuthority())
+		return;
+
+	//The deactivate condition only work when this data snippet has been activated
+	if (DeactivateCondition)
+	{
+		//Before the deactivation work i need to reset it
+		DeactivateCondition->BP_Reset();
+
+		if (!DeactivateCondition->EvaluatorDelegate.IsAlreadyBound(this, &UItemDataSnippetBase::OnActivateDataSnippet))
+		{
+			DeactivateCondition->EvaluatorDelegate.AddDynamic(this, &UItemDataSnippetBase::OnActivateDataSnippet);
+		}
+
+		DeactivateCondition->Evaluator();
+	}
+
 	OnActivate();
+
+	bActivated = true;
 }
 
 void UItemDataSnippetBase::Deactivate()
 {
+	if (!IsActivated())
+	{
+		UE_LOG(LogItem, Warning, TEXT("Can not deactivate the data snippet %s as it has not been activated"), *GetPathName());
+		return;
+	}
+
+	if(!HasAuthority())
+		return;
+
 	OnDeactivate();
+
+	bActivated = false;
 }
 
 void UItemDataSnippetBase::Initialized()
@@ -217,7 +248,34 @@ void UItemDataSnippetBase::Initialized()
 
 	OnInitialized();
 
+	if (ActivateCondition)
+	{
+		if (!ActivateCondition->EvaluatorDelegate.IsAlreadyBound(this, &UItemDataSnippetBase::OnActivateDataSnippet))
+		{
+			ActivateCondition->EvaluatorDelegate.AddDynamic(this, &UItemDataSnippetBase::OnActivateDataSnippet);
+		}
+		
+		ActivateCondition->Evaluator();
+	}
+	
+
 	MarkDataPrepared();
+}
+
+void UItemDataSnippetBase::OnActivateDataSnippet(UEvaluatorBase* Evaluator, bool EvaluatorResult)
+{
+	if (EvaluatorResult)
+	{
+		Activate();
+	}
+}
+
+void UItemDataSnippetBase::OnDeactivateDataSnippet(UEvaluatorBase* Evaluator, bool EvaluatorResult)
+{
+	if (EvaluatorResult)
+	{
+		Deactivate();
+	}
 }
 
 void UItemDataSnippetBase::OnRep_RuntimeDataOwner(UItemRuntimeDataBase* OldValue)

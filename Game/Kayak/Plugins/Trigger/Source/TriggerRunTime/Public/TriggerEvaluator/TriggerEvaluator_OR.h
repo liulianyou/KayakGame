@@ -19,7 +19,7 @@
 * The operation just like ||, which means one of the sub triggers toggled the condition,
 * than they can notify or affect other triggers
 */
-UCLASS( BlueprintType, meta = (DisplayName = "OR"))
+UCLASS( hidedropdown)
 class TRIGGERRUNTIME_API UTriggerEvaluator_OR : public UEvaluator_OR
 {
 	GENERATED_UCLASS_BODY()

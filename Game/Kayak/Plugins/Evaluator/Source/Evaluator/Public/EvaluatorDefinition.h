@@ -55,7 +55,7 @@ struct EVALUATOR_API FEvaluatorNeededDelegate
 };
 
 
-UINTERFACE(MinimalAPI, BlueprintType, Category = "TriggerRuntime|Task")
+UINTERFACE(MinimalAPI, BlueprintType, Category = "Evaluator|Dead")
 class UDeadSupportInterface : public UInterface
 {
 	GENERATED_BODY()

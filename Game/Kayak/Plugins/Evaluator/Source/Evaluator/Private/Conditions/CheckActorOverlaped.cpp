@@ -64,7 +64,7 @@ void UCheckActorOverlaped::NativeInitialize(UObject* OwnerObject)
 {
 	Super::NativeInitialize( OwnerObject );
 	
-	if (TargetActor == nullptr)
+	if (!TargetActor.IsValid())
 	{
 		//Find the first actor who own this condition
 		UObject* Outer = GetOuter();
@@ -75,19 +75,7 @@ void UCheckActorOverlaped::NativeInitialize(UObject* OwnerObject)
 		}
 	}
 	
-	if (TargetActor != nullptr && TargetActor->IsValidLowLevel())
-	{
-		if (!TargetActor->OnActorBeginOverlap.IsAlreadyBound(this, &UCheckActorOverlaped::OnActorBeginOverlap))
-		{
-			TargetActor->OnActorBeginOverlap.AddDynamic(this, &UCheckActorOverlaped::OnActorBeginOverlap);
-		}
-		
-		if (!TargetActor->OnActorEndOverlap.IsAlreadyBound(this, &UCheckActorOverlaped::OnActorEndOverlap))
-		{
-			TargetActor->OnActorEndOverlap.AddDynamic(this, &UCheckActorOverlaped::OnActorEndOverlap);
-		}
-		
-	}
+	SetTargetActor(TargetActor.Get());
 
 	//Remove empty filter
 	for (int i = 0; i < OverlapFilters.Num(); i++)
@@ -101,13 +89,52 @@ void UCheckActorOverlaped::NativeInitialize(UObject* OwnerObject)
 
 void UCheckActorOverlaped::BeginDestroy()
 {
-	Super::BeginDestroy();
+	SetTargetActor(nullptr);
 
-	if (TargetActor->IsValidLowLevel())
+	Super::BeginDestroy();
+}
+
+AActor* UCheckActorOverlaped::GetTargetActor() const
+{
+	return PrivateActor;
+}
+
+void UCheckActorOverlaped::SetTargetActor(AActor* NewActor)
+{
+	if(PrivateActor == NewActor)
+		return;
+
+	if (PrivateActor != nullptr)
 	{
-		TargetActor->OnActorBeginOverlap.RemoveDynamic(this, &UCheckActorOverlaped::OnActorBeginOverlap);
-		TargetActor->OnActorEndOverlap.RemoveDynamic(this, &UCheckActorOverlaped::OnActorEndOverlap);
+		if (GetTargetActor() != nullptr && GetTargetActor()->IsValidLowLevel())
+		{
+			GetTargetActor()->OnActorBeginOverlap.RemoveDynamic(this, &UCheckActorOverlaped::OnActorBeginOverlap);
+			GetTargetActor()->OnActorEndOverlap.RemoveDynamic(this, &UCheckActorOverlaped::OnActorEndOverlap);
+			GetTargetActor()->OnDestroyed.RemoveDynamic(this, &UCheckActorOverlaped::OnActorDestroyed);
+		}
 	}
+
+	PrivateActor = NewActor;
+
+	if (GetTargetActor() != nullptr)
+	{
+		if (!GetTargetActor()->OnActorBeginOverlap.IsAlreadyBound(this, &UCheckActorOverlaped::OnActorBeginOverlap))
+		{
+			GetTargetActor()->OnActorBeginOverlap.AddDynamic(this, &UCheckActorOverlaped::OnActorBeginOverlap);
+		}
+
+		if (!GetTargetActor()->OnActorEndOverlap.IsAlreadyBound(this, &UCheckActorOverlaped::OnActorEndOverlap))
+		{
+			GetTargetActor()->OnActorEndOverlap.AddDynamic(this, &UCheckActorOverlaped::OnActorEndOverlap);
+		}
+
+		if (!GetTargetActor()->OnDestroyed.IsAlreadyBound(this, &UCheckActorOverlaped::OnActorDestroyed))
+		{
+			GetTargetActor()->OnDestroyed.AddDynamic(this, &UCheckActorOverlaped::OnActorDestroyed);
+		}
+	}
+
+	TargetActor = NewActor;
 }
 
 void UCheckActorOverlaped::OnActorBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
@@ -147,4 +174,14 @@ void UCheckActorOverlaped::OnActorEndOverlap(AActor* OverlappedActor, AActor* Ot
 			Filter->SetFilterData(nullptr);
 		}
 	}
+}
+
+void UCheckActorOverlaped::OnActorDestroyed(AActor* Actor)
+{
+	if (PrivateActor != Actor)
+	{
+		return;
+	}
+
+	SetTargetActor(nullptr);
 }

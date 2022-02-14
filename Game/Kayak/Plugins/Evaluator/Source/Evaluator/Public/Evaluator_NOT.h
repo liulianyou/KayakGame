@@ -17,7 +17,7 @@ class UEvaluatorOperation;
 class UEvaluatorCondition;
 
 /*
-* This operation only work when its child is false
+* This operation only pass when its first child is false
 */
 UCLASS( BlueprintType, meta = (DisplayName = "NOT"))
 class EVALUATOR_API UEvaluator_NOT : public UEvaluatorOperation
